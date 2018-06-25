@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.27703.2026
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryBot.Web", "CryBot.Web\CryBot.Web.csproj", "{403A7CF6-DD3D-4D07-BD35-F13F8EE46F4E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryBot.Core", "CryBot.Core\CryBot.Core.csproj", "{8E394FD3-FF1D-4B2B-8172-AD0EFFAA73DD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{403A7CF6-DD3D-4D07-BD35-F13F8EE46F4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{403A7CF6-DD3D-4D07-BD35-F13F8EE46F4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{403A7CF6-DD3D-4D07-BD35-F13F8EE46F4E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E394FD3-FF1D-4B2B-8172-AD0EFFAA73DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E394FD3-FF1D-4B2B-8172-AD0EFFAA73DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E394FD3-FF1D-4B2B-8172-AD0EFFAA73DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E394FD3-FF1D-4B2B-8172-AD0EFFAA73DD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
