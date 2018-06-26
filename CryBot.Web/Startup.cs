@@ -1,3 +1,5 @@
+using CryBot.Core.Models;
+using CryBot.Core.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -18,6 +20,8 @@ namespace CryBot.Web
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<EnvironmentConfig>(Configuration);
+            services.AddSingleton(typeof(ICryptoApi), typeof(BittrexApi));
             services.AddMvc();
         }
 
