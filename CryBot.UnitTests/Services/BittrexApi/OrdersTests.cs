@@ -49,10 +49,55 @@ namespace CryBot.UnitTests.Services.BittrexApi
             ordersResponse.ErrorMessage.Should().NotBeNullOrWhiteSpace();
             ordersResponse.IsSuccessful.Should().BeFalse();
         }
-        
-        private static CallResult<BittrexOpenOrdersOrder[]> CreateOpenOrdersResponse(List<BittrexOpenOrdersOrder> bittrexOpenOrdersOrders, ServerError serverError)
+
+        [Fact]
+        public async Task SuccessfulOrderCall_ShouldReturn_CryptoOrders()
         {
-            return new CallResult<BittrexOpenOrdersOrder[]>(bittrexOpenOrdersOrders.ToArray(), serverError);
+            _bittrexClientMock.Setup(b => b.GetOrderHistoryAsync(It.IsAny<string>()))
+                .ReturnsAsync(() => CreateCompletedOrdersResponse(new List<BittrexOrderHistoryOrder>(), null));
+            var ordersResponse = await _bittrexApi.GetCompletedOrdersAsync();
+            ordersResponse.IsSuccessful.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task FailedHistoryCall_ShouldReturn_ErrorResponse()
+        {
+            
+            _bittrexClientMock.Setup(b => b.GetOrderHistoryAsync(It.IsAny<string>()))
+                .ReturnsAsync(() => CreateCompletedOrdersResponse(null, new ServerError("test")));
+            var ordersResponse = await _bittrexApi.GetCompletedOrdersAsync();
+            ordersResponse.IsSuccessful.Should().BeFalse();
+            ordersResponse.ErrorMessage.Should().NotBeNullOrWhiteSpace();
+        }
+
+        [Fact]
+        public async Task SuccessfulHistoryCall_ShouldReturn_ConvertedOrders()
+        {
+            _bittrexClientMock.Setup(b => b.GetOrderHistoryAsync(It.IsAny<string>()))
+                .ReturnsAsync(() => CreateCompletedOrdersResponse(new List<BittrexOrderHistoryOrder>
+                {
+                    new BittrexOrderHistoryOrder
+                    {
+                        Exchange = "BTC-XLM"
+                    }
+                }, null));
+            var ordersResponse = await _bittrexApi.GetCompletedOrdersAsync();
+            ordersResponse.Content.Count.Should().Be(1);
+            ordersResponse.Content[0].Market.Should().Be("BTC-XLM");
+        }
+
+        private static CallResult<BittrexOrderHistoryOrder[]> CreateCompletedOrdersResponse(
+            List<BittrexOrderHistoryOrder> bittrexOrders,
+            Error serverError)
+        {
+            return new CallResult<BittrexOrderHistoryOrder[]>(bittrexOrders?.ToArray(), serverError);
+        }
+        
+        private static CallResult<BittrexOpenOrdersOrder[]> CreateOpenOrdersResponse(
+            List<BittrexOpenOrdersOrder> bittrexOpenOrders,
+            Error serverError)
+        {
+            return new CallResult<BittrexOpenOrdersOrder[]>(bittrexOpenOrders?.ToArray(), serverError);
         }
     }
 }

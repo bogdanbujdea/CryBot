@@ -39,6 +39,13 @@ namespace CryBot.UnitTests.Services.BittrexApi
                         Available = 100,
                         Balance = 200,
                         Pending = 100
+                    },
+                    new BittrexBalance
+                    {
+                        Currency = "BTC",
+                        Available = 100,
+                        Balance = 200,
+                        Pending = 100
                     }
                 }, null));
             var walletResponse = await _bittrexApi.GetWalletAsync();

@@ -64,6 +64,18 @@ namespace CryBot.Core.Services
             return new CryptoResponse<List<CryptoOrder>>(orders);
         }
 
+        public async Task<CryptoResponse<List<CryptoOrder>>> GetCompletedOrdersAsync()
+        {
+            var orderHistoryResponse = await _bittrexClient.GetOrderHistoryAsync();
+            if (orderHistoryResponse.Success)
+            {
+                var cryptoOrders = orderHistoryResponse.Data
+                    .Select(o => o.ToCryptoOrder()).ToList();
+                return new CryptoResponse<List<CryptoOrder>>(cryptoOrders);
+            }
+            return new CryptoResponse<List<CryptoOrder>>(orderHistoryResponse.Error.Message);
+        }
+
         private async Task<List<CoinBalance>> RetrieveBalances()
         {
             var balancesCallResult = await _bittrexClient.GetBalancesAsync();

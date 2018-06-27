@@ -37,6 +37,24 @@ namespace CryBot.Core.Utilities
                 QuantityRemaining = openOrder.QuantityRemaining.RoundSatoshi()
             };
         }
+        
+        public static CryptoOrder ToCryptoOrder(this BittrexOrderHistoryOrder completedOrder)
+        {
+            return new CryptoOrder
+            {
+                Market = completedOrder.Exchange,
+                OrderType = completedOrder.OrderType == OrderSideExtended.LimitBuy ? CryptoOrderType.LimitBuy : CryptoOrderType.LimitSell,
+                Price = completedOrder.Price.RoundSatoshi(),
+                Quantity = completedOrder.Quantity.RoundSatoshi(),
+                PricePerUnit = completedOrder.Limit.RoundSatoshi(),
+                CommissionPaid = completedOrder.Commission.RoundSatoshi(),
+                Uuid = completedOrder.OrderUuid,
+                Opened = completedOrder.TimeStamp,
+                Closed = completedOrder.Closed.GetValueOrDefault(),
+                Limit = completedOrder.Limit.RoundSatoshi(),
+                QuantityRemaining = completedOrder.QuantityRemaining.RoundSatoshi()
+            };
+        }
 
         public static string ToMarket(this string currency)
         {

@@ -12,5 +12,7 @@ namespace CryBot.Core.Services
         Task<CryptoResponse<Wallet>> GetWalletAsync();
 
         Task<CryptoResponse<List<CryptoOrder>>> GetOpenOrdersAsync();
+
+        Task<CryptoResponse<List<CryptoOrder>>> GetCompletedOrdersAsync();
     }
 }
