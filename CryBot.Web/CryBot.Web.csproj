@@ -9,6 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="ClientApp\app\converters\currency-format.ts" />
+    <None Remove="ClientApp\app\converters\date-format.ts" />
+    <None Remove="ClientApp\app\converters\order-format.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.7" />
   </ItemGroup>
 
@@ -18,6 +24,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CryBot.Core\CryBot.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <TypeScriptCompile Include="ClientApp\app\converters\order-format.ts" />
+    <TypeScriptCompile Include="ClientApp\app\converters\date-format.ts" />
+    <TypeScriptCompile Include="ClientApp\app\converters\currency-format.ts" />
   </ItemGroup>
 
   <Target Name="DebugRunWebpack" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('wwwroot\dist') ">

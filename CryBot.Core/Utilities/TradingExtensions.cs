@@ -52,7 +52,8 @@ namespace CryBot.Core.Utilities
                 Opened = completedOrder.TimeStamp,
                 Closed = completedOrder.Closed.GetValueOrDefault(),
                 Limit = completedOrder.Limit.RoundSatoshi(),
-                QuantityRemaining = completedOrder.QuantityRemaining.RoundSatoshi()
+                QuantityRemaining = completedOrder.QuantityRemaining.RoundSatoshi(),
+                IsClosed = true
             };
         }
 

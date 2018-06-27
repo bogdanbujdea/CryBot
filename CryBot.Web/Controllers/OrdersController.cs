@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CryBot.Core.Models;
 using CryBot.Core.Services;
 
@@ -20,12 +21,28 @@ namespace CryBot.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetOpenOrders()
+        public async Task<IActionResult> GetOrders([FromQuery]OrderType orderType)
         {
-            var ordersResponse = await _cryptoApi.GetOpenOrdersAsync();
-            if (ordersResponse.IsSuccessful)
+            CryptoResponse<List<CryptoOrder>> ordersResponse = null;
+            switch (orderType)
+            {
+                case OrderType.OpenOrders:
+                    ordersResponse = await _cryptoApi.GetOpenOrdersAsync();
+                    break;
+                case OrderType.CompletedOrders:
+                    ordersResponse = await _cryptoApi.GetCompletedOrdersAsync();
+                    break;
+            }
+
+            if (ordersResponse != null && ordersResponse.IsSuccessful)
                 return Ok(new { orders = ordersResponse.Content, isSuccessful = true});
             return BadRequest(new { ordersResponse.ErrorMessage });
         }
+    }
+
+    public enum OrderType
+    {
+        OpenOrders = 1,
+        CompletedOrders
     }
 }

@@ -17,6 +17,7 @@ namespace CryBot.Core.Models
         public decimal Limit { get; set; }
         public decimal QuantityRemaining { get; set; }
         public DateTime Closed { get; set; }
+        public bool IsClosed { get; set; }
     }
 
     public enum CryptoOrderType
