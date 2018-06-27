@@ -37,19 +37,18 @@ namespace CryBot.Core.Services
             var balances = await RetrieveBalances();
             var markets = await _bittrexClient.GetMarketSummariesAsync();
             wallet.Coins = balances;
-            wallet.BitcoinBalance = wallet.Coins.FirstOrDefault(c => c.Currency == "BTC");
+            wallet.BitcoinBalance = wallet.Coins.FirstOrDefault(c => c.Market.ToCurrency() == "BTC");
+            wallet.Coins.Remove(wallet.BitcoinBalance);
             foreach (var coinBalance in wallet.Coins)
             {
-                var market = markets.Data.FirstOrDefault(m => m.MarketName == coinBalance.MarketName);
+                var market = markets.Data.FirstOrDefault(m => m.MarketName == coinBalance.Market);
                 if (market != null)
                 {
-                    coinBalance.PricePerUnit = market.Last.GetValueOrDefault();
-                    coinBalance.Price = market.Last.GetValueOrDefault() * coinBalance.Quantity;
+                    coinBalance.PricePerUnit = market.Last.GetValueOrDefault().RoundSatoshi();
+                    coinBalance.Price = market.Last.GetValueOrDefault().RoundSatoshi() * coinBalance.Quantity.RoundSatoshi();
                 }
-
-                if (wallet.BitcoinBalance != null) 
-                    wallet.BitcoinBalance.Quantity += coinBalance.Price;
             }
+            wallet.BitcoinBalance.Quantity = (wallet.BitcoinBalance.Available + wallet.Coins.Where(c => c.Market.ToCurrency() != "BTC").Sum(c => c.Price)).RoundSatoshi();
 
             return new CryptoResponse<Wallet>(wallet);
         }

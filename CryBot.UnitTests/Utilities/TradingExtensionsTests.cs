@@ -16,15 +16,17 @@ namespace CryBot.UnitTests.Utilities
         [Fact]
         public void ToCoinBalance_Should_Convert()
         {
-            var bittrexBalance = new BittrexBalance();
-            bittrexBalance.Currency = "XLM";
-            bittrexBalance.Available = 100;
-            bittrexBalance.Balance = 100;
-            bittrexBalance.Pending = 0;
+            var bittrexBalance = new BittrexBalance
+            {
+                Currency = "XLM",
+                Available = 50,
+                Balance = 100,
+                Pending = 50
+            };
             var coinBalance = bittrexBalance.ConvertToCoinBalance();
-            coinBalance.Currency.Should().Be("XLM");
-            coinBalance.MarketName.Should().Be("BTC-XLM");
+            coinBalance.Market.Should().Be("BTC-XLM");
             coinBalance.Quantity.Should().Be(100);
+            coinBalance.Available.Should().Be(50);
         }
 
         

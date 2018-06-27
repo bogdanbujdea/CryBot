@@ -2,6 +2,8 @@
 
 using CryBot.Core.Models;
 
+using System;
+
 namespace CryBot.Core.Utilities
 {
     public static class TradingExtensions
@@ -11,9 +13,9 @@ namespace CryBot.Core.Utilities
         {
             return new CoinBalance
             {
-                Currency = bittrexBalance.Currency,
-                MarketName = bittrexBalance.Currency.ToMarket(),
-                Quantity = bittrexBalance.Balance.GetValueOrDefault(),
+                Market = bittrexBalance.Currency.ToMarket(),
+                Quantity = bittrexBalance.Balance.GetValueOrDefault().RoundSatoshi(),
+                Available = bittrexBalance.Available.GetValueOrDefault().RoundSatoshi()
             };
         }
         
@@ -23,22 +25,32 @@ namespace CryBot.Core.Utilities
             {
                 Market = openOrder.Exchange,
                 OrderType = openOrder.OrderType == OrderSideExtended.LimitBuy ? CryptoOrderType.LimitBuy : CryptoOrderType.LimitSell,
-                Price = openOrder.Price,
-                Quantity = openOrder.Quantity,
-                PricePerUnit = openOrder.Limit,
-                CommissionPaid = openOrder.CommissionPaid,
+                Price = openOrder.Price.RoundSatoshi(),
+                Quantity = openOrder.Quantity.RoundSatoshi(),
+                PricePerUnit = openOrder.Limit.RoundSatoshi(),
+                CommissionPaid = openOrder.CommissionPaid.RoundSatoshi(),
                 Canceled = openOrder.CancelInitiated,
                 Uuid = openOrder.Uuid.GetValueOrDefault(),
                 Opened = openOrder.Opened,
                 Closed = openOrder.Closed.GetValueOrDefault(),
-                Limit = openOrder.Limit,
-                QuantityRemaining = openOrder.QuantityRemaining
+                Limit = openOrder.Limit.RoundSatoshi(),
+                QuantityRemaining = openOrder.QuantityRemaining.RoundSatoshi()
             };
         }
 
         public static string ToMarket(this string currency)
         {
             return $"BTC-{currency}";
+        }
+
+        public static string ToCurrency(this string market)
+        {
+            return market.Split('-')[1];
+        }
+
+        public static decimal RoundSatoshi(this decimal price)
+        {
+            return Math.Round(price, 8);
         }
     }
 }

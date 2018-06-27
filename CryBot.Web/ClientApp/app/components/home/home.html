@@ -1,3 +1,25 @@
 <template>
-    <h1>This is version: ${version}</h1>
+    <h3>Version: ${version}</h3>
+    <p if.bind="!wallet"><em>Loading...</em></p>
+    <h3>Bitcoin: ${ wallet.bitcoinBalance.available } / ${ wallet.bitcoinBalance.quantity }</h3>
+    <table if.bind="wallet.coins" class="table">
+        <thead>
+            <tr>
+                <th>Market</th>
+                <th>Balance</th>
+                <th>Price per unit</th>
+                <th>Price</th>
+                <th>Available</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr repeat.for="coinBalance of wallet.coins">
+                <td>${ coinBalance.market }</td>
+                <td>${ coinBalance.quantity }</td>
+                <td>${ coinBalance.pricePerUnit }</td>
+                <td>${ coinBalance.price }</td>
+                <td>${ coinBalance.available }</td>
+            </tr>
+        </tbody>
+    </table>
 </template>

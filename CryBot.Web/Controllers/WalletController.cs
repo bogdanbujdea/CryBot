@@ -22,8 +22,10 @@ namespace CryBot.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> GetWallet()
         {
-            var wallet = await _cryptoApi.GetWalletAsync();
-            return Ok(wallet);
+            var walletResponse = await _cryptoApi.GetWalletAsync();
+            if (walletResponse.IsSuccessful)
+                return Ok(new { wallet = walletResponse.Content, isSuccessful = true});
+            return BadRequest(new { walletResponse.ErrorMessage });
         }
     }
 }

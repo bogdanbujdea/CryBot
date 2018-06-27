@@ -1,5 +1,7 @@
 import { HttpClient } from 'aurelia-fetch-client';
 import { inject } from 'aurelia-framework';
+import {IOrderResponse} from "../../models/IOrderResponse";
+import {IOrder} from "../../models/IOrder";
 
 @inject(HttpClient)
 export class FetchOrders {
@@ -13,30 +15,4 @@ export class FetchOrders {
                     this.openOrders = data.orders;
             });
     }
-}
-
-interface IOrderResponse {
-    errorMessage: string;
-    isSuccessful: boolean;
-    orders: IOrder[];
-}
-
-interface IOrder {
-
-    market: string;
-    orderType: OrderType;
-    price: number;
-    commissionPaid: number;
-    canceled: boolean;
-    opened: Date;
-    closed: Date;
-    uuid: string;
-    limit: number;
-    quantity: number;
-    quantityRemaining: number;
-}
-
-enum OrderType {
-    LimitBuy,
-    LimitSell
 }
