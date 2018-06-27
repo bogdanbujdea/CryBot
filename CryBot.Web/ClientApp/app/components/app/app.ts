@@ -21,12 +21,12 @@ export class App {
             nav: true,
             title: 'Counter'
         }, {
-            route: 'fetch-data',
-            name: 'fetchdata',
+            route: 'orders',
+            name: 'orders',
             settings: { icon: 'th-list' },
-            moduleId: PLATFORM.moduleName('../fetchdata/fetchdata'),
+            moduleId: PLATFORM.moduleName('../orders/orders'),
             nav: true,
-            title: 'Fetch data'
+            title: 'Orders'
         }]);
 
         this.router = router;

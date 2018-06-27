@@ -22,10 +22,10 @@ namespace CryBot.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> GetOpenOrders()
         {
-            var orders = await _cryptoApi.GetOpenOrdersAsync();
-            if (orders.IsSuccessful)
-                return Ok(orders.Content);
-            return Json(new { orders.ErrorMessage });
+            var ordersResponse = await _cryptoApi.GetOpenOrdersAsync();
+            if (ordersResponse.IsSuccessful)
+                return Ok(new { orders = ordersResponse.Content, isSuccessful = true});
+            return BadRequest(new { ordersResponse.ErrorMessage });
         }
     }
 }

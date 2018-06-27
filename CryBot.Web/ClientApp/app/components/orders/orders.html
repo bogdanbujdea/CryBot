@@ -1,0 +1,30 @@
+<template>
+    <h1>Open orders</h1>
+
+    <p>This component demonstrates fetching data from the server.</p>
+
+    <p if.bind="!openOrders"><em>Loading...</em></p>
+
+    <table if.bind="openOrders" class="table">
+        <thead>
+            <tr>
+                <th>Opened Date</th>
+                <th>Market</th>
+                <th>Balance</th>
+                <th>Price per unit</th>
+                <th>Total</th>
+                <th>Filled</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr repeat.for="openOrder of openOrders">
+                <td>${ openOrder.opened }</td>
+                <td>${ openOrder.market }</td>
+                <td>${ openOrder.quantity }</td>
+                <td>${ openOrder.pricePerUnit }</td>
+                <td>${ openOrder.price }</td>
+                <td>${ openOrder.quantity - openOrder.quantityRemaining }</td>
+            </tr>
+        </tbody>
+    </table>
+</template>

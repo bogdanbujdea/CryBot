@@ -44,11 +44,11 @@ namespace CryBot.Core.Services
                 if (market != null)
                 {
                     coinBalance.PricePerUnit = market.Last.GetValueOrDefault();
-                    coinBalance.Price = market.Last.GetValueOrDefault() * coinBalance.Balance;
+                    coinBalance.Price = market.Last.GetValueOrDefault() * coinBalance.Quantity;
                 }
 
                 if (wallet.BitcoinBalance != null) 
-                    wallet.BitcoinBalance.Balance += coinBalance.Price;
+                    wallet.BitcoinBalance.Quantity += coinBalance.Price;
             }
 
             return new CryptoResponse<Wallet>(wallet);

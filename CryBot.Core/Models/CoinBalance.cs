@@ -2,7 +2,7 @@
 {
     public class CoinBalance
     {
-        public decimal Balance { get; set; }
+        public decimal Quantity { get; set; }
 
         public decimal PricePerUnit { get; set; }
 

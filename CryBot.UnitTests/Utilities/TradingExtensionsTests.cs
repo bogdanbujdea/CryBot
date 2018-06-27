@@ -24,7 +24,7 @@ namespace CryBot.UnitTests.Utilities
             var coinBalance = bittrexBalance.ConvertToCoinBalance();
             coinBalance.Currency.Should().Be("XLM");
             coinBalance.MarketName.Should().Be("BTC-XLM");
-            coinBalance.Balance.Should().Be(100);
+            coinBalance.Quantity.Should().Be(100);
         }
 
         

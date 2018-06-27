@@ -13,7 +13,7 @@ namespace CryBot.Core.Utilities
             {
                 Currency = bittrexBalance.Currency,
                 MarketName = bittrexBalance.Currency.ToMarket(),
-                Balance = bittrexBalance.Balance.GetValueOrDefault(),
+                Quantity = bittrexBalance.Balance.GetValueOrDefault(),
             };
         }
         
@@ -25,7 +25,7 @@ namespace CryBot.Core.Utilities
                 OrderType = openOrder.OrderType == OrderSideExtended.LimitBuy ? CryptoOrderType.LimitBuy : CryptoOrderType.LimitSell,
                 Price = openOrder.Price,
                 Quantity = openOrder.Quantity,
-                PricePerUnit = openOrder.PricePerUnit.GetValueOrDefault(),
+                PricePerUnit = openOrder.Limit,
                 CommissionPaid = openOrder.CommissionPaid,
                 Canceled = openOrder.CancelInitiated,
                 Uuid = openOrder.Uuid.GetValueOrDefault(),
