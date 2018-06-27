@@ -1,8 +1,12 @@
-﻿using System;
-using Bittrex.Net.Objects;
+﻿using Bittrex.Net.Objects;
+
 using CryBot.Core.Models;
 using CryBot.Core.Utilities;
+
 using FluentAssertions;
+
+using System;
+
 using Xunit;
 
 namespace CryBot.UnitTests.Utilities

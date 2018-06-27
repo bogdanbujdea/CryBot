@@ -16,7 +16,7 @@ namespace CryBot.Core.Services
 {
     public class BittrexApi : ICryptoApi
     {
-        private readonly IBittrexClient _bittrexClient;
+        private IBittrexClient _bittrexClient;
 
         public BittrexApi(IBittrexClient bittrexClient)
         {
@@ -25,7 +25,7 @@ namespace CryBot.Core.Services
 
         public void Initialize(string apiKey, string apiSecret)
         {
-            BittrexClient.SetDefaultOptions(new BittrexClientOptions
+            _bittrexClient = new BittrexClient(new BittrexClientOptions
             {
                 ApiCredentials = new ApiCredentials(apiKey, apiSecret)
             });

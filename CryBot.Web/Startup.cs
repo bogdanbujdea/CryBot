@@ -1,3 +1,5 @@
+using Bittrex.Net;
+using Bittrex.Net.Interfaces;
 using CryBot.Core.Models;
 using CryBot.Core.Services;
 using Microsoft.AspNetCore.Builder;
@@ -22,6 +24,7 @@ namespace CryBot.Web
         {
             services.Configure<EnvironmentConfig>(Configuration);
             services.AddSingleton(typeof(ICryptoApi), typeof(BittrexApi));
+            services.AddSingleton(typeof(IBittrexClient), typeof(BittrexClient));
             services.AddMvc();
         }
 

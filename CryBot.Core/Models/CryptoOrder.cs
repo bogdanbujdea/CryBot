@@ -1,5 +1,4 @@
 ﻿using System;
-using Bittrex.Net.Objects;
 
 namespace CryBot.Core.Models
 {

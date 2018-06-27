@@ -23,7 +23,9 @@ namespace CryBot.Web.Controllers
         public async Task<IActionResult> GetOpenOrders()
         {
             var orders = await _cryptoApi.GetOpenOrdersAsync();
-            return Ok(orders);
+            if (orders.IsSuccessful)
+                return Ok(orders.Content);
+            return Json(new { orders.ErrorMessage });
         }
     }
 }

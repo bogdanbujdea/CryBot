@@ -1,6 +1,5 @@
 ﻿using Bittrex.Net.Objects;
 using Bittrex.Net.Interfaces;
-
 using CryptoExchange.Net;
 
 using FluentAssertions;
@@ -9,7 +8,7 @@ using Moq;
 
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using CryBot.Core.Models;
+
 using Xunit;
 
 namespace CryBot.UnitTests.Services.BittrexApi
