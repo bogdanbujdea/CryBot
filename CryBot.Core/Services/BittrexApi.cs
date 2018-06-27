@@ -1,5 +1,6 @@
 ﻿using Bittrex.Net;
 using Bittrex.Net.Objects;
+using Bittrex.Net.Interfaces;
 
 using CryBot.Core.Models;
 using CryBot.Core.Utilities;
@@ -15,19 +16,22 @@ namespace CryBot.Core.Services
 {
     public class BittrexApi : ICryptoApi
     {
-        private BittrexClient _bittrexClient;
+        private readonly IBittrexClient _bittrexClient;
+
+        public BittrexApi(IBittrexClient bittrexClient)
+        {
+            _bittrexClient = bittrexClient;
+        }
 
         public void Initialize(string apiKey, string apiSecret)
         {
-            var bittrexClientOptions = new BittrexClientOptions
+            BittrexClient.SetDefaultOptions(new BittrexClientOptions
             {
                 ApiCredentials = new ApiCredentials(apiKey, apiSecret)
-            };
-
-            _bittrexClient = new BittrexClient(bittrexClientOptions);
+            });
         }
 
-        public async Task<Wallet> GetWalletAsync()
+        public async Task<CryptoResponse<Wallet>> GetWalletAsync()
         {
             var wallet = new Wallet();
             var balances = await RetrieveBalances();
@@ -47,7 +51,18 @@ namespace CryBot.Core.Services
                     wallet.BitcoinBalance.Balance += coinBalance.Price;
             }
 
-            return wallet;
+            return new CryptoResponse<Wallet>(wallet);
+        }
+
+        public async Task<CryptoResponse<List<CryptoOrder>>> GetOpenOrdersAsync()
+        {
+            var ordersCallResult = await _bittrexClient.GetOpenOrdersAsync();
+            if (ordersCallResult.Success == false)
+            {
+                return new CryptoResponse<List<CryptoOrder>>(ordersCallResult.Error.Message);
+            }
+            var orders = ordersCallResult.Data.Select(s => s.ToCryptoOrder()).ToList();
+            return new CryptoResponse<List<CryptoOrder>>(orders);
         }
 
         private async Task<List<CoinBalance>> RetrieveBalances()

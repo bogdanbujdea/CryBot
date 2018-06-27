@@ -1,6 +1,7 @@
 ﻿using CryBot.Core.Models;
 
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace CryBot.Core.Services
 {
@@ -8,6 +9,8 @@ namespace CryBot.Core.Services
     {
         void Initialize(string apiKey, string apiSecret);
 
-        Task<Wallet> GetWalletAsync();
+        Task<CryptoResponse<Wallet>> GetWalletAsync();
+
+        Task<CryptoResponse<List<CryptoOrder>>> GetOpenOrdersAsync();
     }
 }

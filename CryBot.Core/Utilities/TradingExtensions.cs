@@ -16,6 +16,25 @@ namespace CryBot.Core.Utilities
                 Balance = bittrexBalance.Balance.GetValueOrDefault(),
             };
         }
+        
+        public static CryptoOrder ToCryptoOrder(this BittrexOpenOrdersOrder openOrder)
+        {
+            return new CryptoOrder
+            {
+                Market = openOrder.Exchange,
+                OrderType = openOrder.OrderType == OrderSideExtended.LimitBuy ? CryptoOrderType.LimitBuy : CryptoOrderType.LimitSell,
+                Price = openOrder.Price,
+                Quantity = openOrder.Quantity,
+                PricePerUnit = openOrder.PricePerUnit.GetValueOrDefault(),
+                CommissionPaid = openOrder.CommissionPaid,
+                Canceled = openOrder.CancelInitiated,
+                Uuid = openOrder.Uuid.GetValueOrDefault(),
+                Opened = openOrder.Opened,
+                Closed = openOrder.Closed.GetValueOrDefault(),
+                Limit = openOrder.Limit,
+                QuantityRemaining = openOrder.QuantityRemaining
+            };
+        }
 
         public static string ToMarket(this string currency)
         {
