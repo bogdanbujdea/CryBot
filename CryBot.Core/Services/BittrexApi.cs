@@ -1,4 +1,5 @@
-﻿using Bittrex.Net;
+﻿using System;
+using Bittrex.Net;
 using Bittrex.Net.Objects;
 using Bittrex.Net.Interfaces;
 
@@ -17,18 +18,39 @@ namespace CryBot.Core.Services
     public class BittrexApi : ICryptoApi
     {
         private IBittrexClient _bittrexClient;
+        private BittrexSocketClient _bittrexSocketClient;
 
         public BittrexApi(IBittrexClient bittrexClient)
         {
             _bittrexClient = bittrexClient;
         }
 
+        public event EventHandler<List<Ticker>> MarketsUpdated;
+
         public void Initialize(string apiKey, string apiSecret)
         {
+            var apiCredentials = new ApiCredentials(apiKey, apiSecret);
             _bittrexClient = new BittrexClient(new BittrexClientOptions
             {
-                ApiCredentials = new ApiCredentials(apiKey, apiSecret)
+                ApiCredentials = apiCredentials
             });
+            _bittrexSocketClient = new BittrexSocketClient(new BittrexSocketClientOptions
+            {
+                ApiCredentials = apiCredentials
+            });
+            _bittrexSocketClient.SubscribeToMarketSummariesLiteUpdate(OnUpdate);
+        }
+
+        public void OnUpdate(List<BittrexStreamMarketSummaryLite> markets)
+        {
+            MarketsUpdated?.Invoke(this, markets.Select(m => new Ticker
+            {
+                Last = m.Last,
+                Ask = m.Last,
+                Bid = m.BaseVolume,
+                Market = m.MarketName,
+                BaseVolume = m.BaseVolume
+            }).ToList());
         }
 
         public async Task<CryptoResponse<Wallet>> GetWalletAsync()

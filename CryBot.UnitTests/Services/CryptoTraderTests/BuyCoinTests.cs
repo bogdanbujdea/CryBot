@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using CryBot.Core.Models;
 using CryBot.Core.Services;
+using FluentAssertions;
 using Moq;
 using Xunit;
 
@@ -54,6 +55,29 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
             _cryptoTrader.Trades.Add(new Trade());
             await _cryptoTrader.StartAsync();
             _cryptoApiMock.Verify(c => c.BuyCoinAsync(It.IsAny<CryptoOrder>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task TraderPrice_Should_BeSubscribedToUpdates()
+        {
+            _cryptoTrader.Market = "BTC-XLM";
+            await _cryptoTrader.StartAsync();
+            _cryptoApiMock.Raise(c => c.MarketsUpdated += null, _cryptoTrader, new List<Ticker>
+            {
+                new Ticker
+                {
+                    Market = "BTC-XLM",
+                    Last = 100,
+                    BaseVolume = 1000,
+                    Ask = 10,
+                    Bid = 5
+                }
+            });
+            _cryptoTrader.Ticker.Last.Should().Be(100);
+            _cryptoTrader.Ticker.Ask.Should().Be(10);
+            _cryptoTrader.Ticker.Bid.Should().Be(5);
+            _cryptoTrader.Ticker.BaseVolume.Should().Be(1000);
+            _cryptoTrader.Ticker.Market.Should().Be("BTC-XLM");
         }
 
         private void CreateDefaultSetups()
