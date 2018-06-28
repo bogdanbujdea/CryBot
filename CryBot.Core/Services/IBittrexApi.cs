@@ -14,5 +14,9 @@ namespace CryBot.Core.Services
         Task<CryptoResponse<List<CryptoOrder>>> GetOpenOrdersAsync();
 
         Task<CryptoResponse<List<CryptoOrder>>> GetCompletedOrdersAsync();
+
+        Task<CryptoResponse<CryptoOrder>> BuyCoinAsync(CryptoOrder cryptoOrder);
+
+        Task<CryptoResponse<Ticker>> GetTickerAsync(string market);
     }
 }

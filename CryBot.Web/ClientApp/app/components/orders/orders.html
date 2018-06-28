@@ -3,56 +3,61 @@
     <require from="../../converters/currency-format"></require>
     <require from="../../converters/order-format"></require>
 
-    <h1>Open orders</h1>
+    <h3>Open orders</h3>
 
-    <p>This component demonstrates fetching data from the server.</p>
-
-    <p if.bind="!openOrders"><em>Loading...</em></p>
+    <p if.bind="!openOrders"><em>Loading open orders...</em></p>
 
     <table if.bind="openOrders" class="table">
         <thead>
-        <tr>
-            <th>Opened Date</th>
-            <th>Market</th>
-            <th>Balance</th>
-            <th>Price per unit</th>
-            <th>Total</th>
-            <th>Filled</th>
-        </tr>
+            <tr>
+                <th>Opened Date</th>
+                <th>Type</th>
+                <th>Market</th>
+                <th>Balance</th>
+                <th>Price per unit</th>
+                <th>Total</th>
+                <th>Filled</th>
+            </tr>
         </thead>
         <tbody>
-        <tr repeat.for="openOrder of openOrders">
-            <td>${ openOrder.opened | dateFormat }</td>
-            <td>${ openOrder.market }</td>
-            <td>${ openOrder.quantity | currencyFormat }</td>
-            <td>${ openOrder.pricePerUnit }</td>
-            <td>${ openOrder.price }</td>
-            <td>${ openOrder.quantity - openOrder.quantityRemaining }</td>
-        </tr>
+            <tr repeat.for="openOrder of openOrders">
+                <td>${ openOrder.opened | dateFormat }</td>
+                <td>${ completedOrder.orderType | orderFormat }</td>
+                <td>${ openOrder.market }</td>
+                <td>${ openOrder.quantity }</td>
+                <td>${ openOrder.pricePerUnit }</td>
+                <td>${ openOrder.price }</td>
+                <td>${ openOrder.quantity - openOrder.quantityRemaining }</td>
+            </tr>
         </tbody>
     </table>
+
+    <h3>Closed orders</h3>
+
+    <p if.bind="!openOrders"><em>Loading closed orders...</em></p>
+
     <table if.bind="completedOrders" class="table">
         <thead>
-        <tr>
-            <th>Opened Date</th>
-            <th>Type</th>
-            <th>Market</th>
-            <th>Balance</th>
-            <th>Price per unit</th>
-            <th>Total</th>
-            <th>Closed</th>
-        </tr>
+            <tr>
+                <th>Opened Date</th>
+                <th>Type</th>
+                <th>Market</th>
+                <th>Balance</th>
+                <th>Price per unit</th>
+                <th>Total</th>
+                <th>Closed</th>
+            </tr>
         </thead>
         <tbody>
-        <tr repeat.for="completedOrder of completedOrders">
-            <td>${ completedOrder.opened | dateFormat}</td>
-            <td>${ completedOrder.orderType | orderFormat }</td>
-            <td>${ completedOrder.market }</td>
-            <td>${ completedOrder.quantity }</td>
-            <td>${ completedOrder.pricePerUnit | currencyFormat }</td>
-            <td>${ completedOrder.price | currencyFormat}</td>
-            <td>${ completedOrder.closed | dateFormat }</td>
-        </tr>
+            <tr repeat.for="completedOrder of completedOrders">
+                <td>${ completedOrder.opened | dateFormat}</td>
+                <td>${ completedOrder.orderType | orderFormat }</td>
+                <td>${ completedOrder.market }</td>
+                <td>${ completedOrder.quantity }</td>
+                <td>${ completedOrder.pricePerUnit | currencyFormat }</td>
+                <td>${ completedOrder.price | currencyFormat}</td>
+                <td>${ completedOrder.closed | dateFormat }</td>
+            </tr>
         </tbody>
     </table>
 </template>

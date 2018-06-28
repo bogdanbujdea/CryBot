@@ -76,6 +76,16 @@ namespace CryBot.Core.Services
             return new CryptoResponse<List<CryptoOrder>>(orderHistoryResponse.Error.Message);
         }
 
+        public async Task<CryptoResponse<CryptoOrder>> BuyCoinAsync(CryptoOrder cryptoOrder)
+        {
+            return new CryptoResponse<CryptoOrder>("");
+        }
+
+        public Task<CryptoResponse<Ticker>> GetTickerAsync(string market)
+        {
+            throw new System.NotImplementedException();
+        }
+
         private async Task<List<CoinBalance>> RetrieveBalances()
         {
             var balancesCallResult = await _bittrexClient.GetBalancesAsync();
