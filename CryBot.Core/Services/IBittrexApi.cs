@@ -1,5 +1,6 @@
-﻿using System;
-using CryBot.Core.Models;
+﻿using CryBot.Core.Models;
+
+using System;
 
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -18,8 +19,10 @@ namespace CryBot.Core.Services
 
         Task<CryptoResponse<List<CryptoOrder>>> GetCompletedOrdersAsync();
 
-        Task<CryptoResponse<CryptoOrder>> BuyCoinAsync(CryptoOrder cryptoOrder);
+        Task<CryptoResponse<CryptoOrder>> BuyCoinAsync(CryptoOrder buyOrder);
 
         Task<CryptoResponse<Ticker>> GetTickerAsync(string market);
+
+        Task<CryptoResponse<CryptoOrder>> SellCoinAsync(CryptoOrder sellOrder);
     }
 }

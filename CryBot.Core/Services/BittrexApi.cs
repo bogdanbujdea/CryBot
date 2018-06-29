@@ -1,5 +1,4 @@
-﻿using System;
-using Bittrex.Net;
+﻿using Bittrex.Net;
 using Bittrex.Net.Objects;
 using Bittrex.Net.Interfaces;
 
@@ -7,6 +6,8 @@ using CryBot.Core.Models;
 using CryBot.Core.Utilities;
 
 using CryptoExchange.Net.Authentication;
+
+using System;
 
 using System.Linq;
 
@@ -106,6 +107,11 @@ namespace CryBot.Core.Services
         public Task<CryptoResponse<Ticker>> GetTickerAsync(string market)
         {
             throw new System.NotImplementedException();
+        }
+
+        public Task<CryptoResponse<CryptoOrder>> SellCoinAsync(CryptoOrder sellOrder)
+        {
+            throw new NotImplementedException();
         }
 
         private async Task<List<CoinBalance>> RetrieveBalances()

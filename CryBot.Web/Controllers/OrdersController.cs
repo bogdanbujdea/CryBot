@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using CryBot.Core.Models;
 using CryBot.Core.Services;
 
@@ -6,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace CryBot.Web.Controllers
 {

@@ -1,16 +1,20 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using CryBot.Core.Models;
+﻿using CryBot.Core.Models;
 using CryBot.Core.Services;
+
 using FluentAssertions;
+
 using Moq;
+
+using System.Threading.Tasks;
+using System.Collections.Generic;
+
 using Xunit;
 
 namespace CryBot.UnitTests.Services.CryptoTraderTests
 {
     public class BuyCoinTests
     {
-        private Mock<ICryptoApi> _cryptoApiMock;
+        private readonly Mock<ICryptoApi> _cryptoApiMock;
         private CryptoTrader _cryptoTrader;
 
         public BuyCoinTests()

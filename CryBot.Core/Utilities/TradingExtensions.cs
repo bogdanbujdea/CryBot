@@ -18,7 +18,7 @@ namespace CryBot.Core.Utilities
                 Available = bittrexBalance.Available.GetValueOrDefault().RoundSatoshi()
             };
         }
-        
+
         public static CryptoOrder ToCryptoOrder(this BittrexOpenOrdersOrder openOrder)
         {
             return new CryptoOrder
@@ -37,7 +37,7 @@ namespace CryBot.Core.Utilities
                 QuantityRemaining = openOrder.QuantityRemaining.RoundSatoshi()
             };
         }
-        
+
         public static CryptoOrder ToCryptoOrder(this BittrexOrderHistoryOrder completedOrder)
         {
             return new CryptoOrder
@@ -70,6 +70,26 @@ namespace CryBot.Core.Utilities
         public static decimal RoundSatoshi(this decimal price)
         {
             return Math.Round(price, 8);
+        }
+
+        public static bool ReachedHighStopLoss(this decimal currentPrice, decimal maxPrice, decimal minimumTakeProfit, decimal percentage, decimal buyPrice)
+        {
+            if (currentPrice < minimumTakeProfit)
+                return false;
+            var difference = maxPrice - buyPrice;
+            if (difference * percentage > (minimumTakeProfit - buyPrice) && difference * percentage >= (currentPrice - buyPrice))
+                return true;
+            return false;
+        }
+
+        public static bool ReachedStopLoss(this decimal currentPrice, decimal buyPrice, decimal stopLoss)
+        {
+            return buyPrice * stopLoss.ToPercentageMultiplier() >= currentPrice;
+        }
+
+        public static decimal ToPercentageMultiplier(this decimal percentage)
+        {
+            return 1 + (percentage / 100);
         }
     }
 }

@@ -95,5 +95,63 @@ namespace CryBot.UnitTests.Utilities
             order.IsClosed.Should().BeTrue();
             order.Closed.Should().Be(bittrexOrder.Closed.GetValueOrDefault());
         }
+
+        [Fact]
+        public void MinimumHighStopLoss_ShouldBe_HigherThanMinPrice()
+        {
+            var currentPrice = 105M;
+            var maxPrice = 110M;
+            var minimumLimit = 104M;
+            var percentage = 0.9M;
+            decimal buyPrice = 100;
+            var highhStopLossReached = currentPrice.ReachedHighStopLoss(maxPrice, minimumLimit, percentage, buyPrice);
+            highhStopLossReached.Should().BeTrue();
+        }
+
+        [Fact]
+        public void GoingLowAboveMinimumPercentage_ShouldNotTrigger_HighStopLoss()
+        {
+            var currentPrice = 108M;
+            var maxPrice = 110M;
+            var minimumLimit = 105M;
+            var percentage = 0.7M;
+            decimal buyPrice = 100;
+            var highhStopLossReached = currentPrice.ReachedHighStopLoss(maxPrice, minimumLimit, percentage, buyPrice);
+            highhStopLossReached.Should().BeFalse();
+        }
+
+        [Fact]
+        public void GoingLowerThanMinimumLimit_ShouldNotTriggerHighStopLoss()
+        {
+            var currentPrice = 104M;
+            var maxPrice = 110M;
+            var minimumLimit = 105M;
+            var percentage = 0.7M;
+            decimal buyPrice = 100;
+            var highhStopLossReached = currentPrice.ReachedHighStopLoss(maxPrice, minimumLimit, percentage, buyPrice);
+            highhStopLossReached.Should().BeFalse();
+        }
+
+        [Fact]
+        public void GoingLowerThanPercentageAndHigherThanMinimumLimit_ShouldTriggerHighStopLoss()
+        {
+            var currentPrice = 106M;
+            var maxPrice = 110M;
+            var minimumLimit = 105M;
+            var percentage = 0.9M;
+            decimal buyPrice = 100;
+            var highhStopLossReached = currentPrice.ReachedHighStopLoss(maxPrice, minimumLimit, percentage, buyPrice);
+            highhStopLossReached.Should().BeTrue();
+        }
+
+        [Fact]
+        public void PercentageMultiplierTests()
+        {
+            1M.ToPercentageMultiplier().Should().Be(1.01M);
+            (-1M).ToPercentageMultiplier().Should().Be(0.99M);
+            (-11M).ToPercentageMultiplier().Should().Be(0.89M);
+            0.5M.ToPercentageMultiplier().Should().Be(1.005M);
+            0.25M.ToPercentageMultiplier().Should().Be(1.0025M);
+        }
     }
 }
