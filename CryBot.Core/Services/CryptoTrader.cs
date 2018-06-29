@@ -34,7 +34,7 @@ namespace CryBot.Core.Services
             var tickerResponse = await _cryptoApi.GetTickerAsync(Market);
             Ticker = tickerResponse.Content;
             await CreateBuyOrder(tickerResponse.Content.Last);
-            await CreateBuyOrder(tickerResponse.Content.Last * 0.98M);
+            await CreateBuyOrder(tickerResponse.Content.Last * Settings.BuyLowerPercentage.ToPercentageMultiplier());
         }
 
         private async Task CreateBuyOrder(decimal pricePerUnit)
@@ -46,12 +46,13 @@ namespace CryBot.Core.Services
             Trades.Add(trade);
         }
 
-        private void OrderUpdated(object sender, CryptoOrder e)
+        private async void OrderUpdated(object sender, CryptoOrder e)
         {
             var tradeForOrder = Trades.FirstOrDefault(t => t.SellOrder.Uuid == e.Uuid);
             if (tradeForOrder != null)
             {
                 tradeForOrder.IsActive = false;
+                await CreateBuyOrder(e.PricePerUnit * Settings.BuyLowerPercentage.ToPercentageMultiplier());
             }
         }
 

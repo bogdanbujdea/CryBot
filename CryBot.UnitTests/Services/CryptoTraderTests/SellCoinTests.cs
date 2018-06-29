@@ -7,7 +7,7 @@ using Moq;
 
 using System.Threading.Tasks;
 using System.Collections.Generic;
-
+using CryBot.Core.Utilities;
 using Xunit;
 
 namespace CryBot.UnitTests.Services.CryptoTraderTests
@@ -119,13 +119,24 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
             _cryptoTrader.Trades[1].IsActive.Should().BeTrue();
         }
 
+        [Fact]
+        public async Task SoldCoin_Should_BuyLower()
+        {
+            _sellOrder.Uuid = "s2";
+            _sellOrder.PricePerUnit = 98;
+            _cryptoTrader.Settings.BuyLowerPercentage = -2;
+            await _cryptoTrader.StartAsync();
+            RaiseMarketUpdate(98);
+            RaiseClosedOrder("s2");
+            _cryptoApiMock.Verify(c => c.BuyCoinAsync(It.Is<CryptoOrder>(order => order.PricePerUnit == 98 * _cryptoTrader.Settings.BuyLowerPercentage.ToPercentageMultiplier())), Times.Once);
+        }
+
         private void RaiseClosedOrder(string uuid)
         {
-            var closedOrder = new CryptoOrder();
-            closedOrder.Uuid = uuid;
-            closedOrder.IsClosed = true;
-            closedOrder.OrderType = CryptoOrderType.LimitSell;
-            _cryptoApiMock.Raise(c => c.OrderUpdated += null, _cryptoTrader, closedOrder);
+            _sellOrder.Uuid = uuid;
+            _sellOrder.IsClosed = true;
+            _sellOrder.OrderType = CryptoOrderType.LimitSell;
+            _cryptoApiMock.Raise(c => c.OrderUpdated += null, _cryptoTrader, _sellOrder);
         }
 
         private void RaiseMarketUpdate(decimal last)

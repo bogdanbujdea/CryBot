@@ -92,7 +92,7 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
             _cryptoTrader.Trades[0].IsActive.Should().BeTrue();
             _cryptoTrader.Trades[1].IsActive.Should().BeTrue();
         }
-        
+
         [Fact]
         public async Task BuyingCoin_Should_AddBuyOrderToTrade()
         {
@@ -105,7 +105,11 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
             _cryptoTrader = new CryptoTrader(_cryptoApiMock.Object)
             {
                 Market = "BTC-XLM",
-                Trades = new List<Trade>()
+                Trades = new List<Trade>(),
+                Settings = new TraderSettings
+                {
+                    BuyLowerPercentage = -2
+                }
             };
 
             _cryptoApiMock.Setup(c => c.GetTickerAsync(It.IsAny<string>()))
