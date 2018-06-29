@@ -30,11 +30,31 @@ namespace CryBot.Core.Utilities
                 PricePerUnit = openOrder.Limit.RoundSatoshi(),
                 CommissionPaid = openOrder.CommissionPaid.RoundSatoshi(),
                 Canceled = openOrder.CancelInitiated,
-                Uuid = openOrder.Uuid.GetValueOrDefault(),
+                Uuid = openOrder.Uuid.GetValueOrDefault().ToString(),
                 Opened = openOrder.Opened,
                 Closed = openOrder.Closed.GetValueOrDefault(),
                 Limit = openOrder.Limit.RoundSatoshi(),
                 QuantityRemaining = openOrder.QuantityRemaining.RoundSatoshi()
+            };
+        }
+
+        public static CryptoOrder ToCryptoOrder(this BittrexStreamOrderData closedOrderData)
+        {
+            var closedOrder = closedOrderData.Order;
+            return new CryptoOrder
+            {
+                Market = closedOrder.Market,
+                OrderType = closedOrder.OrderType == OrderSideExtended.LimitBuy ? CryptoOrderType.LimitBuy : CryptoOrderType.LimitSell,
+                Price = closedOrder.Price.RoundSatoshi(),
+                Quantity = closedOrder.Quantity.RoundSatoshi(),
+                PricePerUnit = closedOrder.Limit.RoundSatoshi(),
+                CommissionPaid = closedOrder.CommissionPaid.RoundSatoshi(),
+                Canceled = closedOrder.CancelInitiated,
+                Uuid = closedOrder.Uuid.ToString(),
+                Opened = closedOrder.Opened,
+                Closed = closedOrder.Closed.GetValueOrDefault(),
+                Limit = closedOrder.Limit.RoundSatoshi(),
+                QuantityRemaining = closedOrder.QuantityRemaining.RoundSatoshi()
             };
         }
 
@@ -48,7 +68,7 @@ namespace CryBot.Core.Utilities
                 Quantity = completedOrder.Quantity.RoundSatoshi(),
                 PricePerUnit = completedOrder.Limit.RoundSatoshi(),
                 CommissionPaid = completedOrder.Commission.RoundSatoshi(),
-                Uuid = completedOrder.OrderUuid,
+                Uuid = completedOrder.OrderUuid.ToString(),
                 Opened = completedOrder.TimeStamp,
                 Closed = completedOrder.Closed.GetValueOrDefault(),
                 Limit = completedOrder.Limit.RoundSatoshi(),

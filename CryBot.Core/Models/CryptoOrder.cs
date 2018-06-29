@@ -12,7 +12,7 @@ namespace CryBot.Core.Models
         public decimal PricePerUnit { get; set; }
         public decimal CommissionPaid { get; set; }
         public bool Canceled { get; set; }
-        public Guid Uuid { get; set; }
+        public string Uuid { get; set; }
         public DateTime Opened { get; set; }
         public decimal Limit { get; set; }
         public decimal QuantityRemaining { get; set; }

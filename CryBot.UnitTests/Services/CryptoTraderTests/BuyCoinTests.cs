@@ -20,7 +20,7 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
         public BuyCoinTests()
         {
             _cryptoApiMock = new Mock<ICryptoApi>();
-            _cryptoApiMock.Setup(c => c.BuyCoinAsync(It.IsAny<CryptoOrder>())).ReturnsAsync(new CryptoResponse<CryptoOrder>("hello"));
+            _cryptoApiMock.Setup(c => c.BuyCoinAsync(It.IsAny<CryptoOrder>())).ReturnsAsync(new CryptoResponse<CryptoOrder>(new CryptoOrder()));
             CreateDefaultSetups();
         }
 
@@ -82,6 +82,22 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
             _cryptoTrader.Ticker.Bid.Should().Be(5);
             _cryptoTrader.Ticker.BaseVolume.Should().Be(1000);
             _cryptoTrader.Ticker.Market.Should().Be("BTC-XLM");
+        }
+
+        [Fact]
+        public async Task BuyingCoin_Should_AddTNewActiverade()
+        {
+            await _cryptoTrader.StartAsync();
+            _cryptoTrader.Trades.Count.Should().Be(2);
+            _cryptoTrader.Trades[0].IsActive.Should().BeTrue();
+            _cryptoTrader.Trades[1].IsActive.Should().BeTrue();
+        }
+        
+        [Fact]
+        public async Task BuyingCoin_Should_AddBuyOrderToTrade()
+        {
+            await _cryptoTrader.StartAsync();
+            _cryptoTrader.Trades[0].BuyOrder.Should().NotBeNull();
         }
 
         private void CreateDefaultSetups()

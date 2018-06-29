@@ -28,12 +28,31 @@ namespace CryBot.Core.Services
         public async Task StartAsync()
         {
             _cryptoApi.MarketsUpdated += MarketsUpdated;
+            _cryptoApi.OrderUpdated += OrderUpdated;
             if (Trades.Count > 0)
                 return;
             var tickerResponse = await _cryptoApi.GetTickerAsync(Market);
             Ticker = tickerResponse.Content;
-            await _cryptoApi.BuyCoinAsync(new CryptoOrder { PricePerUnit = tickerResponse.Content.Last, Price = 0.0012M});
-            await _cryptoApi.BuyCoinAsync(new CryptoOrder { PricePerUnit = tickerResponse.Content.Last * 0.98M, Price = 0.0012M});
+            await CreateBuyOrder(tickerResponse.Content.Last);
+            await CreateBuyOrder(tickerResponse.Content.Last * 0.98M);
+        }
+
+        private async Task CreateBuyOrder(decimal pricePerUnit)
+        {
+            var trade = new Trade();
+            var buyResponse = await _cryptoApi.BuyCoinAsync(new CryptoOrder {PricePerUnit = pricePerUnit, Price = 0.0012M});
+            trade.BuyOrder = buyResponse.Content;
+            trade.IsActive = true;
+            Trades.Add(trade);
+        }
+
+        private void OrderUpdated(object sender, CryptoOrder e)
+        {
+            var tradeForOrder = Trades.FirstOrDefault(t => t.SellOrder.Uuid == e.Uuid);
+            if (tradeForOrder != null)
+            {
+                tradeForOrder.IsActive = false;
+            }
         }
 
         private async void MarketsUpdated(object sender, List<Ticker> e)
@@ -53,25 +72,27 @@ namespace CryBot.Core.Services
                     trade.BuyOrder.PricePerUnit * Settings.MinimumTakeProfit.ToPercentageMultiplier(),
                     Settings.HighStopLossPercentage.ToPercentageMultiplier(), trade.BuyOrder.PricePerUnit))
                 {
-                    await _cryptoApi.SellCoinAsync(CreateSellOrder(trade));
+                    await CreateSellOrder(trade);
                 }
 
                 if (Ticker.Last.ReachedStopLoss(trade.BuyOrder.PricePerUnit, Settings.StopLoss))
                 {
-                    await _cryptoApi.SellCoinAsync(CreateSellOrder(trade));
+                    await CreateSellOrder(trade);
                 }
             }
         }
 
-        private CryptoOrder CreateSellOrder(Trade lastTrade)
+        private async Task CreateSellOrder(Trade trade)
         {
-            return new CryptoOrder
+            var cryptoOrder = new CryptoOrder
             {
                 PricePerUnit = Ticker.Last,
-                Price = Ticker.Last * lastTrade.BuyOrder.Quantity,
+                Price = Ticker.Last * trade.BuyOrder.Quantity,
                 Market = Market,
-                Quantity = lastTrade.BuyOrder.Quantity
+                Quantity = trade.BuyOrder.Quantity
             };
+            var sellOrderResponse =  await _cryptoApi.SellCoinAsync(cryptoOrder);
+            trade.SellOrder = sellOrderResponse.Content;
         }
     }
 }

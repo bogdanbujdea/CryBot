@@ -55,7 +55,7 @@ namespace CryBot.UnitTests.Utilities
             order.Quantity.Should().Be(bittrexOrder.Quantity);
             order.QuantityRemaining.Should().Be(bittrexOrder.QuantityRemaining);
             order.PricePerUnit.Should().Be(bittrexOrder.PricePerUnit);
-            order.Uuid.Should().Be(bittrexOrder.Uuid.GetValueOrDefault());
+            order.Uuid.Should().Be(bittrexOrder.Uuid.GetValueOrDefault().ToString());
             order.CommissionPaid.Should().Be(bittrexOrder.CommissionPaid);
             order.Limit.Should().Be(bittrexOrder.Limit);
             order.Opened.Should().Be(bittrexOrder.Opened);
@@ -88,7 +88,7 @@ namespace CryBot.UnitTests.Utilities
             order.Quantity.Should().Be(bittrexOrder.Quantity);
             order.QuantityRemaining.Should().Be(bittrexOrder.QuantityRemaining);
             order.PricePerUnit.Should().Be(bittrexOrder.PricePerUnit);
-            order.Uuid.Should().Be(bittrexOrder.OrderUuid);
+            order.Uuid.Should().Be(bittrexOrder.OrderUuid.ToString());
             order.CommissionPaid.Should().Be(bittrexOrder.Commission);
             order.Limit.Should().Be(bittrexOrder.Limit);
             order.Opened.Should().Be(bittrexOrder.TimeStamp);

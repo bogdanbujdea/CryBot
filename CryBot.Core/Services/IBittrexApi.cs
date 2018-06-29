@@ -11,6 +11,8 @@ namespace CryBot.Core.Services
     {
         event EventHandler<List<Ticker>> MarketsUpdated;
 
+        event EventHandler<CryptoOrder> OrderUpdated;
+
         void Initialize(string apiKey, string apiSecret);
 
         Task<CryptoResponse<Wallet>> GetWalletAsync();

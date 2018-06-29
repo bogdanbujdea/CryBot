@@ -27,6 +27,7 @@ namespace CryBot.Core.Services
         }
 
         public event EventHandler<List<Ticker>> MarketsUpdated;
+        public event EventHandler<CryptoOrder> OrderUpdated;
 
         public void Initialize(string apiKey, string apiSecret)
         {
@@ -39,10 +40,16 @@ namespace CryBot.Core.Services
             {
                 ApiCredentials = apiCredentials
             });
-            _bittrexSocketClient.SubscribeToMarketSummariesLiteUpdate(OnUpdate);
+            _bittrexSocketClient.SubscribeToMarketSummariesLiteUpdate(OnMarketsUpdate);
+            _bittrexSocketClient.SubscribeToOrderUpdates(OnOrderUpdate);
         }
 
-        public void OnUpdate(List<BittrexStreamMarketSummaryLite> markets)
+        private void OnOrderUpdate(BittrexStreamOrderData bittrexOrder)
+        {
+            OrderUpdated?.Invoke(this, bittrexOrder.ToCryptoOrder());
+        }
+
+        public void OnMarketsUpdate(List<BittrexStreamMarketSummaryLite> markets)
         {
             MarketsUpdated?.Invoke(this, markets.Select(m => new Ticker
             {
