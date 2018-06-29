@@ -40,18 +40,26 @@ namespace CryBot.Core.Services
         {
             var currentMarket = e.FirstOrDefault(m => m.Market == Market);
             Ticker = currentMarket;
-            var lastTrade = Trades.LastOrDefault();
-            if (lastTrade.MaxPricePerUnit < Ticker.Last)
-                lastTrade.MaxPricePerUnit = Ticker.Last;
-            if (Ticker.Last.ReachedHighStopLoss(lastTrade.MaxPricePerUnit, lastTrade.BuyOrder.PricePerUnit * Settings.MinimumTakeProfit.ToPercentageMultiplier(),
-                Settings.HighStopLossPercentage.ToPercentageMultiplier(), lastTrade.BuyOrder.PricePerUnit))
-            {
-                await _cryptoApi.SellCoinAsync(CreateSellOrder(lastTrade));
-            }
+            await UpdateTrades();
+        }
 
-            if (Ticker.Last.ReachedStopLoss(lastTrade.BuyOrder.PricePerUnit, Settings.StopLoss))
+        private async Task UpdateTrades()
+        {
+            foreach (var trade in Trades.Where(t => t.IsActive))
             {
-                await _cryptoApi.SellCoinAsync(CreateSellOrder(lastTrade));
+                if (trade.MaxPricePerUnit < Ticker.Last)
+                    trade.MaxPricePerUnit = Ticker.Last;
+                if (Ticker.Last.ReachedHighStopLoss(trade.MaxPricePerUnit,
+                    trade.BuyOrder.PricePerUnit * Settings.MinimumTakeProfit.ToPercentageMultiplier(),
+                    Settings.HighStopLossPercentage.ToPercentageMultiplier(), trade.BuyOrder.PricePerUnit))
+                {
+                    await _cryptoApi.SellCoinAsync(CreateSellOrder(trade));
+                }
+
+                if (Ticker.Last.ReachedStopLoss(trade.BuyOrder.PricePerUnit, Settings.StopLoss))
+                {
+                    await _cryptoApi.SellCoinAsync(CreateSellOrder(trade));
+                }
             }
         }
 
