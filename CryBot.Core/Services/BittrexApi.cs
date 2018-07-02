@@ -40,25 +40,8 @@ namespace CryBot.Core.Services
             {
                 ApiCredentials = apiCredentials
             });
-            _bittrexSocketClient.SubscribeToMarketSummariesLiteUpdate(OnMarketsUpdate);
+            _bittrexSocketClient.SubscribeToMarketSummariesUpdate(OnMarketsUpdate);
             _bittrexSocketClient.SubscribeToOrderUpdates(OnOrderUpdate);
-        }
-
-        private void OnOrderUpdate(BittrexStreamOrderData bittrexOrder)
-        {
-            OrderUpdated?.Invoke(this, bittrexOrder.ToCryptoOrder());
-        }
-
-        public void OnMarketsUpdate(List<BittrexStreamMarketSummaryLite> markets)
-        {
-            MarketsUpdated?.Invoke(this, markets.Select(m => new Ticker
-            {
-                Last = m.Last,
-                Ask = m.Last,
-                Bid = m.BaseVolume,
-                Market = m.MarketName,
-                BaseVolume = m.BaseVolume
-            }).ToList());
         }
 
         public async Task<CryptoResponse<Wallet>> GetWalletAsync()
@@ -106,21 +89,50 @@ namespace CryBot.Core.Services
             return new CryptoResponse<List<CryptoOrder>>(orderHistoryResponse.Error.Message);
         }
 
-        public async Task<CryptoResponse<CryptoOrder>> BuyCoinAsync(CryptoOrder cryptoOrder)
-        {
-            return new CryptoResponse<CryptoOrder>("");
+        public virtual async Task<CryptoResponse<CryptoOrder>> BuyCoinAsync(CryptoOrder cryptoOrder)
+        {            
+            OrderUpdated?.Invoke(this, cryptoOrder);
+            return new CryptoResponse<CryptoOrder>(cryptoOrder);
         }
 
-        public Task<CryptoResponse<Ticker>> GetTickerAsync(string market)
+        public async Task<CryptoResponse<Ticker>> GetTickerAsync(string market)
         {
-            throw new System.NotImplementedException();
+            var tickerResponse = await _bittrexClient.GetTickerAsync(market);
+            if(tickerResponse.Success)
+                return new CryptoResponse<Ticker>(new Ticker
+                {
+                    Last = tickerResponse.Data.Last,
+                    Ask = tickerResponse.Data.Ask,
+                    Bid = tickerResponse.Data.Bid
+                });
+            return new CryptoResponse<Ticker>(tickerResponse.Error.Message);
         }
 
-        public Task<CryptoResponse<CryptoOrder>> SellCoinAsync(CryptoOrder sellOrder)
+        public virtual Task<CryptoResponse<CryptoOrder>> SellCoinAsync(CryptoOrder sellOrder)
         {
             throw new NotImplementedException();
         }
 
+        protected void OnMarketsUpdate(List<BittrexStreamMarketSummary> markets)
+        {
+            MarketsUpdated?.Invoke(this, markets.Select(m => new Ticker
+            {
+                Last = m.Last.GetValueOrDefault(),
+                Ask = m.Ask,
+                Bid = m.Bid,
+                Market = m.MarketName,
+                BaseVolume = m.BaseVolume.GetValueOrDefault()
+            }).ToList());
+        }
+
+        protected void OnOrderUpdate(BittrexStreamOrderData bittrexOrder)
+        {
+            OrderUpdated?.Invoke(this, bittrexOrder.ToCryptoOrder());
+        }
+        protected void OnOrderUpdate(CryptoOrder cryptoOrder)
+        {
+            OrderUpdated?.Invoke(this, cryptoOrder);
+        }
         private async Task<List<CoinBalance>> RetrieveBalances()
         {
             var balancesCallResult = await _bittrexClient.GetBalancesAsync();

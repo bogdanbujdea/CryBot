@@ -58,6 +58,37 @@ namespace CryBot.Core.Utilities
             };
         }
 
+        public static BittrexStreamOrderData ToBittrexStreamOrder(this CryptoOrder orderData)
+        {
+            try
+            {
+                var bittrexStreamOrderData = new BittrexStreamOrderData
+                {
+                    Order = new BittrexStreamOrder
+                    {
+                        Market = orderData.Market,
+                        OrderType = orderData.OrderType == CryptoOrderType.LimitBuy ? OrderSideExtended.LimitBuy : OrderSideExtended.LimitSell,
+                        Price = orderData.Price.RoundSatoshi(),
+                        Quantity = orderData.Quantity.RoundSatoshi(),
+                        PricePerUnit = orderData.PricePerUnit.RoundSatoshi(),
+                        CommissionPaid = orderData.CommissionPaid.RoundSatoshi(),
+                        CancelInitiated = orderData.Canceled,
+                        Uuid = new Guid(orderData.Uuid),
+                        Opened = orderData.Opened,
+                        Closed = orderData.Closed,
+                        Limit = orderData.PricePerUnit.RoundSatoshi(),
+                        QuantityRemaining = orderData.QuantityRemaining.RoundSatoshi()
+                    }
+                };
+                return bittrexStreamOrderData;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return null;
+            }
+        }
+
         public static CryptoOrder ToCryptoOrder(this BittrexOrderHistoryOrder completedOrder)
         {
             return new CryptoOrder
@@ -110,6 +141,23 @@ namespace CryBot.Core.Utilities
         public static decimal ToPercentageMultiplier(this decimal percentage)
         {
             return 1 + (percentage / 100);
+        }
+
+        public static decimal GetPercentageChange(this decimal oldValue, decimal newValue, bool dropCommission = false)
+        {
+            if (oldValue == 0)
+                oldValue = 1;
+            if (dropCommission)
+                newValue *= 0.995M;
+            var percentage = (newValue - oldValue) / oldValue;
+
+            return percentage;
+        }
+
+        public static decimal GetReadablePercentageChange(this decimal oldValue, decimal newValue,
+            bool dropCommission = false)
+        {
+            return Math.Round(oldValue.RoundSatoshi().GetPercentageChange(newValue.RoundSatoshi(), dropCommission) * 100, 2);
         }
     }
 }

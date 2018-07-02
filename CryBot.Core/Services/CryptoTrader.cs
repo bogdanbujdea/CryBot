@@ -1,4 +1,5 @@
-﻿using CryBot.Core.Models;
+﻿using System;
+using CryBot.Core.Models;
 using CryBot.Core.Utilities;
 
 using System.Linq;
@@ -20,7 +21,7 @@ namespace CryBot.Core.Services
         public string Market { get; set; }
 
         public List<Trade> Trades { get; set; }
-        
+
         public Ticker Ticker { get; set; }
 
         public TraderSettings Settings { get; set; }
@@ -33,32 +34,59 @@ namespace CryBot.Core.Services
                 return;
             var tickerResponse = await _cryptoApi.GetTickerAsync(Market);
             Ticker = tickerResponse.Content;
-            await CreateBuyOrder(tickerResponse.Content.Last);
-            await CreateBuyOrder(tickerResponse.Content.Last * Settings.BuyLowerPercentage.ToPercentageMultiplier());
+            await CreateBuyOrder(tickerResponse.Content.Ask);
+            await CreateBuyOrder(tickerResponse.Content.Bid * Settings.BuyLowerPercentage.ToPercentageMultiplier());
         }
 
         private async Task CreateBuyOrder(decimal pricePerUnit)
         {
             var trade = new Trade();
-            var buyResponse = await _cryptoApi.BuyCoinAsync(new CryptoOrder {PricePerUnit = pricePerUnit, Price = 0.0012M});
+            var buyResponse = await _cryptoApi.BuyCoinAsync(new CryptoOrder
+            {
+                PricePerUnit = pricePerUnit,
+                Price = Settings.DefaultBudget,
+                Quantity = Settings.DefaultBudget / pricePerUnit,
+                Market = Market,
+                OrderType = CryptoOrderType.LimitBuy                
+            });
+            Console.WriteLine($"Created buy order with price {pricePerUnit}");
             trade.BuyOrder = buyResponse.Content;
-            trade.IsActive = true;
+            trade.IsActive = false;
             Trades.Add(trade);
         }
 
         private async void OrderUpdated(object sender, CryptoOrder e)
         {
-            var tradeForOrder = Trades.FirstOrDefault(t => t.SellOrder.Uuid == e.Uuid);
-            if (tradeForOrder != null)
+            if (Trades.Count == 0)
+                return;
+
+            if (e.OrderType == CryptoOrderType.LimitSell)
             {
-                tradeForOrder.IsActive = false;
-                await CreateBuyOrder(e.PricePerUnit * Settings.BuyLowerPercentage.ToPercentageMultiplier());
+                var tradeForOrder = Trades.FirstOrDefault(t => t.SellOrder.Uuid == e.Uuid);
+                if (tradeForOrder != null)
+                {
+                    Console.WriteLine($"Closed sell order");
+                    tradeForOrder.IsActive = false;
+                    await CreateBuyOrder(e.PricePerUnit * Settings.BuyLowerPercentage.ToPercentageMultiplier());
+                }
+            }
+            else
+            {
+                var tradeForOrder = Trades.FirstOrDefault(t => t.BuyOrder.Uuid == e.Uuid);
+                if (tradeForOrder != null)
+                {
+                    Console.WriteLine($"Closed buy order");
+                    tradeForOrder.IsActive = true;
+                    tradeForOrder.BuyOrder = e;
+                }
             }
         }
 
         private async void MarketsUpdated(object sender, List<Ticker> e)
         {
             var currentMarket = e.FirstOrDefault(m => m.Market == Market);
+            if (currentMarket == null)
+                return;
             Ticker = currentMarket;
             await UpdateTrades();
         }
@@ -67,16 +95,22 @@ namespace CryBot.Core.Services
         {
             foreach (var trade in Trades.Where(t => t.IsActive))
             {
-                if (trade.MaxPricePerUnit < Ticker.Last)
-                    trade.MaxPricePerUnit = Ticker.Last;
-                if (Ticker.Last.ReachedHighStopLoss(trade.MaxPricePerUnit,
+                Ticker.Bid = Ticker.Last;
+                if (trade.MaxPricePerUnit < Ticker.Bid)
+                {
+                    Console.WriteLine($"New max for {Market}: {Ticker.Bid}");
+                    trade.MaxPricePerUnit = Ticker.Bid;
+                }
+
+                Console.WriteLine($"{Market}: {trade.BuyOrder.PricePerUnit.GetReadablePercentageChange(Ticker.Bid, true)}\t{trade.BuyOrder.PricePerUnit}\t{Ticker.Bid}");
+                if (Ticker.Bid.ReachedHighStopLoss(trade.MaxPricePerUnit,
                     trade.BuyOrder.PricePerUnit * Settings.MinimumTakeProfit.ToPercentageMultiplier(),
                     Settings.HighStopLossPercentage.ToPercentageMultiplier(), trade.BuyOrder.PricePerUnit))
                 {
                     await CreateSellOrder(trade);
                 }
 
-                if (Ticker.Last.ReachedStopLoss(trade.BuyOrder.PricePerUnit, Settings.StopLoss))
+                if (Ticker.Bid.ReachedStopLoss(trade.BuyOrder.PricePerUnit, Settings.StopLoss))
                 {
                     await CreateSellOrder(trade);
                 }
@@ -85,14 +119,15 @@ namespace CryBot.Core.Services
 
         private async Task CreateSellOrder(Trade trade)
         {
+            Console.WriteLine($"Creating sell order");
             var cryptoOrder = new CryptoOrder
             {
-                PricePerUnit = Ticker.Last,
-                Price = Ticker.Last * trade.BuyOrder.Quantity,
+                PricePerUnit = Ticker.Bid,
+                Price = Ticker.Bid * trade.BuyOrder.Quantity,
                 Market = Market,
                 Quantity = trade.BuyOrder.Quantity
             };
-            var sellOrderResponse =  await _cryptoApi.SellCoinAsync(cryptoOrder);
+            var sellOrderResponse = await _cryptoApi.SellCoinAsync(cryptoOrder);
             trade.SellOrder = sellOrderResponse.Content;
         }
     }

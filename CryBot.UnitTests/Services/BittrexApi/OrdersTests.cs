@@ -1,5 +1,8 @@
 ﻿using Bittrex.Net.Objects;
 using Bittrex.Net.Interfaces;
+
+using CryBot.Core.Models;
+
 using CryptoExchange.Net;
 
 using FluentAssertions;
@@ -84,6 +87,12 @@ namespace CryBot.UnitTests.Services.BittrexApi
             var ordersResponse = await _bittrexApi.GetCompletedOrdersAsync();
             ordersResponse.Content.Count.Should().Be(1);
             ordersResponse.Content[0].Market.Should().Be("BTC-XLM");
+        }
+
+        [Fact]
+        public async Task BuyCoin_Should_HaveValidOrder()
+        {
+            await _bittrexApi.BuyCoinAsync(new CryptoOrder());
         }
 
         private static CallResult<BittrexOrderHistoryOrder[]> CreateCompletedOrdersResponse(

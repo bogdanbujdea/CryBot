@@ -16,6 +16,7 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
     {
         private readonly Mock<ICryptoApi> _cryptoApiMock;
         private CryptoTrader _cryptoTrader;
+        private CryptoOrder _updatedOrder;
 
         public BuyCoinTests()
         {
@@ -49,8 +50,9 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
         [Fact]
         public async Task TraderWithNoCoin_Should_UseDefaultBudget()
         {
+            _cryptoTrader.Settings.DefaultBudget = 0.0012M;
             await _cryptoTrader.StartAsync();
-            _cryptoApiMock.Verify(c => c.BuyCoinAsync(It.Is<CryptoOrder>(o => o.Price == 0.0012M)), Times.Exactly(2));
+            _cryptoApiMock.Verify(c => c.BuyCoinAsync(It.Is<CryptoOrder>(o => o.Price == _cryptoTrader.Settings.DefaultBudget)), Times.Exactly(2));
         }
 
         [Fact]
@@ -85,6 +87,28 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
         }
 
         [Fact]
+        public async Task NotFoundMarket_ShouldNot_UpdateTicker()
+        {
+            _cryptoTrader.Market = "BTC-XLM";
+            _cryptoTrader.Ticker = new Ticker { Ask = 5 };
+            _cryptoApiMock.Setup(c => c.GetTickerAsync(It.IsAny<string>()))
+                .ReturnsAsync(new CryptoResponse<Ticker>(new Ticker
+                {
+                    Ask = 15
+                }));
+            await _cryptoTrader.StartAsync();
+            _cryptoApiMock.Raise(c => c.MarketsUpdated += null, _cryptoTrader, new List<Ticker>
+            {
+                new Ticker
+                {
+                    Market = "BTC-ETC",
+                    Last = 100,
+                }
+            });
+            _cryptoTrader.Ticker.Ask.Should().Be(15);
+        }
+
+        [Fact]
         public async Task BuyingCoin_Should_AddTNewActiverade()
         {
             await _cryptoTrader.StartAsync();
@@ -100,6 +124,29 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
             _cryptoTrader.Trades[0].BuyOrder.Should().NotBeNull();
         }
 
+        [Fact]
+        public async Task FilledBuyOrder_Should_ActivateTrade()
+        {
+            _updatedOrder = new CryptoOrder
+            {
+                Uuid = "s2",
+                OrderType = CryptoOrderType.LimitBuy
+            };
+            _cryptoTrader.Trades.Add(new Trade
+            {
+                BuyOrder = new CryptoOrder { Uuid = "s2" }
+            });            
+            await _cryptoTrader.StartAsync();
+            RaiseClosedOrder("s2");
+            _cryptoTrader.Trades[0].BuyOrder.IsClosed.Should().BeTrue();
+        }
+
+        private void RaiseClosedOrder(string uuid)
+        {
+            _updatedOrder.Uuid = uuid;
+            _updatedOrder.IsClosed = true;
+            _cryptoApiMock.Raise(c => c.OrderUpdated += null, _cryptoTrader, _updatedOrder);
+        }
         private void CreateDefaultSetups()
         {
             _cryptoTrader = new CryptoTrader(_cryptoApiMock.Object)

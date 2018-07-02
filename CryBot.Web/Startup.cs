@@ -2,11 +2,13 @@ using Bittrex.Net;
 using Bittrex.Net.Interfaces;
 using CryBot.Core.Models;
 using CryBot.Core.Services;
+using CryBot.Web.Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.SpaServices.Webpack;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace CryBot.Web
 {
@@ -23,7 +25,8 @@ namespace CryBot.Web
         public void ConfigureServices(IServiceCollection services)
         {
             services.Configure<EnvironmentConfig>(Configuration);
-            services.AddSingleton(typeof(ICryptoApi), typeof(BittrexApi));
+            services.AddSingleton<IHostedService, CryptoHostedService>();
+            services.AddSingleton(typeof(ICryptoApi), typeof(FakeBittrexApi));
             services.AddSingleton(typeof(IBittrexClient), typeof(BittrexClient));
             services.AddMvc();
         }
