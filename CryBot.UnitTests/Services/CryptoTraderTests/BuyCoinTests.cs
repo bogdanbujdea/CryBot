@@ -94,7 +94,8 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
             _cryptoApiMock.Setup(c => c.GetTickerAsync(It.IsAny<string>()))
                 .ReturnsAsync(new CryptoResponse<Ticker>(new Ticker
                 {
-                    Ask = 15
+                    Ask = 15,
+                    Bid = 100
                 }));
             await _cryptoTrader.StartAsync();
             _cryptoApiMock.Raise(c => c.MarketsUpdated += null, _cryptoTrader, new List<Ticker>
@@ -102,19 +103,34 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
                 new Ticker
                 {
                     Market = "BTC-ETC",
-                    Last = 100,
+                    Ask = 100
                 }
             });
             _cryptoTrader.Ticker.Ask.Should().Be(15);
         }
 
         [Fact]
-        public async Task BuyingCoin_Should_AddTNewActiverade()
+        public async Task SecondBuy_ShouldBe_At2pFromBid()
+        {
+            _cryptoTrader.Market = "BTC-XLM";
+            _cryptoTrader.Ticker = new Ticker { Ask = 5 };
+            _cryptoApiMock.Setup(c => c.GetTickerAsync(It.IsAny<string>()))
+                .ReturnsAsync(new CryptoResponse<Ticker>(new Ticker
+                {
+                    Ask = 15,
+                    Bid = 100
+                }));
+            await _cryptoTrader.StartAsync();
+            _cryptoApiMock.Verify(c => c.BuyCoinAsync(It.Is<CryptoOrder>(o => o.PricePerUnit == 98)), Times.Exactly(1));
+        }
+
+        [Fact]
+        public async Task BuyingCoin_Should_AddTNewAInactiveTrades()
         {
             await _cryptoTrader.StartAsync();
             _cryptoTrader.Trades.Count.Should().Be(2);
-            _cryptoTrader.Trades[0].IsActive.Should().BeTrue();
-            _cryptoTrader.Trades[1].IsActive.Should().BeTrue();
+            _cryptoTrader.Trades[0].IsActive.Should().BeFalse();
+            _cryptoTrader.Trades[1].IsActive.Should().BeFalse();
         }
 
         [Fact]
@@ -155,13 +171,16 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
                 Trades = new List<Trade>(),
                 Settings = new TraderSettings
                 {
-                    BuyLowerPercentage = -2
+                    BuyLowerPercentage = -2,
+                    DefaultBudget = 0.0012M
                 }
             };
 
             _cryptoApiMock.Setup(c => c.GetTickerAsync(It.IsAny<string>()))
                 .ReturnsAsync(new CryptoResponse<Ticker>(new Ticker
                 {
+                    Ask = 100,
+                    Bid = 100,
                     Last = 100
                 }));
         }

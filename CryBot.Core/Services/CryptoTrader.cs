@@ -1,6 +1,7 @@
-﻿using System;
-using CryBot.Core.Models;
+﻿using CryBot.Core.Models;
 using CryBot.Core.Utilities;
+
+using System;
 
 using System.Linq;
 using System.Threading.Tasks;
