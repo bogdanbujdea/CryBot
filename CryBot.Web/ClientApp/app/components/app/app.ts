@@ -27,6 +27,13 @@ export class App {
             moduleId: PLATFORM.moduleName('../orders/orders'),
             nav: true,
             title: 'Orders'
+        }, {
+            route: 'traders',
+            name: 'traders',
+            settings: { icon: 'th-list' },
+            moduleId: PLATFORM.moduleName('../traders/traders'),
+            nav: true,
+            title: 'Traders'
         }]);
 
         this.router = router;

@@ -1,8 +1,6 @@
 ﻿using Bittrex.Net.Interfaces;
 
 using CryBot.Core.Models;
-using CryBot.Core.Utilities;
-
 using System;
 using System.Threading.Tasks;
 

@@ -22,6 +22,7 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
         private CryptoOrder _updatedOrder;
         private Mock<IClusterClient> _clusterClientMock;
         private Mock<ITraderGrain> _traderGrainMock;
+        private Mock<IHubNotifier> _hubNotifier;
 
         public BuyCoinTests()
         {
@@ -180,7 +181,8 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
         private void CreateDefaultSetups()
         {
             _clusterClientMock = new Mock<IClusterClient>();
-            _cryptoTrader = new CryptoTrader(_cryptoApiMock.Object, _clusterClientMock.Object)
+            _hubNotifier = new Mock<IHubNotifier>();
+            _cryptoTrader = new CryptoTrader(_cryptoApiMock.Object, _clusterClientMock.Object, _hubNotifier.Object)
             {
                 
             };

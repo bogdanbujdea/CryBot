@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="ClientApp\app\components\traders\traders.ts" />
     <None Remove="ClientApp\app\converters\currency-format.ts" />
     <None Remove="ClientApp\app\converters\date-format.ts" />
     <None Remove="ClientApp\app\converters\order-format.ts" />
@@ -29,6 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <TypeScriptCompile Include="ClientApp\app\components\traders\traders.ts" />
     <TypeScriptCompile Include="ClientApp\app\converters\order-format.ts" />
     <TypeScriptCompile Include="ClientApp\app\converters\date-format.ts" />
     <TypeScriptCompile Include="ClientApp\app\converters\currency-format.ts" />

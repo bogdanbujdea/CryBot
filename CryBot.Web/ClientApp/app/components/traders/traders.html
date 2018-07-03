@@ -1,0 +1,24 @@
+﻿    <template>
+    <h1>Chat</h1>
+
+    <p>Price log.</p>
+
+    <form>
+        <div class="form-row">
+            <div class="col">
+                <input type="text" class="form-control" placeholder="Your name..." value.two-way="currentMessage.SenderName">
+            </div>
+            <div class="col-7">
+                <input type="text" class="form-control" placeholder="Your message..." value.two-way="currentMessage.Text">
+            </div>
+            <div class="col">
+                <button type="submit" class="btn btn-primary" click.delegate="sendMessage()">Send</button>
+            </div>
+        </div>
+    </form>
+    <p>
+        <ul>
+            <li repeat.for="ticker of tickerLog"><strong>${ticker.market}:</strong> ${ticker.last}</li>
+        </ul>
+    </p>
+</template>

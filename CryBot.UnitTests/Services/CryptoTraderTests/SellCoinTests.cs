@@ -26,12 +26,14 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
         private string _defaultMarket = "BTC-XLM";
         private Mock<IClusterClient> _clusterClientMock;
         private Mock<ITraderGrain> _traderGrainMock;
+        private Mock<IHubNotifier> _hubNotifier;
 
         public SellCoinTests()
         {
             _cryptoApiMock = new Mock<ICryptoApi>();
             _clusterClientMock = new Mock<IClusterClient>();
-            _cryptoTrader = new CryptoTrader(_cryptoApiMock.Object, _clusterClientMock.Object);
+            _hubNotifier = new Mock<IHubNotifier>();
+            _cryptoTrader = new CryptoTrader(_cryptoApiMock.Object, _clusterClientMock.Object, _hubNotifier.Object);
             _cryptoApiMock.Setup(c => c.BuyCoinAsync(It.IsAny<CryptoOrder>())).ReturnsAsync(new CryptoResponse<CryptoOrder>("hello"));
             _updatedOrder = new CryptoOrder();
             _cryptoApiMock.Setup(c => c.SellCoinAsync(It.IsAny<CryptoOrder>())).ReturnsAsync(new CryptoResponse<CryptoOrder>(_updatedOrder));

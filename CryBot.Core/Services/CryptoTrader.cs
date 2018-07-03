@@ -1,7 +1,6 @@
 ﻿using CryBot.Contracts;
 using CryBot.Core.Models;
 using CryBot.Core.Utilities;
-
 using Orleans;
 
 using System;
@@ -16,12 +15,15 @@ namespace CryBot.Core.Services
     {
         private readonly ICryptoApi _cryptoApi;
         private readonly IClusterClient _orleansClient;
+        private readonly IHubNotifier _hubNotifier;
         private ITraderGrain _traderGrain;
 
-        public CryptoTrader(ICryptoApi cryptoApi, IClusterClient orleansClient)
+        public CryptoTrader(ICryptoApi cryptoApi, IClusterClient orleansClient, IHubNotifier hubNotifier)
         {
             _cryptoApi = cryptoApi;
             _orleansClient = orleansClient;
+            _hubNotifier = hubNotifier;
+            _hubNotifier = hubNotifier;
             Trades = new List<ITrade>();
         }
 
@@ -105,6 +107,7 @@ namespace CryBot.Core.Services
             var currentMarket = e.FirstOrDefault(m => m.Market == Market);
             if (currentMarket == null)
                 return;
+            await _hubNotifier.SendTicker(currentMarket);
             await _traderGrain.UpdatePriceAsync(currentMarket);
             Ticker = currentMarket;
             await UpdateTrades();
