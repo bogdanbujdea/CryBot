@@ -1,12 +1,14 @@
-﻿namespace CryBot.Core.Models
+﻿using CryBot.Contracts;
+
+namespace CryBot.Core.Models
 {
-    public class Trade
+    public class Trade: ITrade
     {
         public bool IsActive { get; set; }
 
-        public CryptoOrder BuyOrder { get; set; } = new CryptoOrder();
-
-        public CryptoOrder SellOrder { get; set; } = new CryptoOrder();
+        public ICryptoOrder BuyOrder { get; set; } = new CryptoOrder();
+               
+        public ICryptoOrder SellOrder { get; set; } = new CryptoOrder();
 
         public decimal MaxPricePerUnit { get; set; }
     }

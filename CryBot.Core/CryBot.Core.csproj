@@ -1,11 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Bittrex.Net" Version="2.1.9" />
+    <PackageReference Include="Microsoft.Orleans.Core.Abstractions" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Orleans.OrleansCodeGenerator.Build" Version="*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CryBot.Contracts\CryBot.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Orleans.Core">
+      <HintPath>..\..\..\..\..\.nuget\packages\microsoft.orleans.core\2.0.3\lib\netstandard2.0\Orleans.Core.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

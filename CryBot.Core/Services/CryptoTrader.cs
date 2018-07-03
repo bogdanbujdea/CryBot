@@ -1,5 +1,8 @@
-﻿using CryBot.Core.Models;
+﻿using CryBot.Contracts;
+using CryBot.Core.Models;
 using CryBot.Core.Utilities;
+
+using Orleans;
 
 using System;
 
@@ -12,31 +15,45 @@ namespace CryBot.Core.Services
     public class CryptoTrader
     {
         private readonly ICryptoApi _cryptoApi;
+        private readonly IClusterClient _orleansClient;
+        private ITraderGrain _traderGrain;
 
-        public CryptoTrader(ICryptoApi cryptoApi)
+        public CryptoTrader(ICryptoApi cryptoApi, IClusterClient orleansClient)
         {
             _cryptoApi = cryptoApi;
-            Trades = new List<Trade>();
+            _orleansClient = orleansClient;
+            Trades = new List<ITrade>();
         }
 
-        public string Market { get; set; }
+        public string Market { get; private set; }
 
-        public List<Trade> Trades { get; set; }
+        public Ticker Ticker { get; private set; }
 
-        public Ticker Ticker { get; set; }
+        public List<ITrade> Trades { get; private set; }
 
-        public TraderSettings Settings { get; set; }
+        public ITraderSettings Settings { get; private set; }
 
-        public async Task StartAsync()
+        public async Task StartAsync(string market)
         {
+            _traderGrain = _orleansClient.GetGrain<ITraderGrain>(market);
+            Market = market;
             _cryptoApi.MarketsUpdated += MarketsUpdated;
             _cryptoApi.OrderUpdated += OrderUpdated;
+            Trades = await _traderGrain.GetActiveTrades();
+            var tickerResponse = await _cryptoApi.GetTickerAsync(Market);
+            await _traderGrain.UpdatePriceAsync(tickerResponse.Content);
+            Ticker = tickerResponse.Content;
+            Settings = await _traderGrain.GetSettings();
             if (Trades.Count > 0)
                 return;
-            var tickerResponse = await _cryptoApi.GetTickerAsync(Market);
-            Ticker = tickerResponse.Content;
             await CreateBuyOrder(tickerResponse.Content.Ask);
             await CreateBuyOrder(tickerResponse.Content.Bid * Settings.BuyLowerPercentage.ToPercentageMultiplier());
+        }
+
+        public async Task UpdatePrice(Ticker ticker)
+        {
+            Ticker = ticker;
+            await _traderGrain.UpdatePriceAsync(ticker);
         }
 
         private async Task CreateBuyOrder(decimal pricePerUnit)
@@ -66,7 +83,7 @@ namespace CryBot.Core.Services
                 var tradeForOrder = Trades.FirstOrDefault(t => t.SellOrder.Uuid == e.Uuid);
                 if (tradeForOrder != null)
                 {
-                    Console.WriteLine($"Closed sell order");
+                    Console.WriteLine("Closed sell order");
                     tradeForOrder.IsActive = false;
                     await CreateBuyOrder(e.PricePerUnit * Settings.BuyLowerPercentage.ToPercentageMultiplier());
                 }
@@ -76,7 +93,7 @@ namespace CryBot.Core.Services
                 var tradeForOrder = Trades.FirstOrDefault(t => t.BuyOrder.Uuid == e.Uuid);
                 if (tradeForOrder != null)
                 {
-                    Console.WriteLine($"Closed buy order");
+                    Console.WriteLine("Closed buy order");
                     tradeForOrder.IsActive = true;
                     tradeForOrder.BuyOrder = e;
                 }
@@ -88,6 +105,7 @@ namespace CryBot.Core.Services
             var currentMarket = e.FirstOrDefault(m => m.Market == Market);
             if (currentMarket == null)
                 return;
+            await _traderGrain.UpdatePriceAsync(currentMarket);
             Ticker = currentMarket;
             await UpdateTrades();
         }
@@ -96,7 +114,6 @@ namespace CryBot.Core.Services
         {
             foreach (var trade in Trades.Where(t => t.IsActive))
             {
-                Ticker.Bid = Ticker.Last;
                 if (trade.MaxPricePerUnit < Ticker.Bid)
                 {
                     Console.WriteLine($"New max for {Market}: {Ticker.Bid}");
@@ -118,9 +135,9 @@ namespace CryBot.Core.Services
             }
         }
 
-        private async Task CreateSellOrder(Trade trade)
+        private async Task CreateSellOrder(ITrade trade)
         {
-            Console.WriteLine($"Creating sell order");
+            Console.WriteLine("Creating sell order");
             var cryptoOrder = new CryptoOrder
             {
                 PricePerUnit = Ticker.Bid,

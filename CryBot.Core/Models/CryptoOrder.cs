@@ -1,11 +1,12 @@
-﻿using System;
+﻿using CryBot.Contracts;
+
+using System;
 
 namespace CryBot.Core.Models
 {
-    public class CryptoOrder
+    public class CryptoOrder: ICryptoOrder
     {
         public string Market { get; set; }
-        
         public CryptoOrderType OrderType { get; set; }
         public decimal Price { get; set; }
         public decimal Quantity { get; set; }
@@ -18,12 +19,5 @@ namespace CryBot.Core.Models
         public decimal QuantityRemaining { get; set; }
         public DateTime Closed { get; set; }
         public bool IsClosed { get; set; }
-    }
-
-    public enum CryptoOrderType
-    {
-        None,
-        LimitBuy,
-        LimitSell
     }
 }

@@ -5,9 +5,13 @@ VisualStudioVersion = 15.0.27703.2026
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryBot.Web", "CryBot.Web\CryBot.Web.csproj", "{403A7CF6-DD3D-4D07-BD35-F13F8EE46F4E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryBot.Core", "CryBot.Core\CryBot.Core.csproj", "{8E394FD3-FF1D-4B2B-8172-AD0EFFAA73DD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryBot.UnitTests", "CryBot.UnitTests\CryBot.UnitTests.csproj", "{099FB0EF-9A97-466A-9C8E-CC31E558E8B6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryBot.UnitTests", "CryBot.UnitTests\CryBot.UnitTests.csproj", "{099FB0EF-9A97-466A-9C8E-CC31E558E8B6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryBot.Silo", "CryBot.Silo\CryBot.Silo.csproj", "{0D15D4AF-1ECE-43A8-A8E9-B5A3ADB8713D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryBot.Core", "CryBot.Core\CryBot.Core.csproj", "{3192EDA1-114A-4CC3-AF4C-3F00A74C11B7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryBot.Contracts", "CryBot.Contracts\CryBot.Contracts.csproj", "{5CA9EA60-3063-49D3-AD28-FF9C9BCE2836}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,14 +23,22 @@ Global
 		{403A7CF6-DD3D-4D07-BD35-F13F8EE46F4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{403A7CF6-DD3D-4D07-BD35-F13F8EE46F4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{403A7CF6-DD3D-4D07-BD35-F13F8EE46F4E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8E394FD3-FF1D-4B2B-8172-AD0EFFAA73DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8E394FD3-FF1D-4B2B-8172-AD0EFFAA73DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8E394FD3-FF1D-4B2B-8172-AD0EFFAA73DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8E394FD3-FF1D-4B2B-8172-AD0EFFAA73DD}.Release|Any CPU.Build.0 = Release|Any CPU
 		{099FB0EF-9A97-466A-9C8E-CC31E558E8B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{099FB0EF-9A97-466A-9C8E-CC31E558E8B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{099FB0EF-9A97-466A-9C8E-CC31E558E8B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{099FB0EF-9A97-466A-9C8E-CC31E558E8B6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D15D4AF-1ECE-43A8-A8E9-B5A3ADB8713D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D15D4AF-1ECE-43A8-A8E9-B5A3ADB8713D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D15D4AF-1ECE-43A8-A8E9-B5A3ADB8713D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D15D4AF-1ECE-43A8-A8E9-B5A3ADB8713D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3192EDA1-114A-4CC3-AF4C-3F00A74C11B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3192EDA1-114A-4CC3-AF4C-3F00A74C11B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3192EDA1-114A-4CC3-AF4C-3F00A74C11B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3192EDA1-114A-4CC3-AF4C-3F00A74C11B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5CA9EA60-3063-49D3-AD28-FF9C9BCE2836}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5CA9EA60-3063-49D3-AD28-FF9C9BCE2836}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5CA9EA60-3063-49D3-AD28-FF9C9BCE2836}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5CA9EA60-3063-49D3-AD28-FF9C9BCE2836}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

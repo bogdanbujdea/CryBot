@@ -1,14 +1,27 @@
 using Bittrex.Net;
 using Bittrex.Net.Interfaces;
+
+using CryBot.Contracts;
 using CryBot.Core.Models;
 using CryBot.Core.Services;
 using CryBot.Web.Infrastructure;
+
+using Microsoft.AspNetCore.Mvc;
+
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.SpaServices.Webpack;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+
+using IHostingEnvironment = Microsoft.Extensions.Hosting.IHostingEnvironment;
+
+using Orleans;
+using Orleans.Configuration;
+
+using System;
+using System.Threading;
 
 namespace CryBot.Web
 {
@@ -29,6 +42,10 @@ namespace CryBot.Web
             services.AddSingleton(typeof(ICryptoApi), typeof(FakeBittrexApi));
             services.AddSingleton(typeof(IBittrexClient), typeof(BittrexClient));
             services.AddMvc();
+            var orleansClient = CreateOrleansClient();
+            services.AddSingleton(orleansClient);
+
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -60,5 +77,35 @@ namespace CryBot.Web
                     defaults: new { controller = "Home", action = "Index" });
             });
         }
+
+        private IClusterClient CreateOrleansClient()
+        {
+            while (true) // keep trying to connect until silo is available
+            {
+                try
+                {
+                    var clientBuilder = new ClientBuilder()
+                        .UseLocalhostClustering()
+                        .Configure<ClusterOptions>(options =>
+                        {
+                            options.ClusterId = "dev";
+                            options.ServiceId = "OrleansService";
+                        })
+                        .ConfigureLogging(logging => logging.AddConsole())
+                        .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(ITraderGrain).Assembly).WithReferences());
+
+                    var client = clientBuilder.Build();
+                    client.Connect().Wait();
+
+                    return client;
+                }
+                catch (Exception)
+                {
+                    Thread.Sleep(3000);
+                    // log a warning or something
+                }
+            }
+        }
+
     }
 }

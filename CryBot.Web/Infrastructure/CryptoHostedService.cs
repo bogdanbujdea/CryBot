@@ -4,6 +4,8 @@ using CryBot.Core.Services;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
+using Orleans;
+
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,14 +16,16 @@ namespace CryBot.Web.Infrastructure
     {
         private readonly IOptions<EnvironmentConfig> _options;
         private readonly ICryptoApi _cryptoApi;
+        private readonly IClusterClient _clusterClient;
 
         private CancellationTokenSource _cancellationTokenSource;
         private Guid _hostedServiceId;
 
-        public CryptoHostedService(IOptions<EnvironmentConfig> options, ICryptoApi cryptoApi)
+        public CryptoHostedService(IOptions<EnvironmentConfig> options, ICryptoApi cryptoApi, IClusterClient clusterClient)
         {
             _options = options;
             _cryptoApi = cryptoApi;
+            _clusterClient = clusterClient;
             _cryptoApi.Initialize(options.Value.BittrexApiKey, options.Value.BittrexApiSecret);
         }
 
@@ -35,19 +39,11 @@ namespace CryBot.Web.Infrastructure
 
         public async Task StartTrading()
         {
-            var cryptoTrader = new CryptoTrader(_cryptoApi)
+            var cryptoTrader = new CryptoTrader(_cryptoApi, _clusterClient)
             {
-                Market = "BTC-ETC",
-                Settings = new TraderSettings
-                {
-                    BuyLowerPercentage = -2,
-                    DefaultBudget = 0.0012M,
-                    MinimumTakeProfit = 0.1M,
-                    HighStopLossPercentage = -5,
-                    StopLoss = -2
-                }
+                
             };
-            await cryptoTrader.StartAsync();
+            await cryptoTrader.StartAsync("BTC-ETC");
             while (true)
             {
                 await Task.Delay(5000);
