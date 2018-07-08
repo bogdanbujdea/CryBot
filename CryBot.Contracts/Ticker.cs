@@ -1,8 +1,6 @@
-﻿using CryBot.Contracts;
-
-namespace CryBot.Core.Models
+﻿namespace CryBot.Contracts
 {
-    public class Ticker: ITicker
+    public class Ticker
     {
         public decimal Last { get; set; }
 

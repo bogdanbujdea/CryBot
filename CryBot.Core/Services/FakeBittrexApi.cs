@@ -1,6 +1,9 @@
 ﻿using Bittrex.Net.Interfaces;
 
+using CryBot.Contracts;
+
 using CryBot.Core.Models;
+
 using System;
 using System.Threading.Tasks;
 
@@ -42,6 +45,7 @@ namespace CryBot.Core.Services
             {
                 await Task.Delay(2000);
                 sellOrder.IsClosed = true;
+                sellOrder.OrderType = CryptoOrderType.LimitSell;
                 OnOrderUpdate(sellOrder);
             });
             return Task.FromResult(new CryptoResponse<CryptoOrder>(sellOrder)); ;

@@ -1,7 +1,7 @@
 ﻿using Bittrex.Net.Objects;
 using Bittrex.Net.Interfaces;
 
-using CryBot.Core.Models;
+using CryBot.Contracts;
 
 using CryptoExchange.Net;
 

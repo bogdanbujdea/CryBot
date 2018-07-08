@@ -1,5 +1,7 @@
 ﻿using Bittrex.Net.Objects;
 
+using CryBot.Contracts;
+
 using CryBot.Core.Models;
 
 using System;

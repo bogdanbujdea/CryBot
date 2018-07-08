@@ -1,6 +1,4 @@
-﻿using CryBot.Core.Models;
-
-using System;
+﻿using System;
 
 namespace CryBot.Contracts
 {

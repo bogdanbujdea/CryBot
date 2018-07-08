@@ -7,12 +7,17 @@ namespace CryBot.Contracts
 {
     public interface ITraderGrain: IGrainWithStringKey
     {
-        Task UpdatePriceAsync(ITicker ticker);
+        Task UpdatePriceAsync(Ticker ticker);
 
-        Task AddTradeAsync(ITrade trade);
+        Task AddTradeAsync(Trade trade);
 
-        Task<List<ITrade>> GetActiveTrades();
+        Task<List<Trade>> GetActiveTrades();
 
-        Task<ITraderSettings> GetSettings();
+        Task<TraderSettings> GetSettings();
+
+        Task<TraderState> GetTraderData();
+
+        Task UpdateTrades(List<Trade> trades);
+        Task SetMarketAsync(string market);
     }
 }

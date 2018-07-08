@@ -63,7 +63,7 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
         [Fact]
         public async Task TraderWithTrades_ShouldNotBuy()
         {
-            _traderGrainMock.Setup(t => t.GetActiveTrades()).ReturnsAsync(new List<ITrade>
+            _traderGrainMock.Setup(t => t.GetActiveTrades()).ReturnsAsync(new List<Trade>
             {
                 new Trade()
             });
@@ -160,7 +160,7 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
                 Uuid = "s2",
                 OrderType = CryptoOrderType.LimitBuy
             };
-            _traderGrainMock.Setup(t => t.GetActiveTrades()).ReturnsAsync(new List<ITrade>
+            _traderGrainMock.Setup(t => t.GetActiveTrades()).ReturnsAsync(new List<Trade>
             {
                 new Trade
                 {
@@ -187,9 +187,9 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
                 
             };
             _traderGrainMock = new Mock<ITraderGrain>();
-            _traderGrainMock.Setup(t => t.UpdatePriceAsync(It.IsAny<ITicker>())).Returns(Task.CompletedTask);
+            _traderGrainMock.Setup(t => t.UpdatePriceAsync(It.IsAny<Ticker>())).Returns(Task.CompletedTask);
             _clusterClientMock.Setup(c => c.GetGrain<ITraderGrain>(It.IsAny<string>(), It.IsAny<string>())).Returns(_traderGrainMock.Object);
-            _traderGrainMock.Setup(t => t.GetActiveTrades()).ReturnsAsync(new List<ITrade>());
+            _traderGrainMock.Setup(t => t.GetActiveTrades()).ReturnsAsync(new List<Trade>());
 
             _traderGrainMock.Setup(t => t.GetSettings()).ReturnsAsync(new TraderSettings
             {

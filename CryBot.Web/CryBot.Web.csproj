@@ -26,6 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CryBot.Contracts\CryBot.Contracts.csproj" />
     <ProjectReference Include="..\CryBot.Core\CryBot.Core.csproj" />
   </ItemGroup>
 

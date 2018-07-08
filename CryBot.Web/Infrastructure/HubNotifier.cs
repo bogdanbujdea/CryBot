@@ -1,5 +1,5 @@
-﻿using CryBot.Contracts;
-using CryBot.Core.Hubs;
+﻿using CryBot.Core.Hubs;
+using CryBot.Contracts;
 using CryBot.Core.Services;
 
 using Microsoft.AspNetCore.SignalR;
@@ -16,9 +16,15 @@ namespace CryBot.Web.Infrastructure
         {
             _hub = hub;
         }
-        public async Task SendTicker(ITicker ticker)
+        
+        public async Task UpdateTrader(TraderState trader)
         {
-            await _hub.Clients.All.SendAsync("priceUpdate", ticker);
+            await _hub.Clients.All.SendAsync("traderUpdate:" + trader.Market, trader);
+        }
+
+        public async Task UpdateTicker(Ticker ticker)
+        {
+            await _hub.Clients.All.SendAsync("priceUpdate:" + ticker.Market, ticker);
         }
     }
 }

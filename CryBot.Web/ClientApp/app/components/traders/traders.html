@@ -1,24 +1,33 @@
-﻿    <template>
-    <h1>Chat</h1>
+﻿<template>
+    <require from="../../converters/date-format"></require>
+    <require from="../../converters/currency-format"></require>
+    <require from="../../converters/order-format"></require>
 
-    <p>Price log.</p>
+    <h3>Trader</h3>
 
-    <form>
-        <div class="form-row">
-            <div class="col">
-                <input type="text" class="form-control" placeholder="Your name..." value.two-way="currentMessage.SenderName">
-            </div>
-            <div class="col-7">
-                <input type="text" class="form-control" placeholder="Your message..." value.two-way="currentMessage.Text">
-            </div>
-            <div class="col">
-                <button type="submit" class="btn btn-primary" click.delegate="sendMessage()">Send</button>
-            </div>
-        </div>
-    </form>
+    <p if.bind="!trader"><em>Loading trader...</em></p>
+
+    <table if.bind="trader.trades" class="table">
+        <thead>
+            <tr>
+                <th>Market</th>
+                <th>Active</th>
+                <th>Max Price</th>
+                <th>Profit%</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr repeat.for="trade of trader.trades">
+                <td>${ trade.market }</td>
+                <td>${ trade.isActive }</td>
+                <td>${ trade.maxPricePerUnit }</td>
+                <td>${ trade.profit }</td>
+            </tr>
+        </tbody>
+    </table>
     <p>
         <ul>
-            <li repeat.for="ticker of tickerLog"><strong>${ticker.market}:</strong> ${ticker.last}</li>
+            <li repeat.for="ticker of tickerLog"><strong>${ticker.market}:</strong> ${ticker.bid} - ${ ticker.timestamp | dateFormat }</li>
         </ul>
     </p>
 </template>

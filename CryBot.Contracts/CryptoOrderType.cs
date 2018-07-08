@@ -1,4 +1,4 @@
-﻿namespace CryBot.Core.Models
+﻿namespace CryBot.Contracts
 {
     public enum CryptoOrderType
     {

@@ -1,6 +1,4 @@
-﻿using CryBot.Contracts;
-
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 
 using System;
 using System.Threading.Tasks;
@@ -13,12 +11,6 @@ namespace CryBot.Core.Hubs
         {
             Console.WriteLine($"Client connected");
             return base.OnConnectedAsync();
-        }
-
-        public async Task Send(ITicker ticker)
-        {
-            if (Clients != null) 
-                await Clients.All.SendAsync("priceUpdate", ticker);
         }
     }    
 }

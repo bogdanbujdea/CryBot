@@ -1,7 +1,5 @@
 using Bittrex.Net;
 using Bittrex.Net.Interfaces;
-
-using CryBot.Contracts;
 using CryBot.Core.Hubs;
 using CryBot.Core.Models;
 using CryBot.Core.Services;
@@ -99,7 +97,7 @@ namespace CryBot.Web
                             options.ServiceId = "OrleansService";
                         })
                         .ConfigureLogging(logging => logging.AddConsole())
-                        .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(ITraderGrain).Assembly).WithReferences());
+                        .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(TraderGrain).Assembly).WithReferences());
 
                     var client = clientBuilder.Build();
                     client.Connect().Wait();
