@@ -1,6 +1,6 @@
 ﻿using Bittrex.Net.Objects;
 
-using CryBot.Core.Models;
+using CryBot.Contracts;
 using CryBot.Core.Utilities;
 
 using FluentAssertions;

@@ -1,7 +1,6 @@
 using Bittrex.Net;
 using Bittrex.Net.Interfaces;
-
-using CryBot.Contracts;
+using CryBot.Core.Hubs;
 using CryBot.Core.Models;
 using CryBot.Core.Services;
 using CryBot.Web.Infrastructure;
@@ -41,10 +40,13 @@ namespace CryBot.Web
             services.AddSingleton<IHostedService, CryptoHostedService>();
             services.AddSingleton(typeof(ICryptoApi), typeof(FakeBittrexApi));
             services.AddSingleton(typeof(IBittrexClient), typeof(BittrexClient));
-            services.AddMvc();
+            //services.AddSingleton(typeof(IHubNotifier), typeof(ApplicationHub));
+
             var orleansClient = CreateOrleansClient();
             services.AddSingleton(orleansClient);
-
+            
+            services.AddMvc();
+            services.AddSignalR();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
@@ -65,7 +67,10 @@ namespace CryBot.Web
             }
 
             app.UseStaticFiles();
-
+            app.UseSignalR(routes => 
+            {
+                routes.MapHub<ApplicationHub>("/app");
+            });
             app.UseMvc(routes =>
             {
                 routes.MapRoute(
@@ -92,7 +97,7 @@ namespace CryBot.Web
                             options.ServiceId = "OrleansService";
                         })
                         .ConfigureLogging(logging => logging.AddConsole())
-                        .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(ITraderGrain).Assembly).WithReferences());
+                        .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(TraderGrain).Assembly).WithReferences());
 
                     var client = clientBuilder.Build();
                     client.Connect().Wait();

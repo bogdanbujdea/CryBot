@@ -24,10 +24,14 @@
     "moment": "^2.22.2",
     "numeral": "^2.0.6",
     "style-loader": "^0.16.1",
-    "ts-loader": "^2.0.3",
-    "typescript": "^2.2.2",
+    "ts-loader": "2.3.7",
+    "typescript": "^2.0.6",
     "url-loader": "^0.5.8",
-    "webpack": "^2.3.3",
-    "webpack-hot-middleware": "^2.18.0"
+    "webpack": "3.12.0",
+    "webpack-hot-middleware": "^2.22.2"
+  },
+  "dependencies": {
+    "@aspnet/signalr": "1.0.0",
+    "tslib": "^1.9.3"
   }
 }

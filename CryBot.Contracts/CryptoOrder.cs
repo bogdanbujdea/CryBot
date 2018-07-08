@@ -1,8 +1,6 @@
-﻿using CryBot.Contracts;
+﻿using System;
 
-using System;
-
-namespace CryBot.Core.Models
+namespace CryBot.Contracts
 {
     public class CryptoOrder: ICryptoOrder
     {

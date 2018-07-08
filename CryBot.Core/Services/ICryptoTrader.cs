@@ -1,4 +1,4 @@
-﻿using CryBot.Core.Models;
+﻿using CryBot.Contracts;
 
 using System.Threading.Tasks;
 using System.Collections.Generic;

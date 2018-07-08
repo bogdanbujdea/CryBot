@@ -2,6 +2,8 @@
 using Bittrex.Net.Objects;
 using Bittrex.Net.Interfaces;
 
+using CryBot.Contracts;
+
 using CryBot.Core.Models;
 using CryBot.Core.Utilities;
 

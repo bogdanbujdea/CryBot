@@ -13,7 +13,7 @@ module.exports = ({ prod } = {}) => {
                 extensions: ['.js']
             },
             module: {
-                loaders: [
+                rules: [
                     { test: /\.(png|woff|woff2|eot|ttf|svg)(\?|$)/, loader: 'url-loader?limit=100000' },
                     {
                         test: /\.css(\?|$)/,
@@ -37,8 +37,9 @@ module.exports = ({ prod } = {}) => {
                     'aurelia-templating-router',
                     'bootstrap',
                     'bootstrap/dist/css/bootstrap.css',
-                    'jquery'
-                ],
+                    'jquery',
+                    '@aspnet/signalr'
+                ]
             },
             output: {
                 path: path.join(__dirname, 'wwwroot', 'dist'),

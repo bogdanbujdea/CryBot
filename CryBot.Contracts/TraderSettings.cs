@@ -1,8 +1,6 @@
-﻿using CryBot.Contracts;
-
-namespace CryBot.Core.Services
+﻿namespace CryBot.Contracts
 {
-    public class TraderSettings: ITraderSettings
+    public class TraderSettings
     {
         public decimal HighStopLossPercentage { get; set; }
 
@@ -14,7 +12,7 @@ namespace CryBot.Core.Services
         
         public decimal DefaultBudget { get; set; }
         
-        public static ITraderSettings Default { get; } = new TraderSettings
+        public static TraderSettings Default { get; } = new TraderSettings
         {
             BuyLowerPercentage = -2,
             DefaultBudget = 0.0012M,
