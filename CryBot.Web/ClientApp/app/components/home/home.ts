@@ -1,7 +1,7 @@
 import { HttpClient } from 'aurelia-fetch-client';
 import { inject } from 'aurelia-framework';
-import {IWalletResponse} from "../../models/IWalletResponse";
-import {IWallet} from "../../models/IWallet";
+import {IWallet} from "../../models/api/IWallet";
+import {IWalletResponse} from "../../models/api/IWalletResponse";
 
 @inject(HttpClient)
 export class Home {

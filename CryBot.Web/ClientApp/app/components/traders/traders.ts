@@ -1,10 +1,13 @@
 ﻿import * as signalR from '@aspnet/signalr';
 import { HttpClient } from 'aurelia-fetch-client';
 import { inject } from 'aurelia-framework';
+import { ITrader } from "../../models/api/ITrader";
+import { ITraderResponse } from "../../models/api/ITraderResponse";
+import { Ticker } from '../../models/api/Ticker';
 
 @inject(HttpClient)
 export class Trader {
-    trader: Trader;
+    trader: ITrader;
     market: string = "BTC-ETC";
     private connectionPromise?: Promise<void>;
     private chatHubConnection: signalR.HubConnection;
@@ -15,7 +18,7 @@ export class Trader {
     constructor(http: HttpClient) {
         this.chatHubConnection = new signalR.HubConnectionBuilder().withUrl("/app").build();
         
-        this.chatHubConnection.on('traderUpdate:' + this.market, (trader: Trader) => {
+        this.chatHubConnection.on('traderUpdate:' + this.market, (trader: ITrader) => {
             this.trader = trader;
         });
         this.chatHubConnection.on('priceUpdate:' + this.market, (newTicker: Ticker) => {
@@ -23,7 +26,7 @@ export class Trader {
             this.tickerLog.unshift(newTicker);            
         });
         http.fetch('api/traders?market=' + this.market)
-            .then(result => result.json() as Promise<TraderResponse>)
+            .then(result => result.json() as Promise<ITraderResponse>)
             .then(data => {
                 if (data.isSuccessful)
                     this.trader = data.trader;
@@ -47,52 +50,4 @@ export class Trader {
         //this.chatHubConnection.invoke('sendMessage', this.currentTicker);
         //this.currentTicker.text = '';
     }
-}
-
-export interface TraderResponse {
-    errorMessage: string;
-    isSuccessful: boolean;
-    trader: Trader;
-}
-
-export class Ticker {
-    market: string = "";
-    last: number = 0;
-    ask: number = 0;
-    bid: number = 0;
-}
-
-export class CryptoOrder {
-    market: string;
-    orderType: CryptoOrderType;
-    price: number;
-    quantity: number;
-    pricePerUnit: number;
-    commissionPaid: number;
-    canceled: boolean;
-    uuid: string;
-    opened: Date;
-    limit: number;
-    quantityRemaining: number;
-    closed: Date;
-    isClosed: boolean;
-}
-
-export enum CryptoOrderType {
-    None,
-    LimitBuy,
-    LimitSell
-}
-
-export class Trade {
-    isActive: boolean;
-    buyOrder: CryptoOrder;
-    sellOrder: CryptoOrder;
-    maxPricePerUnit: number;
-    profit: number;
-}
-
-export interface Trader {
-    ticker: Ticker;
-    trades: Trade[];
 }

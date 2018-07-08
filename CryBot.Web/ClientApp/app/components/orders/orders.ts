@@ -1,7 +1,7 @@
 import { HttpClient } from 'aurelia-fetch-client';
 import { inject } from 'aurelia-framework';
-import {IOrderResponse} from "../../models/IOrderResponse";
-import {IOrder} from "../../models/IOrder";
+import {IOrderResponse} from "../../models/api/IOrderResponse";
+import {IOrder} from "../../models/api/IOrder";
 
 @inject(HttpClient)
 export class FetchOrders {
