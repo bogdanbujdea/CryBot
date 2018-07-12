@@ -1,5 +1,6 @@
 using CryBot.Contracts;
 using CryBot.Core.Models;
+using CryBot.Core.Services;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -14,18 +15,38 @@ namespace CryBot.Web.Controllers
     public class TradersController : Controller
     {
         private readonly IClusterClient _clusterClient;
+        private readonly ITradersManager _tradersManager;
 
-        public TradersController(IOptions<EnvironmentConfig> options, IClusterClient clusterClient)
+        public TradersController(IOptions<EnvironmentConfig> options, IClusterClient clusterClient, ICryptoApi cryptoApi, ITradersManager tradersManager)
         {
             _clusterClient = clusterClient;
+            _tradersManager = tradersManager;
         }
 
-        [HttpGet]
         public async Task<IActionResult> GetTrader([FromQuery] string market)
         {
             var trader = _clusterClient.GetGrain<ITraderGrain>(market);
             var traderResponse = new CryptoResponse<TraderState>(await trader.GetTraderData());
             return Ok(new { trader = traderResponse.Content, isSuccessful = true });
+        }
+
+        [HttpGet("create")]
+        public async Task<IActionResult> CreateTrader([FromQuery] string market)
+        {
+            await _tradersManager.CreateTraderAsync(market);
+            return Ok();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetTraders([FromQuery] string market)
+        {
+            if (string.IsNullOrWhiteSpace(market))
+            {
+                var traders = await _tradersManager.GetAllTraders();
+                return Ok(new { traders, isSuccessful = true });
+            }
+
+            return await GetTrader(market);
         }
     }
 }

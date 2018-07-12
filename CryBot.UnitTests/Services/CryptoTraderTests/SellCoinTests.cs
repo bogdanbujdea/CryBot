@@ -75,8 +75,8 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
         public async Task MinimumHighLoss_Should_SellCoin()
         {
             await _cryptoTrader.StartAsync(_defaultMarket);
-            RaiseMarketUpdate(110);
-            RaiseMarketUpdate(107);
+            await RaiseMarketUpdate(110);
+            await RaiseMarketUpdate(107);
             _cryptoApiMock.Verify(c => c.SellCoinAsync(It.IsAny<CryptoOrder>()), Times.Once);
         }
 
@@ -84,7 +84,7 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
         public async Task StopLossTriggered_Should_SellCoin()
         {
             await _cryptoTrader.StartAsync(_defaultMarket);
-            RaiseMarketUpdate(98);
+            await RaiseMarketUpdate(98);
             _cryptoApiMock.Verify(c => c.SellCoinAsync(It.Is<CryptoOrder>(o => o.PricePerUnit == 98)), Times.Once);
         }
 
@@ -94,7 +94,7 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
             await _cryptoTrader.StartAsync(_defaultMarket);
             _currentTrade.BuyOrder.Quantity = 100;
             _currentTrade.BuyOrder.Market = _cryptoTrader.Market;
-            RaiseMarketUpdate(98);
+            await RaiseMarketUpdate(98);
             _cryptoApiMock.Verify(c => c.SellCoinAsync(It.Is<CryptoOrder>(o => o.PricePerUnit == 98 &&
                                                                                o.Quantity == _currentTrade.BuyOrder.Quantity &&
                                                                                o.Price == 98 * _currentTrade.BuyOrder.Quantity &&
@@ -112,7 +112,7 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
             });
             await _cryptoTrader.StartAsync(_defaultMarket);
 
-            RaiseMarketUpdate(100);
+            await RaiseMarketUpdate(100);
             _cryptoTrader.Trades[0].MaxPricePerUnit.Should().Be(100);
             _cryptoTrader.Trades[1].MaxPricePerUnit.Should().Be(100);
             _cryptoTrader.Trades[2].MaxPricePerUnit.Should().Be(10);
@@ -125,7 +125,7 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
             _currentTrade.BuyOrder.Quantity = 100;
             _currentTrade.BuyOrder.Market = _cryptoTrader.Market;
             _updatedOrder.Uuid = "test";
-            RaiseMarketUpdate(98);
+            await RaiseMarketUpdate(98);
             _currentTrade.SellOrder.Should().NotBeNull();
             _currentTrade.SellOrder.Uuid.Should().Be("test");
         }
@@ -154,7 +154,7 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
             _updatedOrder.PricePerUnit = 98;
             await _cryptoTrader.StartAsync(_defaultMarket);
             _cryptoTrader.Settings.BuyLowerPercentage = -2;
-            RaiseMarketUpdate(98);
+            await RaiseMarketUpdate(98);
             RaiseClosedOrder("s2");
             _cryptoApiMock.Verify(c => c.BuyCoinAsync(It.Is<CryptoOrder>(order => order.PricePerUnit == 98 * _cryptoTrader.Settings.BuyLowerPercentage.ToPercentageMultiplier())), Times.Once);
         }
@@ -167,7 +167,7 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
             _cryptoApiMock.Raise(c => c.OrderUpdated += null, _cryptoTrader, _updatedOrder);
         }
 
-        private void RaiseMarketUpdate(decimal last)
+        private async Task RaiseMarketUpdate(decimal last)
         {
             _ticker = new Ticker
             {
@@ -181,6 +181,7 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
             {
                 _ticker
             });
+            await _cryptoTrader.ProcessMarketUpdates();
         }
     }
 }

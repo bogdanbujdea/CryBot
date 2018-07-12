@@ -1,0 +1,33 @@
+﻿<template>
+    <require from="../../converters/date-format"></require>
+    <require from="../../converters/currency-format"></require>
+    <require from="../../converters/order-format"></require>
+
+    <h3 style="display: inline;">${ traderData.market }</h3> - <h4 style="display: inline;">${ traderData.currentTicker.bid } BTC</h4>
+
+    <p if.bind="!traderData"><em>Loading trader...</em></p>
+    
+   <table if.bind="traderData.trades" class="table">
+        <thead>
+            <tr>
+                <th>Market</th>
+                <th>Active</th>
+                <th>Max Price</th>
+                <th>Profit%</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr repeat.for="trade of traderData.trades">
+                <td>${ trade.market }</td>
+                <td>${ trade.isActive }</td>
+                <td>${ trade.maxPricePerUnit }</td>
+                <td>${ trade.profit }</td>
+            </tr>
+        </tbody>
+    </table>
+    <!--<p>
+        <ul>
+            <li repeat.for="ticker of tickerLog"><strong>${ticker.market}:</strong> ${ticker.bid} - ${ ticker.timestamp | dateFormat }</li>
+        </ul>
+    </p>-->
+</template>

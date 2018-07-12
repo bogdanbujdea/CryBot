@@ -1,12 +1,11 @@
-﻿using CryBot.Core.Hubs;
-using CryBot.Contracts;
+﻿using CryBot.Contracts;
 using CryBot.Core.Services;
 
 using Microsoft.AspNetCore.SignalR;
 
 using System.Threading.Tasks;
 
-namespace CryBot.Web.Infrastructure
+namespace CryBot.Core.Hubs
 {
     public class HubNotifier: IHubNotifier
     {

@@ -2,6 +2,7 @@
 import { Ticker } from "./Ticker";
 
 export interface ITrader {
-    ticker: Ticker;
+    currentTicker: Ticker;
     trades: ITrade[];
+    market: string;
 }

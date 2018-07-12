@@ -1,10 +1,16 @@
 ﻿using CryBot.Contracts;
 using CryBot.Core.Utilities;
+
 using Orleans;
 
 using System;
 
 using System.Linq;
+using System.Timers;
+using System.Threading;
+
+using Timer = System.Timers.Timer;
+
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
@@ -16,6 +22,8 @@ namespace CryBot.Core.Services
         private readonly IClusterClient _orleansClient;
         private readonly IHubNotifier _hubNotifier;
         private ITraderGrain _traderGrain;
+        private Queue<Ticker> _queue = new Queue<Ticker>();
+        private Timer _marketUpdatesTimer;
 
         public CryptoTrader(ICryptoApi cryptoApi, IClusterClient orleansClient, IHubNotifier hubNotifier)
         {
@@ -36,26 +44,65 @@ namespace CryBot.Core.Services
 
         public async Task StartAsync(string market)
         {
+            Console.WriteLine($"Starting market {market}");
             _traderGrain = _orleansClient.GetGrain<ITraderGrain>(market);
             Market = market;
             await _traderGrain.SetMarketAsync(market);
-            _cryptoApi.MarketsUpdated += MarketsUpdated;
-            _cryptoApi.OrderUpdated += OrderUpdated;
             Trades = await _traderGrain.GetActiveTrades();
             var tickerResponse = await _cryptoApi.GetTickerAsync(Market);
             await _traderGrain.UpdatePriceAsync(tickerResponse.Content);
             Ticker = tickerResponse.Content;
             Settings = await _traderGrain.GetSettings();
+            _cryptoApi.MarketsUpdated += MarketsUpdated;
+            _cryptoApi.OrderUpdated += OrderUpdated;
+            _marketUpdatesTimer = new Timer
+            {
+                Interval = 500,
+                Enabled = true
+            };
+            _marketUpdatesTimer.Elapsed += ProcessQueue;
+            _marketUpdatesTimer.Start();
             if (Trades.Count > 0)
+            {
                 return;
+            }
+
             await CreateBuyOrder(tickerResponse.Content.Ask);
-            await CreateBuyOrder(tickerResponse.Content.Bid * Settings.BuyLowerPercentage.ToPercentageMultiplier());
+            //await CreateBuyOrder(tickerResponse.Content.Bid * Settings.BuyLowerPercentage.ToPercentageMultiplier());
         }
 
         public async Task UpdatePrice(Ticker ticker)
         {
             Ticker = ticker;
             await _traderGrain.UpdatePriceAsync(ticker);
+        }
+
+        public async Task ProcessMarketUpdates()
+        {
+            _marketUpdatesTimer.Enabled = false;
+            _marketUpdatesTimer.Stop();
+            while (_queue.Count > 0)
+            {
+                await ProcessMarketUpdate(_queue.Dequeue());
+            }
+        }
+
+        private async void ProcessQueue(object state, ElapsedEventArgs elapsedEventArgs)
+        {
+            if(_queue.Count <= 0)
+                return;
+            var currentMarket = _queue.Dequeue();
+            await ProcessMarketUpdate(currentMarket);
+        }
+
+        private async Task ProcessMarketUpdate(Ticker currentMarket)
+        {
+            await _hubNotifier.UpdateTicker(currentMarket);
+            await _traderGrain.UpdatePriceAsync(currentMarket);
+            Ticker = currentMarket;
+            await UpdateTrades();
+            var traderData = await _traderGrain.GetTraderData();
+            await _hubNotifier.UpdateTrader(traderData);
         }
 
         private async Task CreateBuyOrder(decimal pricePerUnit)
@@ -67,7 +114,7 @@ namespace CryBot.Core.Services
                 Price = Settings.DefaultBudget,
                 Quantity = Settings.DefaultBudget / pricePerUnit,
                 Market = Market,
-                OrderType = CryptoOrderType.LimitBuy               
+                OrderType = CryptoOrderType.LimitBuy
             });
             Console.WriteLine($"Created buy order with price {pricePerUnit}");
             trade.BuyOrder = buyResponse.Content;
@@ -108,18 +155,15 @@ namespace CryBot.Core.Services
             await _hubNotifier.UpdateTrader(traderData);
         }
 
-        private async void MarketsUpdated(object sender, List<Ticker> e)
+        private void MarketsUpdated(object sender, List<Ticker> e)
         {
             var currentMarket = e.FirstOrDefault(m => m.Market == Market);
             if (currentMarket == null)
                 return;
-            Console.WriteLine($"{Market}: {currentMarket.Bid}");
-            await _hubNotifier.UpdateTicker(currentMarket);
-            await _traderGrain.UpdatePriceAsync(currentMarket);
-            Ticker = currentMarket;
-            await UpdateTrades();
-            var traderData = await _traderGrain.GetTraderData();
-            await _hubNotifier.UpdateTrader(traderData);
+            if (_queue.Count > 0)
+                if (_queue.Peek().Bid == currentMarket.Bid)
+                    return;
+            _queue.Enqueue(currentMarket);
         }
 
         private async Task UpdateTrades()

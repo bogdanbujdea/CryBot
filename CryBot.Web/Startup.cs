@@ -40,7 +40,8 @@ namespace CryBot.Web
             services.AddSingleton<IHostedService, CryptoHostedService>();
             services.AddSingleton(typeof(ICryptoApi), typeof(FakeBittrexApi));
             services.AddSingleton(typeof(IBittrexClient), typeof(BittrexClient));
-            //services.AddSingleton(typeof(IHubNotifier), typeof(ApplicationHub));
+            services.AddSingleton(typeof(ITradersManager), typeof(TradersManager));
+            services.AddSingleton(typeof(IHubNotifier), typeof(HubNotifier));
 
             var orleansClient = CreateOrleansClient();
             services.AddSingleton(orleansClient);

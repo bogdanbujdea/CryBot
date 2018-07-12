@@ -5,9 +5,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Bittrex.Net" Version="2.1.9" />
+    <PackageReference Include="Bittrex.Net" Version="2.1.10" />
     <PackageReference Include="Microsoft.Orleans.Core.Abstractions" Version="2.0.0" />
-    <PackageReference Include="Microsoft.Orleans.OrleansCodeGenerator.Build" Version="*" />
+    <PackageReference Include="Microsoft.Orleans.OrleansCodeGenerator.Build" Version="2.0.3" />
   </ItemGroup>
 
   <ItemGroup>

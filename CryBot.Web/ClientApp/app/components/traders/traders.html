@@ -2,32 +2,14 @@
     <require from="../../converters/date-format"></require>
     <require from="../../converters/currency-format"></require>
     <require from="../../converters/order-format"></require>
+    <require from="../trader/trader"></require>
 
-    <h3>Trader</h3>
+    <h3>Traders</h3>
 
-    <p if.bind="!trader"><em>Loading trader...</em></p>
+    <p if.bind="!traders"><em>Loading traders...</em></p>
 
-    <table if.bind="trader.trades" class="table">
-        <thead>
-            <tr>
-                <th>Market</th>
-                <th>Active</th>
-                <th>Max Price</th>
-                <th>Profit%</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr repeat.for="trade of trader.trades">
-                <td>${ trade.market }</td>
-                <td>${ trade.isActive }</td>
-                <td>${ trade.maxPricePerUnit }</td>
-                <td>${ trade.profit }</td>
-            </tr>
-        </tbody>
-    </table>
-    <p>
-        <ul>
-            <li repeat.for="ticker of tickerLog"><strong>${ticker.market}:</strong> ${ticker.bid} - ${ ticker.timestamp | dateFormat }</li>
-        </ul>
-    </p>
+    <div repeat.for="trader of traders">
+        <compose model.bind="trader" view-model="../trader/trader"></compose>
+    </div>
+
 </template>

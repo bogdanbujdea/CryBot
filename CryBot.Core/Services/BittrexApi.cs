@@ -115,6 +115,15 @@ namespace CryBot.Core.Services
             throw new NotImplementedException();
         }
 
+        public async Task<CryptoResponse<List<Market>>> GetMarketsAsync()
+        {
+            var marketsCallResult = await _bittrexClient.GetMarketsAsync();
+            return new CryptoResponse<List<Market>>(marketsCallResult.Data.Select(m => new Market
+            {
+                Name = m.MarketName
+            }).ToList());
+        }
+
         protected void OnMarketsUpdate(List<BittrexStreamMarketSummary> markets)
         {
             MarketsUpdated?.Invoke(this, markets.Select(m => new Ticker

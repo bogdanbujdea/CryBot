@@ -9,8 +9,10 @@ using Microsoft.AspNetCore.SignalR;
 using Orleans;
 
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace CryBot.Web.Infrastructure
 {
@@ -20,17 +22,19 @@ namespace CryBot.Web.Infrastructure
         private readonly ICryptoApi _cryptoApi;
         private readonly IClusterClient _clusterClient;
         private readonly IHubContext<ApplicationHub> _hubContext;
+        private readonly ITradersManager _tradersManager;
 
         private CancellationTokenSource _cancellationTokenSource;
         private Guid _hostedServiceId;
         private HubNotifier _hubNotifier;
 
-        public CryptoHostedService(IOptions<EnvironmentConfig> options, ICryptoApi cryptoApi, IClusterClient clusterClient, IHubContext<ApplicationHub> hubContext)
+        public CryptoHostedService(IOptions<EnvironmentConfig> options, ICryptoApi cryptoApi, IClusterClient clusterClient, IHubContext<ApplicationHub> hubContext, ITradersManager tradersManager)
         {
             _options = options;
             _cryptoApi = cryptoApi;
             _clusterClient = clusterClient;
             _hubContext = hubContext;
+            _tradersManager = tradersManager;
             _hubNotifier = new HubNotifier(_hubContext);
             _cryptoApi.Initialize(options.Value.BittrexApiKey, options.Value.BittrexApiSecret);
         }
@@ -45,25 +49,24 @@ namespace CryBot.Web.Infrastructure
 
         public async Task StartTrading()
         {
-            var cryptoTrader = new CryptoTrader(_cryptoApi, _clusterClient, _hubNotifier)
+            var traderStates = await _tradersManager.GetAllTraders();
+            foreach (var market in traderStates.Select(t => t.Market))
             {
-                
-            };
-            await cryptoTrader.StartAsync("BTC-ETC");
-            while (true)
-            {
-                await Task.Delay(5000);
+                var cryptoTrader = new CryptoTrader(_cryptoApi, _clusterClient, _hubNotifier);
+                await cryptoTrader.StartAsync(market);
             }
+
+            Console.WriteLine("Finished loading");
         }
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
-            _cancellationTokenSource.Cancel();
+            _cancellationTokenSource?.Cancel();
         }
 
         public void Dispose()
         {
-            _cancellationTokenSource.Dispose();
+            _cancellationTokenSource?.Dispose();
         }
     }
 }

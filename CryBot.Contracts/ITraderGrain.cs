@@ -19,5 +19,6 @@ namespace CryBot.Contracts
 
         Task UpdateTrades(List<Trade> trades);
         Task SetMarketAsync(string market);
+        Task<bool> IsInitialized();
     }
 }

@@ -1,4 +1,6 @@
-﻿using CryBot.Contracts;
+﻿using Bittrex.Net.Objects;
+
+using CryBot.Contracts;
 using CryBot.Core.Models;
 
 using System;
@@ -27,5 +29,12 @@ namespace CryBot.Core.Services
         Task<CryptoResponse<Ticker>> GetTickerAsync(string market);
 
         Task<CryptoResponse<CryptoOrder>> SellCoinAsync(CryptoOrder sellOrder);
+
+        Task<CryptoResponse<List<Market>>> GetMarketsAsync();
+    }
+
+    public class Market
+    {
+        public string Name { get; set; }
     }
 }

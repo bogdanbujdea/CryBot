@@ -10,50 +10,56 @@ namespace CryBot.Core.Models
     [StorageProvider(ProviderName = "OrleansSqlStore")]
     public class TraderGrain : Grain<TraderState>, ITraderGrain
     {
-        public async Task UpdatePriceAsync(Ticker ticker)
+        public Task UpdatePriceAsync(Ticker ticker)
         {
-            await ReadStateAsync();
             State.CurrentTicker = ticker;
-            await WriteStateAsync();
+            return Task.CompletedTask;
         }
 
-        public async Task AddTradeAsync(Trade trade)
+        public Task AddTradeAsync(Trade trade)
         {
-            await ReadStateAsync();
+            if (State.Trades == null)
+                State.Trades = new List<Trade>();
             State.Trades.Add(trade);
+            return Task.CompletedTask;
+        }
+
+        public override async Task OnDeactivateAsync()
+        {
             await WriteStateAsync();
+            await base.OnDeactivateAsync();
         }
 
-        public async Task<List<Trade>> GetActiveTrades()
+        public Task<List<Trade>> GetActiveTrades()
         {
-            await ReadStateAsync();
-            return State.Trades ?? new List<Trade>();
+            return Task.FromResult(State.Trades ?? new List<Trade>());
         }
 
-        public async Task<TraderSettings> GetSettings()
+        public Task<TraderSettings> GetSettings()
         {
-            await ReadStateAsync();
-            return State.Settings ?? TraderSettings.Default;
+            return Task.FromResult(State.Settings ?? TraderSettings.Default);
         }
 
-        public async Task<TraderState> GetTraderData()
+        public Task<TraderState> GetTraderData()
         {
-            await ReadStateAsync();
-            return State;
+            return Task.FromResult(State);
         }
 
-        public async Task UpdateTrades(List<Trade> trades)
+        public Task UpdateTrades(List<Trade> trades)
         {
-            await ReadStateAsync();
             State.Trades = trades;
-            await WriteStateAsync();
+            return Task.CompletedTask;
         }
 
-        public async Task SetMarketAsync(string market)
+        public Task SetMarketAsync(string market)
         {
-            await ReadStateAsync();
             State.Market = market;
-            await WriteStateAsync();
+            return Task.CompletedTask;
+        }
+
+        public Task<bool> IsInitialized()
+        {
+            return Task.FromResult(State.Trades != null && State.Trades.Count > 0);
         }
     }
 }

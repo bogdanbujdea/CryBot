@@ -169,6 +169,7 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
             });
             await _cryptoTrader.StartAsync("");
             RaiseClosedOrder("s2");
+            await _cryptoTrader.ProcessMarketUpdates();
             _cryptoTrader.Trades[0].BuyOrder.IsClosed.Should().BeTrue();
         }
 
