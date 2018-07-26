@@ -112,9 +112,9 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
             });
             await _cryptoTrader.StartAsync(_defaultMarket);
 
-            await RaiseMarketUpdate(100);
-            _cryptoTrader.Trades[0].MaxPricePerUnit.Should().Be(100);
-            _cryptoTrader.Trades[1].MaxPricePerUnit.Should().Be(100);
+            await RaiseMarketUpdate(101);
+            _cryptoTrader.Trades[0].MaxPricePerUnit.Should().Be(101);
+            _cryptoTrader.Trades[1].MaxPricePerUnit.Should().Be(101);
             _cryptoTrader.Trades[2].MaxPricePerUnit.Should().Be(10);
         }
 
@@ -141,6 +141,7 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
                 new Trade{IsActive = true, SellOrder = new CryptoOrder{Uuid = "1"}, MaxPricePerUnit = 10, BuyOrder = new CryptoOrder()},
                 new Trade{IsActive = true, SellOrder = new CryptoOrder{Uuid = "2"}, MaxPricePerUnit = 10, BuyOrder = new CryptoOrder()}
             });
+            _updatedOrder.Market = "BTC-XLM";
             await _cryptoTrader.StartAsync(_defaultMarket);
             RaiseClosedOrder("1");
             _cryptoTrader.Trades[0].IsActive.Should().BeFalse();
@@ -152,11 +153,14 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
         {
             _updatedOrder.Uuid = "s2";
             _updatedOrder.PricePerUnit = 98;
+            _updatedOrder.Market = "BTC-XLM";
             await _cryptoTrader.StartAsync(_defaultMarket);
             _cryptoTrader.Settings.BuyLowerPercentage = -2;
             await RaiseMarketUpdate(98);
             RaiseClosedOrder("s2");
-            _cryptoApiMock.Verify(c => c.BuyCoinAsync(It.Is<CryptoOrder>(order => order.PricePerUnit == 98 * _cryptoTrader.Settings.BuyLowerPercentage.ToPercentageMultiplier())), Times.Once);
+            _cryptoApiMock
+                .Verify(c => c.BuyCoinAsync(It.Is<CryptoOrder>(order => 
+                    order.PricePerUnit == 98 * _cryptoTrader.Settings.BuyLowerPercentage.ToPercentageMultiplier())), Times.Once);
         }
 
         private void RaiseClosedOrder(string uuid)

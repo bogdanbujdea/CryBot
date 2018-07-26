@@ -12,11 +12,10 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 
 namespace CryBot.Web.Infrastructure
 {
-        public class CryptoHostedService : IHostedService, IDisposable
+    public class CryptoHostedService : IHostedService, IDisposable
     {
         private readonly IOptions<EnvironmentConfig> _options;
         private readonly ICryptoApi _cryptoApi;

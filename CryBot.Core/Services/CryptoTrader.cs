@@ -68,7 +68,7 @@ namespace CryBot.Core.Services
             }
 
             await CreateBuyOrder(tickerResponse.Content.Ask);
-            //await CreateBuyOrder(tickerResponse.Content.Bid * Settings.BuyLowerPercentage.ToPercentageMultiplier());
+            await CreateBuyOrder(tickerResponse.Content.Bid * Settings.BuyLowerPercentage.ToPercentageMultiplier());
         }
 
         public async Task UpdatePrice(Ticker ticker)
@@ -92,17 +92,26 @@ namespace CryBot.Core.Services
             if(_queue.Count <= 0)
                 return;
             var currentMarket = _queue.Dequeue();
+            if(currentMarket == null)
+                return;
             await ProcessMarketUpdate(currentMarket);
         }
 
-        private async Task ProcessMarketUpdate(Ticker currentMarket)
+        private async Task ProcessMarketUpdate(Ticker currentTicker)
         {
-            await _hubNotifier.UpdateTicker(currentMarket);
-            await _traderGrain.UpdatePriceAsync(currentMarket);
-            Ticker = currentMarket;
-            await UpdateTrades();
-            var traderData = await _traderGrain.GetTraderData();
-            await _hubNotifier.UpdateTrader(traderData);
+            try
+            {
+                await _hubNotifier.UpdateTicker(currentTicker);
+                await _traderGrain.UpdatePriceAsync(currentTicker);
+                Ticker = currentTicker;
+                await UpdateTrades();
+                var traderData = await _traderGrain.GetTraderData();
+                await _hubNotifier.UpdateTrader(traderData);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
         }
 
         private async Task CreateBuyOrder(decimal pricePerUnit)
@@ -126,7 +135,7 @@ namespace CryBot.Core.Services
 
         private async void OrderUpdated(object sender, CryptoOrder e)
         {
-            if (Trades.Count == 0)
+            if (Trades.Count == 0 || e.Market != Market)
                 return;
 
             if (e.OrderType == CryptoOrderType.LimitSell)
@@ -161,8 +170,18 @@ namespace CryBot.Core.Services
             if (currentMarket == null)
                 return;
             if (_queue.Count > 0)
+            {
                 if (_queue.Peek().Bid == currentMarket.Bid)
                     return;
+                
+                if (_queue.Peek().Bid == Ticker.Bid)
+                    return;
+            }
+            else
+            {
+                if (currentMarket.Bid == Ticker.Bid)
+                    return;
+            }
             _queue.Enqueue(currentMarket);
         }
 
@@ -174,6 +193,7 @@ namespace CryBot.Core.Services
                 {
                     Console.WriteLine($"New max for {Market}: {Ticker.Bid}");
                     trade.MaxPricePerUnit = Ticker.Bid;
+                    await _traderGrain.UpdatePriceAsync(Ticker);
                 }
 
                 var profit = trade.BuyOrder.PricePerUnit.GetReadablePercentageChange(Ticker.Bid, true);

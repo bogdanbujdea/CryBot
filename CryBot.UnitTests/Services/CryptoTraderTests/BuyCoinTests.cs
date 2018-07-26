@@ -167,7 +167,8 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
                     BuyOrder = new CryptoOrder { Uuid = "s2" }
                 }
             });
-            await _cryptoTrader.StartAsync("");
+            _updatedOrder.Market = "BTC-XLM";
+            await _cryptoTrader.StartAsync("BTC-XLM");
             RaiseClosedOrder("s2");
             await _cryptoTrader.ProcessMarketUpdates();
             _cryptoTrader.Trades[0].BuyOrder.IsClosed.Should().BeTrue();

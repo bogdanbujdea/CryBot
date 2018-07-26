@@ -21,7 +21,7 @@ namespace CryBot.Core.Models
             if (State.Trades == null)
                 State.Trades = new List<Trade>();
             State.Trades.Add(trade);
-            return Task.CompletedTask;
+            return WriteStateAsync();
         }
 
         public override async Task OnDeactivateAsync()
@@ -48,13 +48,13 @@ namespace CryBot.Core.Models
         public Task UpdateTrades(List<Trade> trades)
         {
             State.Trades = trades;
-            return Task.CompletedTask;
+            return WriteStateAsync();
         }
 
         public Task SetMarketAsync(string market)
         {
             State.Market = market;
-            return Task.CompletedTask;
+            return WriteStateAsync();
         }
 
         public Task<bool> IsInitialized()
