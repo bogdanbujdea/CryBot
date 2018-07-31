@@ -5,6 +5,8 @@
         public decimal HighStopLossPercentage { get; set; }
 
         public decimal StopLoss { get; set; }
+
+        public decimal BuyTrigger { get; set; }
         
         public decimal MinimumTakeProfit { get; set; }
         
@@ -16,9 +18,15 @@
         {
             BuyLowerPercentage = -2,
             DefaultBudget = 0.0012M,
-            MinimumTakeProfit = 0.1M,
-            HighStopLossPercentage = -5,
-            StopLoss = -2
+            MinimumTakeProfit = 0M,
+            HighStopLossPercentage = -1M,
+            StopLoss = -4,
+            BuyTrigger = -2M,
         };
+
+        public override string ToString()
+        {
+            return $"BLP: {BuyLowerPercentage}| MTP: {MinimumTakeProfit}| HSL: {HighStopLossPercentage}| SL: {StopLoss}| BT: {BuyTrigger}";
+        }
     }
 }

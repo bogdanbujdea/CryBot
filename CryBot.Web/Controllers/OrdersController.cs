@@ -40,10 +40,4 @@ namespace CryBot.Web.Controllers
             return BadRequest(new { ordersResponse.ErrorMessage });
         }
     }
-
-    public enum OrderType
-    {
-        OpenOrders = 1,
-        CompletedOrders
-    }
 }

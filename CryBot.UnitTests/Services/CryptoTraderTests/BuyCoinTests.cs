@@ -137,7 +137,7 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
         }
 
         [Fact]
-        public async Task BuyingCoin_Should_AddTNewAInactiveTrades()
+        public async Task BuyingCoin_Should_AddNewInactiveTrades()
         {
             await _cryptoTrader.StartAsync("");
             _cryptoTrader.Trades.Count.Should().Be(2);
@@ -174,12 +174,31 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
             _cryptoTrader.Trades[0].BuyOrder.IsClosed.Should().BeTrue();
         }
 
+        [Fact]
+        public async Task NewTrade_Should_IncreaseAvailableBudgetIfCurrentBudgetIsNotEnough()
+        {
+            await _cryptoTrader.StartAsync("BTC-XLM");
+            _cryptoTrader.InvestedBTC.Should().Be(0.0024M);
+        }
+
+        [Fact]
+        public async Task PriceUpdate_ShouldChange_CurrentBudget()
+        {
+            await _cryptoTrader.StartAsync("BTC-XLM");
+            _cryptoTrader.Trades[0].BuyOrder.Quantity = _cryptoTrader.Trades[1].BuyOrder.Quantity = 100;
+            _cryptoTrader.Trades[0].BuyOrder.PricePerUnit = _cryptoTrader.Trades[1].BuyOrder.PricePerUnit = 100;
+            _cryptoTrader.Trades[1].IsActive = _cryptoTrader.Trades[1].IsActive = true;
+            await _cryptoTrader.UpdatePrice(new Ticker { Bid = 130 });
+            _cryptoTrader.CurrentBudget.Should().BeGreaterThan(0.0024M);
+        }
+
         private void RaiseClosedOrder(string uuid)
         {
             _updatedOrder.Uuid = uuid;
             _updatedOrder.IsClosed = true;
             _cryptoApiMock.Raise(c => c.OrderUpdated += null, _cryptoTrader, _updatedOrder);
         }
+
         private void CreateDefaultSetups()
         {
             _clusterClientMock = new Mock<IClusterClient>();
@@ -196,7 +215,9 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
             _traderGrainMock.Setup(t => t.GetSettings()).ReturnsAsync(new TraderSettings
             {
                 BuyLowerPercentage = -2,
-                DefaultBudget = 0.0012M
+                DefaultBudget = 0.0012M,
+                MinimumTakeProfit = 0.1M,
+                HighStopLossPercentage = -5,
             });
             _cryptoApiMock.Setup(c => c.GetTickerAsync(It.IsAny<string>()))
                 .ReturnsAsync(new CryptoResponse<Ticker>(new Ticker

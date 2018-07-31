@@ -62,6 +62,7 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
             {
                 HighStopLossPercentage = -10,
                 StopLoss = -2,
+                BuyTrigger = -1,
                 MinimumTakeProfit = 2
             });
 
@@ -84,6 +85,7 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
         public async Task StopLossTriggered_Should_SellCoin()
         {
             await _cryptoTrader.StartAsync(_defaultMarket);
+            await RaiseMarketUpdate(99);
             await RaiseMarketUpdate(98);
             _cryptoApiMock.Verify(c => c.SellCoinAsync(It.Is<CryptoOrder>(o => o.PricePerUnit == 98)), Times.Once);
         }
@@ -94,6 +96,7 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
             await _cryptoTrader.StartAsync(_defaultMarket);
             _currentTrade.BuyOrder.Quantity = 100;
             _currentTrade.BuyOrder.Market = _cryptoTrader.Market;
+            await RaiseMarketUpdate(99);
             await RaiseMarketUpdate(98);
             _cryptoApiMock.Verify(c => c.SellCoinAsync(It.Is<CryptoOrder>(o => o.PricePerUnit == 98 &&
                                                                                o.Quantity == _currentTrade.BuyOrder.Quantity &&
@@ -125,6 +128,7 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
             _currentTrade.BuyOrder.Quantity = 100;
             _currentTrade.BuyOrder.Market = _cryptoTrader.Market;
             _updatedOrder.Uuid = "test";
+            await RaiseMarketUpdate(99);
             await RaiseMarketUpdate(98);
             _currentTrade.SellOrder.Should().NotBeNull();
             _currentTrade.SellOrder.Uuid.Should().Be("test");
@@ -156,6 +160,7 @@ namespace CryBot.UnitTests.Services.CryptoTraderTests
             _updatedOrder.Market = "BTC-XLM";
             await _cryptoTrader.StartAsync(_defaultMarket);
             _cryptoTrader.Settings.BuyLowerPercentage = -2;
+            await RaiseMarketUpdate(99);
             await RaiseMarketUpdate(98);
             RaiseClosedOrder("s2");
             _cryptoApiMock

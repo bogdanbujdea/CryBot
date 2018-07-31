@@ -124,6 +124,21 @@ namespace CryBot.Core.Services
             }).ToList());
         }
 
+        public async Task<CryptoResponse<List<Candle>>> GetCandlesAsync(string market, TickInterval interval)
+        {
+            var callResult = await _bittrexClient.GetCandlesAsync(market, interval);
+            return new CryptoResponse<List<Candle>>(callResult.Data.Select(c => new Candle
+            {
+                Timestamp = c.Timestamp,
+                Currency = market,
+                Low = c.Low,
+                High = c.High,
+                Open = c.Open,
+                Close = c.Close,
+                Volume = c.BaseVolume
+            }).ToList());
+        }
+
         protected void OnMarketsUpdate(List<BittrexStreamMarketSummary> markets)
         {
             MarketsUpdated?.Invoke(this, markets.Select(m => new Ticker

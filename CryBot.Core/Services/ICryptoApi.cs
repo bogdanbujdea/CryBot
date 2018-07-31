@@ -4,7 +4,6 @@ using CryBot.Contracts;
 using CryBot.Core.Models;
 
 using System;
-
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
@@ -31,10 +30,6 @@ namespace CryBot.Core.Services
         Task<CryptoResponse<CryptoOrder>> SellCoinAsync(CryptoOrder sellOrder);
 
         Task<CryptoResponse<List<Market>>> GetMarketsAsync();
-    }
-
-    public class Market
-    {
-        public string Name { get; set; }
+        Task<CryptoResponse<List<Candle>>> GetCandlesAsync(string market, TickInterval interval);
     }
 }

@@ -1,7 +1,4 @@
 ﻿using CryBot.Contracts;
-using CryBot.Core.Hubs;
-using Microsoft.AspNetCore.SignalR;
-
 using Orleans;
 
 using System.Linq;

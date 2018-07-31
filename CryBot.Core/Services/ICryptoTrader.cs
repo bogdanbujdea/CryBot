@@ -7,10 +7,18 @@ namespace CryBot.Core.Services
 {
     public interface ICryptoTrader
     {
-        string Market { get; set; }
-        List<Trade> Trades { get; set; }
-        Ticker Ticker { get; set; }
-        TraderSettings Settings { get; set; }
-        Task StartAsync();
+        string Market { get; }
+
+        Ticker Ticker { get; }
+
+        List<Trade> Trades { get; }
+
+        TraderSettings Settings { get; }
+
+        Task StartAsync(string market);
+
+        Task UpdatePrice(Ticker ticker);
+
+        Task ProcessMarketUpdates();
     }
 }

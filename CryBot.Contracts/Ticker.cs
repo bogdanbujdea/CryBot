@@ -1,4 +1,6 @@
-﻿namespace CryBot.Contracts
+﻿using System;
+
+namespace CryBot.Contracts
 {
     public class Ticker
     {
@@ -11,5 +13,7 @@
         public decimal BaseVolume { get; set; }
         
         public string Market { get; set; }
+
+        public DateTime Timestamp { get; set; }
     }
 }

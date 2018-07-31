@@ -140,6 +140,11 @@ namespace CryBot.Core.Utilities
             return buyPrice * stopLoss.ToPercentageMultiplier() >= currentPrice;
         }
 
+        public static bool ReachedBuyPrice(this decimal currentPrice, decimal buyPrice, decimal buyTrigger)
+        {
+            return buyPrice * buyTrigger.ToPercentageMultiplier() >= currentPrice;
+        }
+
         public static decimal ToPercentageMultiplier(this decimal percentage)
         {
             return 1 + (percentage / 100);
@@ -150,7 +155,7 @@ namespace CryBot.Core.Utilities
             if (oldValue == 0)
                 oldValue = 1;
             if (dropCommission)
-                newValue *= 0.995M;
+                newValue *= Consts.BittrexFullCommission;
             var percentage = (newValue - oldValue) / oldValue;
 
             return percentage;
