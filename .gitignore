@@ -260,3 +260,7 @@ paket-files/
 __pycache__/
 *.pyc
 CryBot\.Web/wwwroot/
+
+CryBot\.Backtester/Properties/Resources\.Designer\.cs
+
+CryBot\.Backtester/Properties/Resources\.resx
