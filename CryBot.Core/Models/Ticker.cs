@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CryBot.Contracts
+namespace CryBot.Core.Models
 {
     public class Ticker
     {
@@ -15,5 +15,16 @@ namespace CryBot.Contracts
         public string Market { get; set; }
 
         public DateTime Timestamp { get; set; }
+
+        public static Ticker FromPrice(decimal bid, decimal ask, decimal last, string market)
+        {
+            return new Ticker
+            {
+                Market = market,
+                Ask = ask,
+                Bid = bid,
+                Last = last
+            };
+        }
     }
 }

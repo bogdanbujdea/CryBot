@@ -8,6 +8,7 @@ import { Ticker } from '../../models/api/Ticker';
 @inject(HttpClient)
 export class Trader {
     traderData: ITrader;
+    profit: number = 0;
     market: string = "BTC-ETC";
     private connectionPromise?: Promise<void>;
     private chatHubConnection: signalR.HubConnection;
@@ -25,8 +26,11 @@ export class Trader {
         this.chatHubConnection = new signalR.HubConnectionBuilder().withUrl("/app").build();
 
         this.chatHubConnection.on('traderUpdate:' + this.market, (trader: ITrader) => {
-            if (trader)
+            if (trader) {
                 this.traderData = trader;
+                this.profit = 0;
+                trader.trades.forEach(t => this.profit += t.profit);
+            }
         });
         this.chatHubConnection.on('priceUpdate:' + this.market, (newTicker: Ticker) => {
             this.traderData.currentTicker = newTicker;

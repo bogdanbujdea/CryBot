@@ -3,24 +3,33 @@
     <require from="../../converters/currency-format"></require>
     <require from="../../converters/order-format"></require>
 
-    <h3 style="display: inline;">${ traderData.market }</h3> - <h4 style="display: inline;">${ traderData.currentTicker.bid } BTC</h4>
+    <h3 style="display: inline;">${ traderData.market }</h3> - <h4 style="display: inline;">${ traderData.currentTicker.bid } BTC | ${ traderData.currentTicker.timestamp }</h4>
 
     <p if.bind="!traderData"><em>Loading trader...</em></p>
+    <p>Profit: ${ profit }</p>
     
    <table if.bind="traderData.trades" class="table">
         <thead>
             <tr>
                 <th>Market</th>
+                <th>Time</th>
                 <th>Active</th>
+                <th>Canceled</th>
+                <th>Buy</th>
                 <th>Max Price</th>
+                <th>Sell</th>
                 <th>Profit%</th>
             </tr>
         </thead>
         <tbody>
             <tr repeat.for="trade of traderData.trades">
                 <td>${ trade.market }</td>
+                <td>${ trade.buyOrder.opened}</td>
                 <td>${ trade.isActive }</td>
+                <td>${ trade.buyOrder.canceled }</td>
+                <td>${ trade.buyOrder.pricePerUnit }</td>
                 <td>${ trade.maxPricePerUnit }</td>
+                <td>${ trade.sellOrder.pricePerUnit }</td>
                 <td>${ trade.profit }</td>
             </tr>
         </tbody>

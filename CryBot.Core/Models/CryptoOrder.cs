@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CryBot.Contracts
+namespace CryBot.Core.Models
 {
     public class CryptoOrder: ICryptoOrder
     {
@@ -17,5 +17,6 @@ namespace CryBot.Contracts
         public decimal QuantityRemaining { get; set; }
         public DateTime Closed { get; set; }
         public bool IsClosed { get; set; }
+        public bool IsOpened { get; set; }
     }
 }

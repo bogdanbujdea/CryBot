@@ -1,4 +1,6 @@
-﻿using CryBot.Core.Hubs;
+﻿using Bittrex.Net.Objects;
+
+using CryBot.Core.Hubs;
 using CryBot.Core.Models;
 using CryBot.Core.Services;
 
@@ -43,7 +45,14 @@ namespace CryBot.Web.Infrastructure
             _hostedServiceId = Guid.NewGuid();
 
             _cancellationTokenSource = new CancellationTokenSource();
-            await StartTrading();
+            
+            _cryptoApi.IsInTestMode = true;
+            var market = "BTC-ETC";
+            await _cryptoApi.GetCandlesAsync(market, TickInterval.OneMinute);
+            var cryptoTrader = new CryptoTrader(_cryptoApi, _clusterClient, _hubNotifier);
+            await cryptoTrader.StartAsync(market);
+            await Task.Run(() => _cryptoApi.SendMarketUpdates(market));
+            //await StartTrading();
         }
 
         public async Task StartTrading()

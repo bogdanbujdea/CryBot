@@ -1,5 +1,4 @@
-﻿using CryBot.Contracts;
-using CryBot.Core.Models;
+﻿using CryBot.Core.Models;
 using CryBot.Core.Services;
 using CryBot.Core.Utilities;
 

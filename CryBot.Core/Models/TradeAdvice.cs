@@ -1,9 +1,10 @@
-﻿namespace CryBot.Contracts
+﻿namespace CryBot.Core.Models
 {
     public enum TradeAdvice
     {
         Hold,
         Buy,
-        Sell
+        Sell,
+        Cancel
     }
 }

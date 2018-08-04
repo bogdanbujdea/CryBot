@@ -1,10 +1,13 @@
-﻿using CryBot.Contracts;
+﻿using CryBot.Core.Models;
 using CryBot.Core.Utilities;
+
+using System;
 
 namespace CryBot.Core.Services
 {
     public class HoldUntilPriceDropsStrategy : ITradingStrategy
     {
+        private static volatile object _syncRoot = new object();
         public HoldUntilPriceDropsStrategy()
         {
             Settings = TraderSettings.Default;
@@ -14,46 +17,71 @@ namespace CryBot.Core.Services
 
         public TraderSettings Settings { get; set; }
 
-        public Trade CurrentTrade { get; set; }
-
-        public TradeAction CalculateTradeAction(Ticker ticker)
+        public TradeAction CalculateTradeAction(Ticker ticker, Trade currentTrade)
         {
-            var tradeAction = new TradeAction();
-            CurrentTrade.CurrentTicker = ticker;
-            if (CurrentTrade.MaxPricePerUnit < ticker.Bid)
-                CurrentTrade.MaxPricePerUnit = ticker.Bid;
-            var profit = CurrentTrade.BuyOrder.PricePerUnit.GetReadablePercentageChange(ticker.Bid, true);
-            CurrentTrade.Profit = profit;
-            if (profit > Settings.MinimumTakeProfit.ToPercentageMultiplier() && 
-                ticker.Bid.ReachedHighStopLoss(CurrentTrade.MaxPricePerUnit,
-                CurrentTrade.BuyOrder.PricePerUnit * Settings.MinimumTakeProfit.ToPercentageMultiplier() * Consts.BittrexCommission,
-                Settings.HighStopLossPercentage.ToPercentageMultiplier(), CurrentTrade.BuyOrder.PricePerUnit))
+            lock (_syncRoot)
             {
-                tradeAction.OrderPricePerUnit = ticker.Bid;
-                tradeAction.TradeAdvice = TradeAdvice.Sell;
-                return tradeAction;
-            }
+                var tradeAction = new TradeAction();
             
-            if(Settings.BuyTrigger < Settings.StopLoss)
-            {
-                tradeAction.TradeAdvice = TradeAdvice.Hold;
-                return tradeAction;
-            }
-            if (CurrentTrade.TriggeredBuy == false && ticker.Bid.ReachedBuyPrice(CurrentTrade.BuyOrder.PricePerUnit, Settings.BuyTrigger))
-            {
-                tradeAction.TradeAdvice = TradeAdvice.Buy;
-                tradeAction.OrderPricePerUnit = ticker.Bid;
-                CurrentTrade.TriggeredBuy = true;
-                return tradeAction;
-            }
+                UpdateTrade(ticker, currentTrade);
+                if (currentTrade.BuyOrder.Uuid == null)
+                {
+                    tradeAction.OrderPricePerUnit = ticker.Bid;
+                    tradeAction.Reason = TradeReason.FirstTrade;
+                    tradeAction.TradeAdvice = TradeAdvice.Buy;
+                    return tradeAction;
+                }
+                if (currentTrade.BuyOrder.IsOpened && currentTrade.BuyOrder.Opened.Expired(TimeSpan.FromHours(5), ticker.Timestamp))
+                {
+                    tradeAction.OrderPricePerUnit = ticker.Bid;
+                    tradeAction.Reason = TradeReason.ExpiredBuyOrder;
+                    tradeAction.TradeAdvice = TradeAdvice.Cancel;
+                    return tradeAction;
+                }
+                if (currentTrade.Profit > Settings.MinimumTakeProfit && 
+                    ticker.Bid.ReachedHighStopLoss(currentTrade.MaxPricePerUnit,
+                        currentTrade.BuyOrder.PricePerUnit * Settings.MinimumTakeProfit.ToPercentageMultiplier() * Consts.BittrexCommission,
+                        Settings.HighStopLossPercentage.ToPercentageMultiplier(), currentTrade.BuyOrder.PricePerUnit))
+                {
+                    tradeAction.OrderPricePerUnit = ticker.Bid;
+                    tradeAction.Reason = TradeReason.TakeProfit;
+                    tradeAction.TradeAdvice = TradeAdvice.Sell;
+                    return tradeAction;
+                }
+            
+                if(Settings.BuyTrigger < Settings.StopLoss)
+                {
+                    tradeAction.TradeAdvice = TradeAdvice.Hold;
+                    return tradeAction;
+                }
 
-            if (ticker.Bid.ReachedStopLoss(CurrentTrade.BuyOrder.PricePerUnit, Settings.StopLoss))
-            {
-                tradeAction.TradeAdvice = TradeAdvice.Sell;
-                tradeAction.OrderPricePerUnit = ticker.Bid;
+                if (currentTrade.TriggeredBuy == false && ticker.Bid.ReachedBuyPrice(currentTrade.BuyOrder.PricePerUnit, Settings.BuyTrigger))
+                {
+                    tradeAction.Reason = TradeReason.BuyTrigger;
+                    tradeAction.TradeAdvice = TradeAdvice.Buy;
+                    tradeAction.OrderPricePerUnit = ticker.Bid;
+                    currentTrade.TriggeredBuy = true;
+                    return tradeAction;
+                }
+
+                if (ticker.Bid.ReachedStopLoss(currentTrade.BuyOrder.PricePerUnit, Settings.StopLoss))
+                {
+                    tradeAction.Reason = TradeReason.StopLoss;
+                    tradeAction.TradeAdvice = TradeAdvice.Sell;
+                    tradeAction.OrderPricePerUnit = ticker.Bid;
+                    return tradeAction;
+                }
                 return tradeAction;
             }
-            return tradeAction;
+        }
+
+        private static void UpdateTrade(Ticker ticker, Trade currentTrade)
+        {
+            currentTrade.CurrentTicker = ticker;
+            if (currentTrade.MaxPricePerUnit < ticker.Bid)
+                currentTrade.MaxPricePerUnit = ticker.Bid;
+            var profit = currentTrade.BuyOrder.PricePerUnit.GetReadablePercentageChange(ticker.Bid, true);
+            currentTrade.Profit = profit;
         }
     }
 }

@@ -1,5 +1,6 @@
-﻿using CryBot.Contracts;
+﻿using CryBot.Core.Models;
 using CryBot.Core.Utilities;
+
 using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -16,13 +17,13 @@ namespace CryBot.Core.Services
 
         public List<Candle> Candles { get; set; }
 
-        public ITradingStrategy Strategy { get; set;}
+        public ITradingStrategy Strategy { get; set; }
 
         public CryptoTraderStats StartFromFile(string market)
         {
             _market = market;
             var prices = Candles.Select(c => CreateTicker(_market, c.Low, c.High, c.Timestamp)).ToList();
-            _trades.Add(CreateTrade(_market, prices[0], Strategy.Settings.DefaultBudget));
+            _trades.Add(CreateTrade(_market, prices[0], Strategy.Settings.TradingBudget));
             foreach (var ticker in prices)
             {
                 UpdateTicker(ticker);
@@ -35,7 +36,7 @@ namespace CryBot.Core.Services
         {
             _stats = new CryptoTraderStats();
             _trades = new List<Trade>();
-            _stats.InvestedBTC += Strategy.Settings.DefaultBudget;
+            _stats.InvestedBTC += Strategy.Settings.TradingBudget;
             _stats.CurrentBTC = _stats.InvestedBTC;
             _profitBTC = 0M;
             _newTradeCount = 1;
@@ -43,7 +44,7 @@ namespace CryBot.Core.Services
 
         private void LogText(string text)
         {
-            //Console.WriteLine(text);
+            Console.WriteLine(text);
         }
 
         private void GetStats()
@@ -53,7 +54,7 @@ namespace CryBot.Core.Services
             _stats.Opened = _trades.Count(t => t.IsActive);
             LogText($"BTC: {_profitBTC.RoundSatoshi()}");
             LogText($"Trade count: {_newTradeCount}");
-            LogText($"Diff BTC: {(totalBTC - _stats.InvestedBTC).RoundSatoshi()}");
+            LogText($"Diff BTC: {(_profitBTC - _stats.InvestedBTC).RoundSatoshi()}");
             LogText($"Triggered buys: {_trades.Count(t => t.TriggeredBuy)}");
             LogText($"Closed trades count: {_stats.Closed}");
             LogText($"Opened trades count: {_trades.Count(t => t.IsActive)}");
@@ -63,22 +64,7 @@ namespace CryBot.Core.Services
         private void UpdateTicker(Ticker ticker)
         {
             Trade newTrade = null;
-            if (_trades.Count(t => t.IsActive) == 0)
-            {
-                var newTicker = new Ticker
-                {
-                    Ask = ticker.Ask * Strategy.Settings.BuyLowerPercentage.ToPercentageMultiplier(),
-                    Bid = ticker.Bid,
-                    Timestamp = ticker.Timestamp,
-                    Market = ticker.Market
-                };
-                newTrade = CreateTrade(ticker.Market, newTicker, _stats.AvailableBTC);
-                _trades.Add(newTrade);
-                LogText($"Created trade at {Strategy.Settings.BuyLowerPercentage}% lower than {ticker.Ask} - {newTicker.Ask} for trade {_trades.IndexOf(newTrade)}");
-                _stats.AvailableBTC = 0;
-                newTrade = null;
-            }
-
+            newTrade = null;
             foreach (var trade in _trades.Where(t => t.IsActive))
             {
                 if (trade.BuyOrder.IsClosed == false)
@@ -86,25 +72,33 @@ namespace CryBot.Core.Services
                     if (trade.BuyOrder.PricePerUnit >= ticker.Ask)
                     {
                         trade.BuyOrder.Uuid = _trades.IndexOf(trade).ToString();
-                        LogText($"BOUGHT\t{trade.BuyOrder.PricePerUnit}\t{ticker.Timestamp:F}\t{trade.BuyOrder.Price} BTC\t\t{trade.BuyOrder.Uuid}");
+                        LogText($"FILLED BUY\t{trade.BuyOrder.PricePerUnit}\t{ticker.Timestamp:F}\t{trade.BuyOrder.Price} BTC\t\t{trade.BuyOrder.Uuid}");
                         trade.BuyOrder.IsClosed = true;
+                        continue;
                     }
 
-                    continue;
                 }
 
-                Strategy.CurrentTrade = trade;
-                var tradeAction = Strategy.CalculateTradeAction(ticker);
-                if (tradeAction.TradeAdvice == TradeAdvice.Buy)
+                var tradeAction = Strategy.CalculateTradeAction(ticker, trade);
+                if (tradeAction.TradeAdvice == TradeAdvice.Cancel)
+                {
+                    trade.IsActive = false;
+                    trade.Profit = 0;
+                    trade.CurrentTicker = new Ticker();
+                    newTrade = CreateLowerTrade(ticker);
+                    _stats.AvailableBTC += trade.BuyOrder.Price;
+                }
+                else if (tradeAction.TradeAdvice == TradeAdvice.Buy)
                 {
                     _newTradeCount++;
-                    ticker.Ask = tradeAction.OrderPricePerUnit;
-                    if (_stats.AvailableBTC <= Strategy.Settings.DefaultBudget)
+                    ticker.Bid = tradeAction.OrderPricePerUnit;
+                    if (_stats.AvailableBTC <= Strategy.Settings.TradingBudget)
                     {
-                        _stats.InvestedBTC += Strategy.Settings.DefaultBudget;
-                        _stats.AvailableBTC = Strategy.Settings.DefaultBudget;
+                        _stats.InvestedBTC += Strategy.Settings.TradingBudget;
+                        _stats.AvailableBTC = Strategy.Settings.TradingBudget;
                     }
 
+                    LogText($"BUYING due to {tradeAction.Reason} at {ticker.Bid}");
                     newTrade = CreateTrade(ticker.Market, ticker, _stats.AvailableBTC);
                     _stats.AvailableBTC = 0;
                 }
@@ -112,9 +106,13 @@ namespace CryBot.Core.Services
                 {
                     CloseTrade(trade, ticker);
                     var profit = trade.BuyOrder.Price.GetReadablePercentageChange(trade.SellOrder.Price);
-                    LogText($"SOLD\t{ticker.Bid}\t{profit}%\t{ticker.Timestamp:F}\t{trade.SellOrder.Price} BTC\t\t{trade.BuyOrder.Uuid}");
+                    LogText($"SOLD due to {tradeAction.Reason}\t{ticker.Bid}\t{profit}%\t{ticker.Timestamp:F}\t{trade.SellOrder.Price} BTC\t\t{trade.BuyOrder.Uuid}");
+                    //Console.WriteLine($"BC: {trade.BuyOrder.CommissionPaid}\tSC: {trade.SellOrder.CommissionPaid}\tQ: {trade.BuyOrder.Quantity}");
+                    //Console.WriteLine($"BP: {trade.BuyOrder.Price}\tSP: {trade.SellOrder.Price}\tSPWC{trade.SellOrder.Price + trade.SellOrder.CommissionPaid}");
+                    //Console.WriteLine($"BPP: {trade.BuyOrder.PricePerUnit}\tSPP: {trade.SellOrder.PricePerUnit}");
                     _profitBTC += trade.SellOrder.Price - trade.BuyOrder.Price;
                     _stats.AvailableBTC += Math.Round(trade.SellOrder.Price, 8);
+                    newTrade = CreateLowerTrade(ticker);
                 }
             }
 
@@ -124,32 +122,45 @@ namespace CryBot.Core.Services
             }
         }
 
+        private Trade CreateLowerTrade(Ticker ticker)
+        {
+            var newTicker = new Ticker
+            {
+                Ask = ticker.Ask,
+                Bid = ticker.Bid * Strategy.Settings.BuyLowerPercentage.ToPercentageMultiplier(),
+                Timestamp = ticker.Timestamp,
+                Market = ticker.Market
+            };
+            var newTrade = CreateTrade(ticker.Market, newTicker, _stats.AvailableBTC);
+            LogText($"Created trade at {Strategy.Settings.BuyLowerPercentage}% lower than {ticker.Ask} - {newTicker.Ask} for trade {_trades.IndexOf(newTrade)}");
+            _stats.AvailableBTC = 0;
+            return newTrade;
+        }
+
         private void CloseTrade(Trade trade, Ticker ticker)
         {
-            trade.SellOrder = new CryptoOrder
-            {
-                Market = trade.Market,
-                Closed = DateTime.UtcNow,
-                IsClosed = true,
-                Limit = ticker.Ask,
-                CommissionPaid = 0,
-                OrderType = CryptoOrderType.LimitBuy,
-                PricePerUnit = ticker.Bid,
-                Price = Math.Round((ticker.Bid * trade.BuyOrder.Quantity) * Consts.BittrexCommission, 8),
-                Quantity = trade.BuyOrder.Quantity,
-                Uuid = Guid.NewGuid().ToString()
-            };
+            var fullPrice = (ticker.Bid * trade.BuyOrder.Quantity);
+            trade.SellOrder = new CryptoOrder();
+            trade.SellOrder.Market = trade.Market;
+            trade.SellOrder.Closed = DateTime.UtcNow;
+            trade.SellOrder.IsClosed = true;
+            trade.SellOrder.Limit = ticker.Bid;
+            trade.SellOrder.OrderType = CryptoOrderType.LimitBuy;
+            trade.SellOrder.PricePerUnit = ticker.Bid;
+            trade.SellOrder.CommissionPaid = (trade.BuyOrder.Quantity * Consts.BittrexCommission2 * trade.SellOrder.PricePerUnit).RoundSatoshi();
+            trade.SellOrder.Price = Math.Round(fullPrice, 8);
+            trade.SellOrder.Quantity = trade.BuyOrder.Quantity;
+            trade.SellOrder.Uuid = Guid.NewGuid().ToString();
             trade.IsActive = false;
         }
 
         private Trade CreateTrade(string market, Ticker ticker, decimal budget)
         {
-            LogText($"Created trade at {ticker.Ask} for {budget} BTC\t{ticker.Timestamp:F}\n");
             var trade = new Trade();
             try
             {
-                var price = Math.Round(budget * Consts.BittrexCommission, 8);
-                var commission = budget - price;
+                var price = (budget * Consts.BittrexCommission).RoundSatoshi();
+
                 trade.Market = market;
                 trade.CurrentTicker = ticker;
                 trade.IsActive = true;
@@ -158,12 +169,12 @@ namespace CryBot.Core.Services
                 trade.BuyOrder.Market = market;
                 trade.BuyOrder.Closed = DateTime.UtcNow;
                 trade.BuyOrder.IsClosed = false;
-                trade.BuyOrder.Limit = ticker.Ask;
-                trade.BuyOrder.CommissionPaid = commission;
+                trade.BuyOrder.Limit = ticker.Bid;
                 trade.BuyOrder.OrderType = CryptoOrderType.LimitBuy;
-                trade.BuyOrder.PricePerUnit = ticker.Ask;
-                trade.BuyOrder.Quantity = Math.Round(price / ticker.Ask, 8);
-                trade.BuyOrder.Price = price;
+                trade.BuyOrder.PricePerUnit = ticker.Bid;
+                trade.BuyOrder.Quantity = (price / ticker.Bid).RoundSatoshi();
+                trade.BuyOrder.CommissionPaid = (trade.BuyOrder.Quantity * Consts.BittrexCommission2 * trade.BuyOrder.PricePerUnit).RoundSatoshi();
+                trade.BuyOrder.Price = budget;
                 trade.BuyOrder.Uuid = Guid.NewGuid().ToString();
                 return trade;
             }

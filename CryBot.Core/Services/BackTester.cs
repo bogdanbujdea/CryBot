@@ -1,6 +1,6 @@
 ﻿using Bittrex.Net.Objects;
 
-using CryBot.Contracts;
+using CryBot.Core.Models;
 
 using System;
 using System.Linq;
@@ -40,7 +40,7 @@ namespace CryBot.Core.Services
                 {
                     Settings = new TraderSettings
                     {
-                        DefaultBudget = 0.0012M,
+                        TradingBudget = 0.0012M,
                         BuyLowerPercentage = -4,
                         MinimumTakeProfit = 1,
                         HighStopLossPercentage = -23,
@@ -57,6 +57,8 @@ namespace CryBot.Core.Services
                     {
                         foreach (var trigger in buyTriggerRange)
                         {
+                            if (trigger >= stopLoss)
+                                continue;
                             foreach (var minProfit in minimumTakeProfitRange)
                             {
                                 var strategy = new HoldUntilPriceDropsStrategy();
@@ -67,7 +69,7 @@ namespace CryBot.Core.Services
                                     StopLoss = stopLoss,
                                     BuyTrigger = trigger,
                                     MinimumTakeProfit = minProfit,
-                                    DefaultBudget = TraderSettings.Default.DefaultBudget
+                                    TradingBudget = TraderSettings.Default.TradingBudget
                                 };
                                 strategies.Add(strategy);
                             }
@@ -128,7 +130,8 @@ namespace CryBot.Core.Services
             {
                 Market = market,
                 TradingStrategy = new HoldUntilPriceDropsStrategy { Settings = bestSettings },
-                TraderStats = topSettings[0].Value
+                TraderStats = topSettings[0].Value,
+                TraderSettings = bestSettings
             };
         }
 

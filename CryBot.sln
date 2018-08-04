@@ -11,9 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryBot.Silo", "CryBot.Silo\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryBot.Core", "CryBot.Core\CryBot.Core.csproj", "{3192EDA1-114A-4CC3-AF4C-3F00A74C11B7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryBot.Contracts", "CryBot.Contracts\CryBot.Contracts.csproj", "{5CA9EA60-3063-49D3-AD28-FF9C9BCE2836}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryBot.Backtester", "CryBot.Backtester\CryBot.Backtester.csproj", "{248B19CE-AEC2-4929-8663-0E087720252B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryBot.Backtester", "CryBot.Backtester\CryBot.Backtester.csproj", "{248B19CE-AEC2-4929-8663-0E087720252B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,10 +35,6 @@ Global
 		{3192EDA1-114A-4CC3-AF4C-3F00A74C11B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3192EDA1-114A-4CC3-AF4C-3F00A74C11B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3192EDA1-114A-4CC3-AF4C-3F00A74C11B7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5CA9EA60-3063-49D3-AD28-FF9C9BCE2836}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5CA9EA60-3063-49D3-AD28-FF9C9BCE2836}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5CA9EA60-3063-49D3-AD28-FF9C9BCE2836}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5CA9EA60-3063-49D3-AD28-FF9C9BCE2836}.Release|Any CPU.Build.0 = Release|Any CPU
 		{248B19CE-AEC2-4929-8663-0E087720252B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{248B19CE-AEC2-4929-8663-0E087720252B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{248B19CE-AEC2-4929-8663-0E087720252B}.Release|Any CPU.ActiveCfg = Release|Any CPU

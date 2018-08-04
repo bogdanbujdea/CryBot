@@ -1,7 +1,4 @@
 ﻿using Bittrex.Net.Objects;
-
-using CryBot.Contracts;
-
 using CryBot.Core.Models;
 
 using System;
@@ -165,6 +162,11 @@ namespace CryBot.Core.Utilities
             bool dropCommission = false)
         {
             return Math.Round(oldValue.RoundSatoshi().GetPercentageChange(newValue.RoundSatoshi(), dropCommission) * 100, 2);
+        }
+        
+        public static bool Expired(this DateTime startDate, TimeSpan expirationTime, DateTime currentDate)
+        {
+            return currentDate.Subtract(expirationTime) > startDate;
         }
     }
 }

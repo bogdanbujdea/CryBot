@@ -1,4 +1,7 @@
-﻿using CryBot.Contracts;
+﻿using Bittrex.Net.Objects;
+
+using CryBot.Core.Models;
+
 using Orleans;
 
 using System.Linq;
@@ -22,13 +25,15 @@ namespace CryBot.Core.Services
 
         public async Task<List<TraderState>> GetAllTraders()
         {
+            //TODO: Get all traders
             var marketsResponse = await _cryptoApi.GetMarketsAsync();
             var traderStates = new List<TraderState>();
             foreach (var market in marketsResponse.Content.Select(m => m.Name))
             {
-                var traderGrain = _clusterClient.GetGrain<ITraderGrain>(market);
+                var traderGrain = _clusterClient.GetGrain<ITraderGrain>("BTC-ETC");
                 if (await traderGrain.IsInitialized())
                     traderStates.Add(await traderGrain.GetTraderData());
+                return traderStates;
             }
 
             return traderStates;
@@ -36,8 +41,11 @@ namespace CryBot.Core.Services
 
         public async Task CreateTraderAsync(string market)
         {
+            _cryptoApi.IsInTestMode = true;
+            await _cryptoApi.GetCandlesAsync(market, TickInterval.OneHour);
             var cryptoTrader = new CryptoTrader(_cryptoApi, _clusterClient, _hubNotifier);
             await cryptoTrader.StartAsync(market);
+            await Task.Run(() => _cryptoApi.SendMarketUpdates(market));
         }
     }
 }

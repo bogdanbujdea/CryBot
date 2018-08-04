@@ -1,5 +1,4 @@
-﻿using CryBot.Contracts;
-using CryBot.Core.Models;
+﻿using CryBot.Core.Models;
 using CryBot.Core.Services;
 
 using FluentAssertions;
@@ -17,11 +16,11 @@ namespace CryBot.UnitTests.Services
 {
     public class TradersManagerTests
     {
-        private Mock<ICryptoApi> _cryptoApiMock;
-        private TradersManager _tradersManager;
-        private Mock<IClusterClient> _clusterClientMock;
-        private Mock<ITraderGrain> _initializedTraderGrainMock;
-        private Mock<ITraderGrain> _notInitializedTraderGrainMock;
+        private readonly Mock<ICryptoApi> _cryptoApiMock;
+        private readonly TradersManager _tradersManager;
+        private readonly Mock<IClusterClient> _clusterClientMock;
+        private readonly Mock<ITraderGrain> _initializedTraderGrainMock;
+        private readonly Mock<ITraderGrain> _notInitializedTraderGrainMock;
 
         public TradersManagerTests()
         {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CryBot.Contracts
+namespace CryBot.Core.Models
 {
     public interface ICryptoOrder
     {

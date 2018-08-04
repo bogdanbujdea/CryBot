@@ -1,4 +1,4 @@
-﻿using CryBot.Contracts;
+﻿using CryBot.Core.Models;
 using CryBot.Core.Services;
 
 using Microsoft.AspNetCore.SignalR;

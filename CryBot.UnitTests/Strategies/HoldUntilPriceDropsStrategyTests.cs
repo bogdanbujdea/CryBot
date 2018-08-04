@@ -1,4 +1,4 @@
-﻿using CryBot.Contracts;
+﻿using CryBot.Core.Models;
 using CryBot.Core.Services;
 
 using FluentAssertions;
@@ -10,6 +10,7 @@ namespace CryBot.UnitTests.Services
     public class HoldUntilPriceDropsStrategyTests
     {
         private readonly HoldUntilPriceDropsStrategy _strategy;
+        private Trade _currentTrade;
 
         public HoldUntilPriceDropsStrategyTests()
         {
@@ -17,11 +18,12 @@ namespace CryBot.UnitTests.Services
             _strategy.Settings.HighStopLossPercentage = -5;
             _strategy.Settings.StopLoss = -2;
             _strategy.Settings.BuyTrigger = -1;
-            _strategy.CurrentTrade = new Trade
+            _currentTrade = new Trade
             {
                 BuyOrder = new CryptoOrder
                 {
-                    PricePerUnit = 100
+                    PricePerUnit = 100,
+                    Uuid = "abc"
                 }
             };
         }
@@ -29,31 +31,31 @@ namespace CryBot.UnitTests.Services
         [Fact]
         public void MinimumHighStopLoss_Should_ReturnSellAdvice()
         {
-            _strategy.CalculateTradeAction(new Ticker { Bid = 110 }).TradeAdvice.Should().Be(TradeAdvice.Hold);
-            _strategy.CalculateTradeAction(new Ticker { Bid = 104 }).TradeAdvice.Should().Be(TradeAdvice.Sell);
+            _strategy.CalculateTradeAction(new Ticker { Bid = 110}, _currentTrade).TradeAdvice.Should().Be(TradeAdvice.Hold);
+            _strategy.CalculateTradeAction(new Ticker { Bid = 104}, _currentTrade).TradeAdvice.Should().Be(TradeAdvice.Sell);
         }
 
         [Fact]
         public void MinimumHighStopLoss_Should_SellImmediately()
         {
-            _strategy.CalculateTradeAction(new Ticker { Bid = 110 }).TradeAdvice.Should().Be(TradeAdvice.Hold);
-            var tradeAction = _strategy.CalculateTradeAction(new Ticker { Bid = 104 });
+            _strategy.CalculateTradeAction(new Ticker { Bid = 110 }, _currentTrade).TradeAdvice.Should().Be(TradeAdvice.Hold);
+            var tradeAction = _strategy.CalculateTradeAction(new Ticker { Bid = 104 }, _currentTrade);
             tradeAction.OrderPricePerUnit.Should().Be(104);
         }
 
         [Fact]
         public void MinimumStopLoss_Should_ReturnSellAdvice()
         {
-            _strategy.CalculateTradeAction(new Ticker { Bid = 99 });
-            var tradeAction = _strategy.CalculateTradeAction(new Ticker { Bid = 98 });
+            _strategy.CalculateTradeAction(new Ticker { Bid = 99 }, _currentTrade);
+            var tradeAction = _strategy.CalculateTradeAction(new Ticker { Bid = 98 }, _currentTrade);
             tradeAction.TradeAdvice.Should().Be(TradeAdvice.Sell);
         }
 
         [Fact]
         public void MinimumStopLoss_Should_SellImmediately()
         {
-            _strategy.CalculateTradeAction(new Ticker { Bid = 99 });
-            var tradeAction = _strategy.CalculateTradeAction(new Ticker { Bid = 98 });
+            _strategy.CalculateTradeAction(new Ticker { Bid = 99 }, _currentTrade);
+            var tradeAction = _strategy.CalculateTradeAction(new Ticker { Bid = 98 }, _currentTrade);
             tradeAction.TradeAdvice.Should().Be(TradeAdvice.Sell);
             tradeAction.OrderPricePerUnit.Should().Be(98);
         }
@@ -62,7 +64,7 @@ namespace CryBot.UnitTests.Services
         public void BuyTrigger_Should_ReturnBuyAdvice()
         {
             _strategy.Settings.BuyTrigger = -1;
-            var tradeAction = _strategy.CalculateTradeAction(new Ticker { Bid = 98 });
+            var tradeAction = _strategy.CalculateTradeAction(new Ticker { Bid = 98 }, _currentTrade);
             tradeAction.TradeAdvice.Should().Be(TradeAdvice.Buy);
         }
 
@@ -70,7 +72,7 @@ namespace CryBot.UnitTests.Services
         public void BuyTrigger_Should_BuyOnBidPrice()
         {
             _strategy.Settings.BuyTrigger = -1;
-            var tradeAction = _strategy.CalculateTradeAction(new Ticker { Bid = 98 });
+            var tradeAction = _strategy.CalculateTradeAction(new Ticker { Bid = 98 }, _currentTrade);
             tradeAction.TradeAdvice.Should().Be(TradeAdvice.Buy);
             tradeAction.OrderPricePerUnit.Should().Be(98);
         }
@@ -80,13 +82,13 @@ namespace CryBot.UnitTests.Services
         {
             _strategy.Settings.BuyTrigger = -1;
             _strategy.Settings.StopLoss = -10;
-            _strategy.CurrentTrade.TriggeredBuy = false;
-            var tradeAction = _strategy.CalculateTradeAction(new Ticker { Bid = 98 });
+            _currentTrade.TriggeredBuy = false;
+            var tradeAction = _strategy.CalculateTradeAction(new Ticker { Bid = 98 }, _currentTrade);
 
-            _strategy.CurrentTrade.TriggeredBuy.Should().Be(true);
+            _currentTrade.TriggeredBuy.Should().Be(true);
             tradeAction.TradeAdvice.Should().Be(TradeAdvice.Buy);
 
-            tradeAction = _strategy.CalculateTradeAction(new Ticker { Bid = 97 });
+            tradeAction = _strategy.CalculateTradeAction(new Ticker { Bid = 97 }, _currentTrade);
             tradeAction.TradeAdvice.Should().Be(TradeAdvice.Hold);
         }
 
@@ -94,8 +96,17 @@ namespace CryBot.UnitTests.Services
         public void BuyTriggerSmallerThanStopLoss_Should_ReturnHold()
         {
             _strategy.Settings.BuyTrigger = -10;
-            var tradeAction = _strategy.CalculateTradeAction(new Ticker { Bid = 98 });
+            var tradeAction = _strategy.CalculateTradeAction(new Ticker { Bid = 98 }, _currentTrade);
             tradeAction.TradeAdvice.Should().Be(TradeAdvice.Hold);
+        }
+
+        [Fact]
+        public void TradeWithNoBuyOrder_Should_ReturnBuyAdvice()
+        {
+            var tradeAction = _strategy.CalculateTradeAction(new Ticker { Bid = 98 }, new Trade());
+            tradeAction.TradeAdvice.Should().Be(TradeAdvice.Buy);
+            tradeAction.Reason.Should().Be(TradeReason.FirstTrade);
+            tradeAction.OrderPricePerUnit.Should().Be(98);
         }
     }
 }

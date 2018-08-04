@@ -22,9 +22,9 @@ namespace CryBot.Silo
                 .Configure<ClusterOptions>(options =>
                 {
                     options.ClusterId = "dev";
-                    options.ServiceId = "OrleansService";
+                    options.ServiceId = "OrleansService";                    
                 })
-                .Configure<EndpointOptions>(options =>
+                .Configure<EndpointOptions>(options =>                    
                     options.AdvertisedIPAddress = IPAddress.Loopback)
                 .ConfigureLogging(logging => logging.AddConsole())
                 .ConfigureApplicationParts(manager =>
@@ -49,10 +49,10 @@ namespace CryBot.Silo
             {
                 options.Invariant = invariant;
                 options.ConnectionString = connectionString;
-                options.UseJsonFormat = true;
+                options.UseJsonFormat = false;
             });
             using (var host = siloBuilder.Build())
-            {
+            {                
                 await host.StartAsync();
                 Console.ReadLine();
             }

@@ -1,4 +1,4 @@
-﻿using CryBot.Contracts;
+﻿using CryBot.Core.Models;
 using CryBot.Core.Utilities;
 
 using Orleans;
@@ -7,6 +7,8 @@ using System;
 
 using System.Linq;
 using System.Timers;
+using System.Threading;
+
 using Timer = System.Timers.Timer;
 
 using System.Threading.Tasks;
@@ -22,6 +24,9 @@ namespace CryBot.Core.Services
         private ITraderGrain _traderGrain;
         private readonly Queue<Ticker> _queue = new Queue<Ticker>();
         private Timer _marketUpdatesTimer;
+        private decimal _profitBTC = 0M;
+        private static readonly SemaphoreSlim SemaphoreSlim = new SemaphoreSlim(1, 1);
+        private int _tickersCount = 0;
 
         public CryptoTrader(ICryptoApi cryptoApi, IClusterClient orleansClient, IHubNotifier hubNotifier)
         {
@@ -63,6 +68,12 @@ namespace CryBot.Core.Services
             await _traderGrain.UpdatePriceAsync(tickerResponse.Content);
             Ticker = tickerResponse.Content;
             Settings = await _traderGrain.GetSettings();
+            AvailableBudget = InvestedBTC = Settings.TradingBudget;
+            Settings.BuyLowerPercentage = -1;
+            Settings.MinimumTakeProfit = 0M;
+            Settings.HighStopLossPercentage = -0.1M;
+            Settings.StopLoss = -4;
+            Settings.BuyTrigger = -2;
             _cryptoApi.MarketsUpdated += MarketsUpdated;
             _cryptoApi.OrderUpdated += OrderUpdated;
             _marketUpdatesTimer = new Timer
@@ -77,8 +88,9 @@ namespace CryBot.Core.Services
                 return;
             }
 
-            await CreateBuyOrder(tickerResponse.Content.Ask);
-            await CreateBuyOrder(tickerResponse.Content.Bid * Settings.BuyLowerPercentage.ToPercentageMultiplier());
+            var trade = await CreateBuyOrder(tickerResponse.Content.Bid);
+            Trades.Add(trade);
+            //await CreateBuyOrder(tickerResponse.Content.Bid * Settings.BuyLowerPercentage.ToPercentageMultiplier());
         }
 
         public async Task UpdatePrice(Ticker ticker)
@@ -96,6 +108,8 @@ namespace CryBot.Core.Services
                 await ProcessMarketUpdate(_queue.Dequeue());
             }
         }
+
+        public static int LastProcessedTicker { get; set; }
 
         protected virtual async void OnPriceUpdated(Ticker e)
         {
@@ -120,12 +134,18 @@ namespace CryBot.Core.Services
 
         private async void ProcessQueue(object state, ElapsedEventArgs elapsedEventArgs)
         {
-            if (_queue.Count <= 0)
-                return;
-            var currentMarket = _queue.Dequeue();
-            if (currentMarket == null)
-                return;
-            await ProcessMarketUpdate(currentMarket);
+            try
+            {
+                if (_queue.Count <= 0)
+                    return;
+                var currentMarket = _queue.Dequeue();
+                if (currentMarket == null)
+                    return;
+                await ProcessMarketUpdate(currentMarket);
+            }
+            catch (Exception e)
+            {
+            }
         }
 
         private async Task ProcessMarketUpdate(Ticker currentTicker)
@@ -143,59 +163,76 @@ namespace CryBot.Core.Services
             }
         }
 
-        private async Task CreateBuyOrder(decimal pricePerUnit)
+        private async Task<Trade> CreateBuyOrder(decimal pricePerUnit)
         {
             var trade = new Trade();
-            if (AvailableBudget <= InvestedBTC)
+            if (AvailableBudget < Settings.TradingBudget)
             {
-                InvestedBTC += Settings.DefaultBudget;
-                AvailableBudget += Settings.DefaultBudget;
+                InvestedBTC += Settings.TradingBudget;
+                AvailableBudget = Settings.TradingBudget;
             }
             var buyResponse = await _cryptoApi.BuyCoinAsync(new CryptoOrder
             {
                 PricePerUnit = pricePerUnit,
-                Price = Settings.DefaultBudget,
-                Quantity = Settings.DefaultBudget / pricePerUnit,
+                Price = AvailableBudget,
+                Quantity = AvailableBudget / pricePerUnit,
+                Opened = Ticker.Timestamp,
                 Market = Market,
                 OrderType = CryptoOrderType.LimitBuy
             });
-            Console.WriteLine($"Created buy order with price {pricePerUnit}");
+            AvailableBudget = 0;
             trade.BuyOrder = buyResponse.Content;
             trade.IsActive = false;
             trade.Market = Market;
-            Trades.Add(trade);
             await _traderGrain.AddTradeAsync(trade);
+            return trade;
         }
 
         private async void OrderUpdated(object sender, CryptoOrder e)
         {
             if (Trades.Count == 0 || e.Market != Market)
                 return;
-
-            if (e.OrderType == CryptoOrderType.LimitSell)
+            try
             {
-                var tradeForOrder = Trades.FirstOrDefault(t => t.SellOrder.Uuid == e.Uuid);
-                if (tradeForOrder != null)
+                if (e.OrderType == CryptoOrderType.LimitSell)
                 {
-                    Console.WriteLine("Closed sell order");
-                    tradeForOrder.IsActive = false;
-                    await CreateBuyOrder(e.PricePerUnit * Settings.BuyLowerPercentage.ToPercentageMultiplier());
+                    var tradeForOrder = Trades.FirstOrDefault(t => t.SellOrder.Uuid == e.Uuid);
+                    if (tradeForOrder != null)
+                    {
+                        tradeForOrder.IsActive = false;
+                        tradeForOrder.SellOrder.IsClosed = true;
+                        tradeForOrder.SellOrder.IsOpened = false;
+                        Console.WriteLine($"Available: {AvailableBudget}");
+                        Console.WriteLine($"Adding sell price of {e.Price} to {AvailableBudget}");
+                        AvailableBudget += Math.Round(e.Price, 8);
+                        var trade = await CreateBuyOrder(
+                            e.PricePerUnit * Settings.BuyLowerPercentage.ToPercentageMultiplier());
+                        trade.BuyOrder.Opened = Ticker.Timestamp;
+                        Trades.Add(trade);
+                        _profitBTC += e.Price - tradeForOrder.BuyOrder.Price;
+                        var profit = InvestedBTC.GetReadablePercentageChange(InvestedBTC + _profitBTC);
+                        Console.WriteLine($"Current profit: {profit}%");
+                    }
                 }
-            }
-            else
-            {
-                var tradeForOrder = Trades.FirstOrDefault(t => t.BuyOrder.Uuid == e.Uuid);
-                if (tradeForOrder != null)
+                else
                 {
-                    Console.WriteLine("Closed buy order");
-                    tradeForOrder.IsActive = true;
-                    tradeForOrder.BuyOrder = e;
+                    var tradeForOrder = Trades.FirstOrDefault(t => t.BuyOrder.Uuid == e.Uuid);
+                    if (tradeForOrder != null)
+                    {
+                        Console.WriteLine($"Closed buy order {e.Uuid} at {Ticker.Timestamp} for {Ticker.Ask}");
+                        tradeForOrder.IsActive = true;
+                        tradeForOrder.BuyOrder = e;
+                    }
                 }
-            }
 
-            await _traderGrain.UpdateTrades(Trades);
-            var traderData = await _traderGrain.GetTraderData();
-            await _hubNotifier.UpdateTrader(traderData);
+                await _traderGrain.UpdateTrades(Trades);
+                var traderData = await _traderGrain.GetTraderData();
+                await _hubNotifier.UpdateTrader(traderData);
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception);
+            }
         }
 
         private void MarketsUpdated(object sender, List<Ticker> e)
@@ -203,57 +240,96 @@ namespace CryBot.Core.Services
             var currentMarket = e.FirstOrDefault(m => m.Market == Market);
             if (currentMarket == null)
                 return;
-            if (_queue.Count > 0)
-            {
-                if (_queue.Peek().Bid == currentMarket.Bid)
-                    return;
-
-                if (_queue.Peek().Bid == Ticker.Bid)
-                    return;
-            }
-            else
-            {
-                if (currentMarket.Bid == Ticker.Bid)
-                    return;
-            }
             _queue.Enqueue(currentMarket);
         }
 
         private async Task UpdateTrades()
         {
-            foreach (var trade in Trades.Where(t => t.IsActive))
+            Trade newTrade = null;
+            await SemaphoreSlim.WaitAsync();
+            
+            try
             {
-                trade.Strategy = new HoldUntilPriceDropsStrategy { Settings = Settings, CurrentTrade = trade };
-                var tradeAction = trade.CalculateAction(Ticker);
-                var profit = trade.BuyOrder.PricePerUnit.GetReadablePercentageChange(Ticker.Bid, true);
-
-                if (trade.MaxPricePerUnit < Ticker.Bid)
+                for (var index = 0; index < Trades.Count; index++)
                 {
-                    Console.WriteLine($"New max for {Market}: {Ticker.Bid}");
-                    trade.MaxPricePerUnit = Ticker.Bid;
+                    var trade = Trades[index];
+                    if (trade.IsActive == false && trade.SellOrder.IsClosed)
+                        continue;
+                    trade.Strategy = new HoldUntilPriceDropsStrategy {Settings = Settings};
+                    var tradeAction = trade.CalculateAction(Ticker);
+
+                    //Console.WriteLine($"{Market}:\t\t{trade.Profit}\t\t{Ticker.Bid}\t\t{Ticker.Timestamp:F}");
+                    if (trade.SellOrder.IsOpened)
+                    {
+                        return;
+                    }
+
+                    if (tradeAction.TradeAdvice == TradeAdvice.Cancel)
+                    {
+                        Console.WriteLine($"Canceled order {trade.BuyOrder.Uuid}");
+                        trade.IsActive = false;
+                        trade.BuyOrder.Canceled = true;
+                        trade.Profit = 0;
+                        trade.CurrentTicker = new Ticker();
+                        newTrade = await CreateBuyOrder(tradeAction.OrderPricePerUnit);
+                    }
+
+                    if (tradeAction.TradeAdvice == TradeAdvice.Buy)
+                    {
+                        Console.WriteLine($"Buying due to {tradeAction.Reason}");
+                        newTrade = await CreateBuyOrder(tradeAction.OrderPricePerUnit);
+                    }
+                    else if (tradeAction.TradeAdvice == TradeAdvice.Sell)
+                    {
+                        if (tradeAction.Reason == TradeReason.StopLoss)
+                        {
+                            trade.SellOrder.OrderType = CryptoOrderType.ImmediateSell;
+                        }
+
+                        CreateSellOrder(trade);
+                        Console.WriteLine(
+                            $"SELLING due to {tradeAction.Reason}\t{Ticker.Bid}\t{trade.Profit}%\t{Ticker.Timestamp:F}\t{trade.SellOrder.Price} BTC\t\t{trade.BuyOrder.Uuid}");
+                    }
                 }
 
-                trade.Profit = profit;
-                Console.WriteLine($"{Market}: {profit}\t{trade.BuyOrder.PricePerUnit}\t{Ticker.Bid}");
-                if (tradeAction.TradeAdvice == TradeAdvice.Sell)
+                if (newTrade != null) Trades.Add(newTrade);
+                var canceledTrades = Trades.Where(t => t.BuyOrder.Canceled).ToList();
+                foreach (var canceledTrade in canceledTrades)
                 {
-                    await CreateSellOrder(trade);
+                    Trades.Remove(canceledTrade);
                 }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            finally
+            {
+                //When the task is ready, release the semaphore. It is vital to ALWAYS release the semaphore when we are ready, or else we will end up with a Semaphore that is forever locked.
+                //This is why it is important to do the Release within a try...finally clause; program execution may crash or take a different path, this way you are guaranteed execution
+                SemaphoreSlim.Release();
+                Console.WriteLine($"CTRADER: {_tickersCount++}");
+                LastProcessedTicker = _tickersCount;
             }
         }
 
-        private async Task CreateSellOrder(Trade trade)
+        private void CreateSellOrder(Trade trade)
         {
-            Console.WriteLine("Creating sell order");
             var cryptoOrder = new CryptoOrder
             {
                 PricePerUnit = Ticker.Bid,
                 Price = Ticker.Bid * trade.BuyOrder.Quantity,
                 Market = Market,
-                Quantity = trade.BuyOrder.Quantity
+                Opened = Ticker.Timestamp,
+                Quantity = trade.BuyOrder.Quantity,
+                OrderType = CryptoOrderType.LimitSell
             };
-            var sellOrderResponse = await _cryptoApi.SellCoinAsync(cryptoOrder);
-            trade.SellOrder = sellOrderResponse.Content;
+            //var sellOrderResponse = await _cryptoApi.SellCoinAsync(cryptoOrder);
+            cryptoOrder.Uuid = "SELLORDER-" + FakeBittrexApi.SellOrdersCount++;
+            trade.SellOrder = cryptoOrder;
+            trade.SellOrder.Closed = Ticker.Timestamp;
+            trade.SellOrder.IsOpened = true;
+            OrderUpdated(this, cryptoOrder);
         }
     }
 }

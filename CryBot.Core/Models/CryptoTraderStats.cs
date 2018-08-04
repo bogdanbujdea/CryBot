@@ -1,4 +1,4 @@
-﻿namespace CryBot.Contracts
+﻿namespace CryBot.Core.Models
 {
     public class CryptoTraderStats
     {

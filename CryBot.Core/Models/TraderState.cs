@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace CryBot.Contracts
+namespace CryBot.Core.Models
 {
     public class TraderState
     {

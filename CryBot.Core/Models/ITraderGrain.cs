@@ -3,7 +3,7 @@
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
-namespace CryBot.Contracts
+namespace CryBot.Core.Models
 {
     public interface ITraderGrain: IGrainWithStringKey
     {

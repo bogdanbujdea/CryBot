@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Services\CryptoTraderTests\**" />
+    <EmbeddedResource Remove="Services\CryptoTraderTests\**" />
+    <None Remove="Services\CryptoTraderTests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Bittrex.Net" Version="2.1.10" />
     <PackageReference Include="FluentAssertions" Version="5.4.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.2" />

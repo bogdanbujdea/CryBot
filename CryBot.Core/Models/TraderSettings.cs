@@ -1,4 +1,4 @@
-﻿namespace CryBot.Contracts
+﻿namespace CryBot.Core.Models
 {
     public class TraderSettings
     {
@@ -12,16 +12,16 @@
         
         public decimal BuyLowerPercentage { get; set; }
         
-        public decimal DefaultBudget { get; set; }
+        public decimal TradingBudget { get; set; }
         
         public static TraderSettings Default { get; } = new TraderSettings
         {
-            BuyLowerPercentage = -2,
-            DefaultBudget = 0.0012M,
+            BuyLowerPercentage = -3,
+            TradingBudget = 0.0012M,
             MinimumTakeProfit = 0M,
-            HighStopLossPercentage = -1M,
-            StopLoss = -4,
-            BuyTrigger = -2M,
+            HighStopLossPercentage = -3M,
+            StopLoss = -5,
+            BuyTrigger = -3M,
         };
 
         public override string ToString()

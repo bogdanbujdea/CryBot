@@ -1,4 +1,4 @@
-﻿namespace CryBot.Contracts
+﻿namespace CryBot.Core.Models
 {
     public interface ITradingStrategy
     {
@@ -6,8 +6,6 @@
 
         TraderSettings Settings { get; set; }
 
-        Trade CurrentTrade { get; set; }
-
-        TradeAction CalculateTradeAction(Ticker ticker);
+        TradeAction CalculateTradeAction(Ticker ticker, Trade trade);
     }
 }
