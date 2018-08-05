@@ -10,7 +10,7 @@ namespace CryBot.UnitTests.Services.CoinTraderTests
         [Fact]
         public void SoldCoin_Should_InvokeOrderUpdated()
         {
-            CoinTrader.OrderUpdated(new CryptoOrder { OrderType = CryptoOrderType.LimitSell, Price = 1100 });
+            CoinTrader.UpdateOrder(new CryptoOrder { OrderType = CryptoOrderType.LimitSell, Price = 1100 });
             CoinTrader.Budget.Available.Should().Be(1100);
         }
 
@@ -30,7 +30,7 @@ namespace CryBot.UnitTests.Services.CoinTraderTests
             CoinTrader.Budget.Profit = 5;
             CoinTrader.Budget.Earned = 1;
 
-            CoinTrader.OrderUpdated(sellOrder);
+            CoinTrader.UpdateOrder(sellOrder);
 
             CoinTrader.Budget.Profit.Should().Be(15);
             CoinTrader.Budget.Earned.Should().Be(101);

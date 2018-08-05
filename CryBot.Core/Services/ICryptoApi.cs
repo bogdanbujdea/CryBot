@@ -1,17 +1,19 @@
 ﻿using Bittrex.Net.Objects;
+
 using CryBot.Core.Models;
 
-using System;
 using System.Threading.Tasks;
+using System.Reactive.Subjects;
 using System.Collections.Generic;
 
 namespace CryBot.Core.Services
 {
     public interface ICryptoApi
     {
-        event EventHandler<List<Ticker>> MarketsUpdated;
+        ISubject<CryptoOrder> OrderUpdated { get; }
 
-        event EventHandler<CryptoOrder> OrderUpdated;
+        ISubject<Ticker> TickerUpdated { get; }
+
         bool IsInTestMode { get; set; }
 
         void Initialize(string apiKey, string apiSecret);

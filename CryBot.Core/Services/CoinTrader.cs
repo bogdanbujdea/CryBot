@@ -1,7 +1,11 @@
 ﻿using CryBot.Core.Models;
 using CryBot.Core.Utilities;
 
+using System;
+
 using System.Linq;
+using System.Reactive;
+using System.Reactive.Linq;
 
 using System.Threading.Tasks;
 
@@ -22,8 +26,19 @@ namespace CryBot.Core.Services
         {
             Market = market;
             Strategy = new HoldUntilPriceDropsStrategy();
-        }
+            _cryptoApi.TickerUpdated
+                .Where(t => t.Market == market)
+                .Select(ticker => Observable.FromAsync(token => UpdatePrice(ticker)))
+                .Concat()
+                .Subscribe();
 
+            _cryptoApi.OrderUpdated
+                .Where(o => o.Market == market)
+                .Select(order => Observable.FromAsync(token => UpdateOrder(order)))
+                .Concat()
+                .Subscribe();
+        }
+        
         public string Market { get; set; }
 
         public Ticker Ticker { get; set; }
@@ -34,10 +49,11 @@ namespace CryBot.Core.Services
 
         public Budget Budget { get; set; } = new Budget();
 
-        public async Task UpdatePrice(Ticker ticker)
+        public async Task<Unit> UpdatePrice(Ticker ticker)
         {
             Ticker = ticker;
             await UpdateTrades();
+            return Unit.Default;
         }
 
         public async Task StartAsync()
@@ -48,7 +64,7 @@ namespace CryBot.Core.Services
             }
         }
 
-        public void OrderUpdated(CryptoOrder cryptoOrder)
+        public async Task<Unit> UpdateOrder(CryptoOrder cryptoOrder)
         {
             switch (cryptoOrder.OrderType)
             {
@@ -72,6 +88,8 @@ namespace CryBot.Core.Services
                     }
                     break;
             }
+
+            return await Task.FromResult(Unit.Default);
         }
 
         private async Task UpdateTrades()

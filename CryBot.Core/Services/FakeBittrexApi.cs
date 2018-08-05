@@ -20,7 +20,6 @@ namespace CryBot.Core.Services
 
         public FakeBittrexApi(IBittrexClient bittrexClient) : base(bittrexClient)
         {
-            MarketsUpdated += MarketsUpdatedHandler;
         }
 
         private void MarketsUpdatedHandler(object sender, List<Ticker> e)
@@ -43,7 +42,7 @@ namespace CryBot.Core.Services
                     sellOrder.Closed = DateTime.UtcNow;
                     sellOrder.OrderType = CryptoOrderType.LimitSell;
                     removedOrders.Add(sellOrder);
-                    OnOrderUpdate(sellOrder);
+                    OrderUpdated.OnNext(sellOrder);
                 }
             }
 
@@ -63,7 +62,7 @@ namespace CryBot.Core.Services
                     Console.WriteLine($"Closed order {cryptoOrder.Uuid}");
                     cryptoOrder.Closed = DateTime.UtcNow;
                     cryptoOrder.IsClosed = true;
-                    OnOrderUpdate(cryptoOrder);
+                    OrderUpdated.OnNext(cryptoOrder);
                     removedOrders.Add(cryptoOrder);
                 }
                 if (cryptoOrder.Canceled)

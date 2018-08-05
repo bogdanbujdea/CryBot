@@ -1,6 +1,7 @@
 ﻿using Bittrex.Net;
 using Bittrex.Net.Objects;
 using Bittrex.Net.Interfaces;
+
 using CryBot.Core.Models;
 using CryBot.Core.Utilities;
 
@@ -11,6 +12,7 @@ using System;
 using System.Linq;
 
 using System.Threading.Tasks;
+using System.Reactive.Subjects;
 using System.Collections.Generic;
 
 namespace CryBot.Core.Services
@@ -24,10 +26,13 @@ namespace CryBot.Core.Services
         public BittrexApi(IBittrexClient bittrexClient)
         {
             _bittrexClient = bittrexClient;
+            TickerUpdated = new Subject<Ticker>();
+            OrderUpdated = new Subject<CryptoOrder>();
         }
 
-        public event EventHandler<List<Ticker>> MarketsUpdated;
-        public event EventHandler<CryptoOrder> OrderUpdated;
+        public ISubject<Ticker> TickerUpdated { get; private set; }
+
+        public ISubject<CryptoOrder> OrderUpdated { get; private set; }
 
         public bool IsInTestMode { get; set; }
 
@@ -43,8 +48,8 @@ namespace CryBot.Core.Services
                 ApiCredentials = apiCredentials
             });
 
-            //_bittrexSocketClient.SubscribeToMarketSummariesUpdate(OnMarketsUpdate);
-            //_bittrexSocketClient.SubscribeToOrderUpdates(OnOrderUpdate);
+            _bittrexSocketClient.SubscribeToMarketSummariesUpdate(OnMarketsUpdate);
+            _bittrexSocketClient.SubscribeToOrderUpdates(OnOrderUpdate);
         }
 
         public async Task<CryptoResponse<Wallet>> GetWalletAsync()
@@ -94,7 +99,7 @@ namespace CryBot.Core.Services
 
         public virtual async Task<CryptoResponse<CryptoOrder>> BuyCoinAsync(CryptoOrder cryptoOrder)
         {
-            OrderUpdated?.Invoke(this, cryptoOrder);
+            OrderUpdated.OnNext(cryptoOrder);
             return new CryptoResponse<CryptoOrder>(cryptoOrder);
         }
 
@@ -147,7 +152,7 @@ namespace CryBot.Core.Services
                 Close = c.Close,
                 Volume = c.BaseVolume
             }).ToList();
-            _candles = candles.Take(candles.Count/4).ToList();
+            _candles = candles.Take(candles.Count / 4).ToList();
             /*_candles = new List<Candle>
             {
                 new Candle{ Low = 0.00010000M, High = 0.00010100M },
@@ -178,11 +183,7 @@ namespace CryBot.Core.Services
                             oldPercentage = percentage;
                         }
                         //Console.WriteLine($"BAPI: {_candles.IndexOf(candle) + 1}\t{candle.Low}\t{candle.High}");
-                        MarketsUpdated?.Invoke(this, new List<Ticker> { new Ticker { Market = market, Bid = candle.Low, Ask = candle.High, Timestamp = candle.Timestamp } });
-                        while (CryptoTrader.LastProcessedTicker < _candles.IndexOf(candle) + 1)
-                        {
-                            await Task.Delay(100); //TODO: Remove this
-                        }
+                        TickerUpdated.OnNext(new Ticker { Market = market, Bid = candle.Low, Ask = candle.High, Timestamp = candle.Timestamp });
                     }
                     catch (Exception)
                     {
@@ -198,24 +199,26 @@ namespace CryBot.Core.Services
 
         protected void OnMarketsUpdate(List<BittrexStreamMarketSummary> markets)
         {
-            MarketsUpdated?.Invoke(this, markets.Select(m => new Ticker
+            var tickers = markets.Select(m => new Ticker
             {
                 Last = m.Last.GetValueOrDefault(),
                 Ask = m.Ask,
                 Bid = m.Bid,
                 Market = m.MarketName,
                 BaseVolume = m.BaseVolume.GetValueOrDefault()
-            }).ToList());
+            });
+
+            foreach (var ticker in tickers)
+            {
+                TickerUpdated.OnNext(ticker);
+            }
         }
 
         protected void OnOrderUpdate(BittrexStreamOrderData bittrexOrder)
         {
-            OrderUpdated?.Invoke(this, bittrexOrder.ToCryptoOrder());
+            OrderUpdated.OnNext(bittrexOrder.ToCryptoOrder());
         }
-        protected void OnOrderUpdate(CryptoOrder cryptoOrder)
-        {
-            OrderUpdated?.Invoke(this, cryptoOrder);
-        }
+
         private async Task<List<CoinBalance>> RetrieveBalances()
         {
             var balancesCallResult = await _bittrexClient.GetBalancesAsync();

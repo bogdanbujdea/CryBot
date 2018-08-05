@@ -141,7 +141,7 @@ namespace CryBot.UnitTests.Services.CoinTraderTests
             };
             CoinTrader.Trades.Add(trade);
 
-            CoinTrader.OrderUpdated(sellOrder);
+            CoinTrader.UpdateOrder(sellOrder);
 
             trade.Status.Should().Be(TradeStatus.Completed);
         }
@@ -179,7 +179,7 @@ namespace CryBot.UnitTests.Services.CoinTraderTests
                 OrderType = CryptoOrderType.LimitBuy
             };
 
-            CoinTrader.OrderUpdated(buyOrder);
+            CoinTrader.UpdateOrder(buyOrder);
 
             CoinTrader.Trades[0].Status.Should().Be(TradeStatus.Bought);
         }

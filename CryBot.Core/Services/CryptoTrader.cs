@@ -74,8 +74,6 @@ namespace CryBot.Core.Services
             Settings.HighStopLossPercentage = -0.1M;
             Settings.StopLoss = -4;
             Settings.BuyTrigger = -2;
-            _cryptoApi.MarketsUpdated += MarketsUpdated;
-            _cryptoApi.OrderUpdated += OrderUpdated;
             _marketUpdatesTimer = new Timer
             {
                 Interval = 500,
