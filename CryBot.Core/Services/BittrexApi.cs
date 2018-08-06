@@ -180,7 +180,7 @@ namespace CryBot.Core.Services
                             Ask = candle.High,
                             Timestamp = candle.Timestamp
                         });
-                        await Task.Delay(100);
+                        await Task.Delay(500);
                     }
                     catch (Exception e)
                     {

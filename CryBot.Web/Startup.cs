@@ -45,7 +45,12 @@ namespace CryBot.Web
 
             var orleansClient = CreateOrleansClient();
             services.AddSingleton(orleansClient);
-            
+            services.AddCors(o => o.AddPolicy("MyPolicy", builder =>
+            {
+                builder.AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            }));
             services.AddMvc();
             services.AddSignalR();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
@@ -66,7 +71,7 @@ namespace CryBot.Web
             {
                 app.UseExceptionHandler("/Home/Error");
             }
-
+            app.UseCors("MyPolicy");
             app.UseStaticFiles();
             app.UseSignalR(routes => 
             {
