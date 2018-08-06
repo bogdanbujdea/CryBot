@@ -166,7 +166,14 @@ namespace CryBot.Core.Utilities
         
         public static bool Expired(this DateTime startDate, TimeSpan expirationTime, DateTime currentDate)
         {
-            return currentDate.Subtract(expirationTime) > startDate;
+            try
+            {
+                return currentDate.Subtract(expirationTime) > startDate;
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
         }
     }
 }

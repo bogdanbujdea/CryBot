@@ -16,12 +16,12 @@
         
         public static TraderSettings Default { get; } = new TraderSettings
         {
-            BuyLowerPercentage = -3,
+            BuyLowerPercentage = -5,
             TradingBudget = 0.0012M,
             MinimumTakeProfit = 0M,
-            HighStopLossPercentage = -3M,
-            StopLoss = -5,
-            BuyTrigger = -3M,
+            HighStopLossPercentage = -0.5M,
+            StopLoss = -2,
+            BuyTrigger = -1M,
         };
 
         public override string ToString()

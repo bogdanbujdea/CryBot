@@ -264,7 +264,7 @@ namespace CryBot.Core.Services
 
                     if (tradeAction.TradeAdvice == TradeAdvice.Cancel)
                     {
-                        Console.WriteLine($"Canceled order {trade.BuyOrder.Uuid}");
+                        Console.WriteLine($"{trade.BuyOrder.Uuid}: Canceled order {trade.BuyOrder.Uuid}");
                         trade.IsActive = false;
                         trade.BuyOrder.Canceled = true;
                         trade.Profit = 0;
@@ -274,8 +274,8 @@ namespace CryBot.Core.Services
 
                     if (tradeAction.TradeAdvice == TradeAdvice.Buy)
                     {
-                        Console.WriteLine($"Buying due to {tradeAction.Reason}");
                         newTrade = await CreateBuyOrder(tradeAction.OrderPricePerUnit);
+                        Console.WriteLine($"{trade.BuyOrder.Uuid}: Buying due to {tradeAction.Reason}");
                     }
                     else if (tradeAction.TradeAdvice == TradeAdvice.Sell)
                     {
@@ -286,7 +286,7 @@ namespace CryBot.Core.Services
 
                         CreateSellOrder(trade);
                         Console.WriteLine(
-                            $"SELLING due to {tradeAction.Reason}\t{Ticker.Bid}\t{trade.Profit}%\t{Ticker.Timestamp:F}\t{trade.SellOrder.Price} BTC\t\t{trade.BuyOrder.Uuid}");
+                            $"{trade.BuyOrder.Uuid}: SELLING due to {tradeAction.Reason}\t{Ticker.Bid}\t{trade.Profit}%\t{Ticker.Timestamp:F}\t{trade.SellOrder.Price} BTC\t\t{trade.BuyOrder.Uuid}");
                     }
                 }
 
@@ -323,7 +323,7 @@ namespace CryBot.Core.Services
                 OrderType = CryptoOrderType.LimitSell
             };
             //var sellOrderResponse = await _cryptoApi.SellCoinAsync(cryptoOrder);
-            cryptoOrder.Uuid = "SELLORDER-" + FakeBittrexApi.SellOrdersCount++;
+            cryptoOrder.Uuid = "SELLORDER-" + Ticker.Id;
             trade.SellOrder = cryptoOrder;
             trade.SellOrder.Closed = Ticker.Timestamp;
             trade.SellOrder.IsOpened = true;

@@ -142,7 +142,7 @@ namespace CryBot.Core.Services
             var fullPrice = (ticker.Bid * trade.BuyOrder.Quantity);
             trade.SellOrder = new CryptoOrder();
             trade.SellOrder.Market = trade.Market;
-            trade.SellOrder.Closed = DateTime.UtcNow;
+            trade.SellOrder.Closed = ticker.Timestamp;
             trade.SellOrder.IsClosed = true;
             trade.SellOrder.Limit = ticker.Bid;
             trade.SellOrder.OrderType = CryptoOrderType.LimitBuy;
@@ -167,7 +167,7 @@ namespace CryBot.Core.Services
                 trade.Strategy = Strategy;
                 trade.BuyOrder = new CryptoOrder();
                 trade.BuyOrder.Market = market;
-                trade.BuyOrder.Closed = DateTime.UtcNow;
+                trade.BuyOrder.Closed = ticker.Timestamp;
                 trade.BuyOrder.IsClosed = false;
                 trade.BuyOrder.Limit = ticker.Bid;
                 trade.BuyOrder.OrderType = CryptoOrderType.LimitBuy;

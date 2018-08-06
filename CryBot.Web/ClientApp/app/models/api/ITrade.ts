@@ -1,4 +1,5 @@
 ﻿import { ICryptoOrder } from "./ICryptoOrder";
+import { TradeStatus } from "../TradeStatus";
 
 export interface ITrade {
     isActive: boolean;
@@ -6,4 +7,5 @@ export interface ITrade {
     sellOrder: ICryptoOrder;
     maxPricePerUnit: number;
     profit: number;
+    status: TradeStatus;
 }

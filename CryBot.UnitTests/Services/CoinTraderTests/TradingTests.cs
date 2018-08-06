@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using CryBot.Core.Models;
+﻿using CryBot.Core.Models;
 using CryBot.Core.Services;
 using CryBot.UnitTests.Infrastructure;
 
@@ -8,7 +6,10 @@ using FluentAssertions;
 
 using Moq;
 
+using System.Linq;
+
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 using Xunit;
 
@@ -35,6 +36,7 @@ namespace CryBot.UnitTests.Services.CoinTraderTests
             var trade = new Trade();
             trade.BuyOrder.PricePerUnit = 100;
             CoinTrader.Trades.Add(trade);
+            trade.Status = TradeStatus.Bought;
             CoinTrader.Strategy = new HoldUntilPriceDropsStrategy();
 
             await CoinTrader.UpdatePrice(_newPriceTicker);
@@ -132,16 +134,17 @@ namespace CryBot.UnitTests.Services.CoinTraderTests
         }
 
         [Fact]
-        public void SoldCoin_Should_UpdateTradeStatus()
+        public async Task SoldCoin_Should_UpdateTradeStatus()
         {
             var sellOrder = new CryptoOrder { OrderType = CryptoOrderType.LimitSell, Price = 1100, Uuid = "S" };
             var trade = new Trade
             {
                 SellOrder = sellOrder
             };
-            CoinTrader.Trades.Add(trade);
 
-            CoinTrader.UpdateOrder(sellOrder);
+            await InitializeTrader(new TradeAction { TradeAdvice = TradeAdvice.Sell });
+            CoinTrader.Trades.Add(trade);
+            await CoinTrader.UpdateOrder(sellOrder);
 
             trade.Status.Should().Be(TradeStatus.Completed);
         }
@@ -168,7 +171,7 @@ namespace CryBot.UnitTests.Services.CoinTraderTests
         }
 
         [Fact]
-        public void BoughtOrder_Should_UpdateTraderStatus()
+        public async Task BoughtOrder_Should_UpdateTraderStatus()
         {
             var trade = new Trade();
             CoinTrader.Trades.Add(trade);
@@ -179,9 +182,33 @@ namespace CryBot.UnitTests.Services.CoinTraderTests
                 OrderType = CryptoOrderType.LimitBuy
             };
 
-            CoinTrader.UpdateOrder(buyOrder);
+            await CoinTrader.UpdateOrder(buyOrder);
 
             CoinTrader.Trades[0].Status.Should().Be(TradeStatus.Bought);
+        }
+
+        [Fact]
+        public async Task BuyingOrder_Should_UpdateTraderStatus()
+        {
+            CryptoApiMock.MockBuyingTrade(new CryptoOrder());
+            await InitializeTrader(new TradeAction { TradeAdvice = TradeAdvice.Buy, OrderPricePerUnit = 98 });
+
+            await CoinTrader.UpdatePrice(_newPriceTicker);
+            CoinTrader.Trades[0].Status.Should().Be(TradeStatus.Buying);
+        }
+
+        [Fact]
+        public async Task SellingCoin_Should_UpdateOrderForTrade()
+        {
+            await InitializeTrader(new TradeAction { TradeAdvice = TradeAdvice.Sell, OrderPricePerUnit = 98 });
+            var sellOrder = new CryptoOrder { OrderType = CryptoOrderType.LimitSell, Price = 1100, Uuid = "S" };
+            CryptoApiMock.MockSellingTrade(sellOrder);
+            CoinTrader.Trades[0].SellOrder.Uuid = "S";
+
+            await CoinTrader.UpdatePrice(_newPriceTicker);
+
+            CoinTrader.Trades[0].SellOrder.Uuid.Should().Be("S");
+            CoinTrader.Trades[0].SellOrder.Price.Should().Be(1100);
         }
     }
 }

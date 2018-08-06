@@ -1,6 +1,9 @@
-﻿using CryBot.Core.Models;
+﻿using System.Collections.Generic;
+using CryBot.Core.Models;
 using CryBot.Core.Services;
 using CryBot.UnitTests.Infrastructure;
+
+using Moq;
 
 using System.Threading.Tasks;
 using System.Reactive.Subjects;
@@ -11,16 +14,23 @@ namespace CryBot.UnitTests.Services.CoinTraderTests
     {
         protected readonly CoinTrader CoinTrader;
 
-        protected string Market { get; set; }
+        protected string Market { get; }
 
         protected CoinTraderTestBase()
         {
-            CoinTrader = new CoinTrader(CryptoApiMock.Object) { Strategy = Strategy.Object };
             Market = "BTC-ETC";
+            CoinTrader = new CoinTrader(CryptoApiMock.Object, OrleansClientMock.Object, HubNotifierMock.Object)
+            {
+                Strategy = Strategy.Object
+            };
             var tickerSubject = new Subject<Ticker>();
             var orderSubject = new Subject<CryptoOrder>();
             CryptoApiMock.SetupGet(c => c.TickerUpdated).Returns(tickerSubject);
             CryptoApiMock.SetupGet(c => c.OrderUpdated).Returns(orderSubject);
+            TraderGrainMock.Setup(t => t.IsInitialized()).ReturnsAsync(true);
+            TraderGrainMock.Setup(c => c.GetTraderData()).ReturnsAsync(new TraderState { Trades = new List<Trade>() });
+            OrleansClientMock.Setup(c => c.GetGrain<ITraderGrain>(It.Is<string>(t => t == Market), It.IsAny<string>()))
+                .Returns(TraderGrainMock.Object);
         }
 
         protected async Task InitializeTrader(TradeAction tradeAction)

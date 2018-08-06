@@ -22,37 +22,33 @@ namespace CryBot.Core.Services
             lock (_syncRoot)
             {
                 var tradeAction = new TradeAction();
-            
+
                 UpdateTrade(ticker, currentTrade);
-                if (currentTrade.BuyOrder.Uuid == null)
+
+                if (currentTrade.Status == TradeStatus.Empty)
                 {
                     tradeAction.OrderPricePerUnit = ticker.Bid;
                     tradeAction.Reason = TradeReason.FirstTrade;
                     tradeAction.TradeAdvice = TradeAdvice.Buy;
                     return tradeAction;
                 }
-                if (currentTrade.BuyOrder.IsOpened && currentTrade.BuyOrder.Opened.Expired(TimeSpan.FromHours(5), ticker.Timestamp))
+
+                if (currentTrade.BuyOrder.IsOpened && currentTrade.BuyOrder.Opened.Expired(TimeSpan.FromMinutes(5), ticker.Timestamp))
                 {
-                    tradeAction.OrderPricePerUnit = ticker.Bid;
-                    tradeAction.Reason = TradeReason.ExpiredBuyOrder;
-                    tradeAction.TradeAdvice = TradeAdvice.Cancel;
-                    return tradeAction;
+                    return TradeAction.Create(TradeAdvice.Cancel, TradeReason.ExpiredBuyOrder, ticker.Bid);
                 }
-                if (currentTrade.Profit > Settings.MinimumTakeProfit && 
+
+                if (currentTrade.Status == TradeStatus.Buying || currentTrade.Status == TradeStatus.Selling)
+                {
+                    return TradeAction.Create(TradeAdvice.Hold);
+                }
+
+                if (currentTrade.Profit > Settings.MinimumTakeProfit &&
                     ticker.Bid.ReachedHighStopLoss(currentTrade.MaxPricePerUnit,
                         currentTrade.BuyOrder.PricePerUnit * Settings.MinimumTakeProfit.ToPercentageMultiplier() * Consts.BittrexCommission,
                         Settings.HighStopLossPercentage.ToPercentageMultiplier(), currentTrade.BuyOrder.PricePerUnit))
                 {
-                    tradeAction.OrderPricePerUnit = ticker.Bid;
-                    tradeAction.Reason = TradeReason.TakeProfit;
-                    tradeAction.TradeAdvice = TradeAdvice.Sell;
-                    return tradeAction;
-                }
-            
-                if(Settings.BuyTrigger < Settings.StopLoss)
-                {
-                    tradeAction.TradeAdvice = TradeAdvice.Hold;
-                    return tradeAction;
+                    return TradeAction.Create(TradeAdvice.Sell, TradeReason.TakeProfit, ticker.Bid);
                 }
 
                 if (currentTrade.TriggeredBuy == false && ticker.Bid.ReachedBuyPrice(currentTrade.BuyOrder.PricePerUnit, Settings.BuyTrigger))
@@ -66,10 +62,7 @@ namespace CryBot.Core.Services
 
                 if (ticker.Bid.ReachedStopLoss(currentTrade.BuyOrder.PricePerUnit, Settings.StopLoss))
                 {
-                    tradeAction.Reason = TradeReason.StopLoss;
-                    tradeAction.TradeAdvice = TradeAdvice.Sell;
-                    tradeAction.OrderPricePerUnit = ticker.Bid;
-                    return tradeAction;
+                    return TradeAction.Create(TradeAdvice.Sell, TradeReason.StopLoss, ticker.Bid);
                 }
                 return tradeAction;
             }
@@ -81,7 +74,8 @@ namespace CryBot.Core.Services
             if (currentTrade.MaxPricePerUnit < ticker.Bid)
                 currentTrade.MaxPricePerUnit = ticker.Bid;
             var profit = currentTrade.BuyOrder.PricePerUnit.GetReadablePercentageChange(ticker.Bid, true);
-            currentTrade.Profit = profit;
+            if (currentTrade.Status == TradeStatus.Bought || currentTrade.Status == TradeStatus.Selling)
+                currentTrade.Profit = profit;
         }
     }
 }

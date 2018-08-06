@@ -4,6 +4,8 @@ namespace CryBot.Core.Models
 {
     public class Ticker
     {
+        public int Id { get; set; }
+
         public decimal Last { get; set; }
 
         public decimal Bid { get; set; }

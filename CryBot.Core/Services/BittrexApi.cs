@@ -48,8 +48,8 @@ namespace CryBot.Core.Services
                 ApiCredentials = apiCredentials
             });
 
-            _bittrexSocketClient.SubscribeToMarketSummariesUpdate(OnMarketsUpdate);
-            _bittrexSocketClient.SubscribeToOrderUpdates(OnOrderUpdate);
+            //_bittrexSocketClient.SubscribeToMarketSummariesUpdate(OnMarketsUpdate);
+            //_bittrexSocketClient.SubscribeToOrderUpdates(OnOrderUpdate);
         }
 
         public async Task<CryptoResponse<Wallet>> GetWalletAsync()
@@ -152,18 +152,7 @@ namespace CryBot.Core.Services
                 Close = c.Close,
                 Volume = c.BaseVolume
             }).ToList();
-            _candles = candles.Take(candles.Count / 4).ToList();
-            /*_candles = new List<Candle>
-            {
-                new Candle{ Low = 0.00010000M, High = 0.00010100M },
-                new Candle{ Low = 0.00009900M, High = 0.00010000M },
-                new Candle{ Low = 0.00010100M, High = 0.00010200M },
-                new Candle{ Low = 0.00010800M, High = 0.00011000M },
-                new Candle{ Low = 0.00010500M, High = 0.00010600M },
-                new Candle{ Low = 0.00010394M, High = 0.00010395M },
-                new Candle{ Low = 0.00009975M, High = 0.00009976M },
-                new Candle{ Low = 0.00009975M, High = 0.00009976M },
-            };*/
+            _candles = candles.Take(candles.Count).ToList();
             return new CryptoResponse<List<Candle>>(candles);
         }
 
@@ -183,16 +172,25 @@ namespace CryBot.Core.Services
                             oldPercentage = percentage;
                         }
                         //Console.WriteLine($"BAPI: {_candles.IndexOf(candle) + 1}\t{candle.Low}\t{candle.High}");
-                        TickerUpdated.OnNext(new Ticker { Market = market, Bid = candle.Low, Ask = candle.High, Timestamp = candle.Timestamp });
+                        TickerUpdated.OnNext(new Ticker
+                        {
+                            Id = _candles.IndexOf(candle),
+                            Market = market,
+                            Bid = candle.Low,
+                            Ask = candle.High,
+                            Timestamp = candle.Timestamp
+                        });
+                        await Task.Delay(100);
                     }
-                    catch (Exception)
+                    catch (Exception e)
                     {
+                        Console.WriteLine(e);
                     }
                 }
             }
         }
 
-        public Task<CryptoResponse<CryptoOrder>> CancelOrder(string orderId)
+        public virtual Task<CryptoResponse<CryptoOrder>> CancelOrder(string orderId)
         {
             throw new NotImplementedException();
         }

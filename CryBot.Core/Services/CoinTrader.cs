@@ -1,6 +1,8 @@
 ﻿using CryBot.Core.Models;
 using CryBot.Core.Utilities;
 
+using Orleans;
+
 using System;
 
 using System.Linq;
@@ -16,10 +18,15 @@ namespace CryBot.Core.Services
     public class CoinTrader
     {
         private readonly ICryptoApi _cryptoApi;
+        private readonly IClusterClient _orleansClient;
+        private readonly IHubNotifier _hubNotifier;
+        private ITraderGrain _traderGrain;
 
-        public CoinTrader(ICryptoApi cryptoApi)
+        public CoinTrader(ICryptoApi cryptoApi, IClusterClient orleansClient, IHubNotifier hubNotifier)
         {
             _cryptoApi = cryptoApi;
+            _orleansClient = orleansClient;
+            _hubNotifier = hubNotifier;
         }
 
         public void Initialize(string market)
@@ -38,7 +45,7 @@ namespace CryBot.Core.Services
                 .Concat()
                 .Subscribe();
         }
-        
+
         public string Market { get; set; }
 
         public Ticker Ticker { get; set; }
@@ -51,16 +58,30 @@ namespace CryBot.Core.Services
 
         public async Task<Unit> UpdatePrice(Ticker ticker)
         {
+            //Console.WriteLine($"{ticker.Id} - {Budget}");
             Ticker = ticker;
             await UpdateTrades();
+            Task.Run(async () =>
+            {
+                await _traderGrain.UpdateTrades(Trades);
+                await _hubNotifier.UpdateTicker(ticker);
+                var traderData = await _traderGrain.GetTraderData();
+                traderData.CurrentTicker = ticker;
+                await _hubNotifier.UpdateTrader(traderData);
+            });
             return Unit.Default;
         }
 
         public async Task StartAsync()
         {
+            _traderGrain = _orleansClient.GetGrain<ITraderGrain>(Market);
+            await _traderGrain.SetMarketAsync(Market);
+            var traderState = await _traderGrain.GetTraderData();
+            Trades = traderState.Trades ?? new List<Trade>();
+            Strategy.Settings = traderState.Settings ?? TraderSettings.Default;
             if (Trades.Count == 0)
             {
-                Trades.Add(new Trade());
+                Trades.Add(new Trade { Status = TradeStatus.Empty });
             }
         }
 
@@ -76,6 +97,7 @@ namespace CryBot.Core.Services
                         var tradeProfit = tradeForSellOrder.BuyOrder.Price.GetReadablePercentageChange(tradeForSellOrder.SellOrder.Price);
                         Budget.Profit += tradeProfit;
                         Budget.Earned += tradeForSellOrder.SellOrder.Price - tradeForSellOrder.BuyOrder.Price;
+                        Console.WriteLine($"{cryptoOrder.Uuid}: SELL - {tradeProfit}");
                         tradeForSellOrder.Profit = tradeProfit;
                         tradeForSellOrder.Status = TradeStatus.Completed;
                     }
@@ -99,9 +121,10 @@ namespace CryBot.Core.Services
             {
                 var newTrade = await UpdateTrade(trade);
                 if (newTrade != Trade.Empty)
+                {
                     newTrades.Add(newTrade);
+                }
             }
-
             if (newTrades.Count > 0)
                 Trades.AddRange(newTrades);
         }
@@ -114,11 +137,13 @@ namespace CryBot.Core.Services
                 case TradeAdvice.Buy:
                     var buyOrder = await CreateBuyOrder(tradeAction.OrderPricePerUnit);
                     trade.BuyOrder = buyOrder;
+                    trade.Status = TradeStatus.Buying;
                     break;
                 case TradeAdvice.Sell:
                     await CreateSellOrder(trade, tradeAction.OrderPricePerUnit);
                     return new Trade { Status = TradeStatus.Empty };
                 case TradeAdvice.Cancel:
+                    Console.WriteLine($"{trade.BuyOrder.Uuid}: Canceling order {trade.BuyOrder.Uuid}");
                     var cancelResponse = await _cryptoApi.CancelOrder(trade.BuyOrder.Uuid);
                     if (cancelResponse.IsSuccessful)
                     {
@@ -140,12 +165,14 @@ namespace CryBot.Core.Services
                 OrderType = CryptoOrderType.LimitSell,
                 Market = Market,
                 Price = pricePerUnit * trade.BuyOrder.Quantity,
-                Quantity = trade.BuyOrder.Quantity
+                Quantity = trade.BuyOrder.Quantity,
+                Uuid = Ticker.Id.ToString()
             };
             var sellResponse = await _cryptoApi.SellCoinAsync(sellOrder);
             if (sellResponse.IsSuccessful)
             {
                 trade.Status = TradeStatus.Selling;
+                trade.SellOrder = sellResponse.Content;
             }
         }
 
@@ -167,7 +194,9 @@ namespace CryBot.Core.Services
                 IsOpened = true,
                 Market = Market,
                 Limit = pricePerUnit,
-                OrderType = CryptoOrderType.LimitBuy
+                Opened = Ticker.Timestamp,
+                OrderType = CryptoOrderType.LimitBuy,
+                Uuid = Ticker.Id.ToString()
             };
             var buyResponse = await _cryptoApi.BuyCoinAsync(buyOrder);
             if (buyResponse.IsSuccessful)

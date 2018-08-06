@@ -1,10 +1,14 @@
-﻿using System.Reactive.Subjects;
+﻿using CryBot.Core.Models;
+using CryBot.UnitTests.Infrastructure;
+
 using FluentAssertions;
 
-using System.Threading.Tasks;
-using CryBot.Core.Models;
-using CryBot.UnitTests.Infrastructure;
 using Moq;
+
+using System.Threading.Tasks;
+using System.Reactive.Subjects;
+using System.Collections.Generic;
+
 using Xunit;
 
 namespace CryBot.UnitTests.Services.CoinTraderTests
@@ -14,14 +18,14 @@ namespace CryBot.UnitTests.Services.CoinTraderTests
         [Fact]
         public void CoinTrader_ShouldBe_InitializedWithAMarket()
         {
-            CoinTrader.Initialize("BTC-XLM");
-            CoinTrader.Market.Should().Be("BTC-XLM");
+            CoinTrader.Initialize(Market);
+            CoinTrader.Market.Should().Be(Market);
         }
 
         [Fact]
         public void Initialize_ShouldSet_TraderData()
         {
-            CoinTrader.Initialize("BTC-XLM");
+            CoinTrader.Initialize(Market);
             CoinTrader.Strategy.Should().NotBeNull();
             CoinTrader.Trades.Should().NotBeNull();
         }
@@ -29,7 +33,7 @@ namespace CryBot.UnitTests.Services.CoinTraderTests
         [Fact]
         public async Task TraderWithNoTrades_Should_CreateFirstTrade()
         {
-            CoinTrader.Initialize("BTC-XLM");
+            CoinTrader.Initialize(Market);
             await CoinTrader.StartAsync();
             CoinTrader.Trades.Count.Should().Be(1);
         }
@@ -48,6 +52,25 @@ namespace CryBot.UnitTests.Services.CoinTraderTests
             }
 
             Strategy.Verify(s => s.CalculateTradeAction(It.IsAny<Ticker>(), It.IsAny<Trade>()), Times.Exactly(100));
+        }
+
+        [Fact]
+        public async Task Start_Should_GetTraderData()
+        {
+            await InitializeTrader(new TradeAction { TradeAdvice = TradeAdvice.Buy, OrderPricePerUnit = 1});
+            TraderGrainMock.Verify(o => o.GetTraderData(), Times.Once);
+        }
+
+        [Fact]
+        public async Task TraderGrain_Should_InitializeTrader()
+        {
+            TraderGrainMock.Setup(t => t.GetTraderData()).ReturnsAsync(new TraderState
+            {
+                Trades = new List<Trade>{Trade.Empty, Trade.Empty, Trade.Empty, Trade.Empty}
+            });
+            await InitializeTrader(new TradeAction { TradeAdvice = TradeAdvice.Buy, OrderPricePerUnit = 1});
+            CoinTrader.Trades.Count.Should().Be(4);
+            CoinTrader.Strategy.Settings.Should().NotBeNull();
         }
     }
 }

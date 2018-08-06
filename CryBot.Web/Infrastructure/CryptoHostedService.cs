@@ -49,8 +49,9 @@ namespace CryBot.Web.Infrastructure
             _cryptoApi.IsInTestMode = true;
             var market = "BTC-ETC";
             await _cryptoApi.GetCandlesAsync(market, TickInterval.OneMinute);
-            var cryptoTrader = new CryptoTrader(_cryptoApi, _clusterClient, _hubNotifier);
-            await cryptoTrader.StartAsync(market);
+            var coinTrader = new CoinTrader(_cryptoApi, _clusterClient, _hubNotifier);
+            coinTrader.Initialize(market);
+            await coinTrader.StartAsync();
             await Task.Run(() => _cryptoApi.SendMarketUpdates(market));
             //await StartTrading();
         }
@@ -60,8 +61,9 @@ namespace CryBot.Web.Infrastructure
             var traderStates = await _tradersManager.GetAllTraders();
             foreach (var market in traderStates.Select(t => t.Market))
             {
-                var cryptoTrader = new CryptoTrader(_cryptoApi, _clusterClient, _hubNotifier);
-                await cryptoTrader.StartAsync(market);
+                var coinTrader = new CoinTrader(_cryptoApi, _clusterClient, _hubNotifier);
+                coinTrader.Initialize(market);
+                await coinTrader.StartAsync();
             }
 
             Console.WriteLine("Finished loading");

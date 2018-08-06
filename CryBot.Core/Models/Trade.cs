@@ -34,14 +34,4 @@ namespace CryBot.Core.Models
 
         public static Trade Empty { get; set; } = new Trade();
     }
-
-    public enum TradeStatus
-    {
-        None,
-        Empty,
-        Buying,
-        Bought,
-        Selling,
-        Completed
-    }
 }

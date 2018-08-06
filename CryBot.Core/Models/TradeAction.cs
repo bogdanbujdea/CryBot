@@ -7,14 +7,10 @@
         public decimal OrderPricePerUnit { get; set; }
 
         public TradeReason Reason { get; set; }
-    }
 
-    public enum TradeReason
-    {
-        StopLoss,
-        TakeProfit,
-        BuyTrigger,
-        ExpiredBuyOrder,
-        FirstTrade
+        public static TradeAction Create(TradeAdvice tradeAdvice, TradeReason reason = TradeReason.None, decimal pricePerUnit = 0)
+        {
+            return new TradeAction { TradeAdvice = tradeAdvice, Reason = reason, OrderPricePerUnit = pricePerUnit };
+        }
     }
 }
