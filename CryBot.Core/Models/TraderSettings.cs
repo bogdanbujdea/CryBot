@@ -1,4 +1,6 @@
-﻿namespace CryBot.Core.Models
+﻿using System;
+
+namespace CryBot.Core.Models
 {
     public class TraderSettings
     {
@@ -13,7 +15,9 @@
         public decimal BuyLowerPercentage { get; set; }
         
         public decimal TradingBudget { get; set; }
-        
+
+        public TimeSpan ExpirationTime { get; set; }
+
         public static TraderSettings Default { get; } = new TraderSettings
         {
             BuyLowerPercentage = -5,
@@ -22,7 +26,9 @@
             HighStopLossPercentage = -0.5M,
             StopLoss = -2,
             BuyTrigger = -1M,
+            ExpirationTime = TimeSpan.FromHours(2)
         };
+
 
         public override string ToString()
         {

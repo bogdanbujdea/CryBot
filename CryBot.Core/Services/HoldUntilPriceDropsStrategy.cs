@@ -33,7 +33,7 @@ namespace CryBot.Core.Services
                     return tradeAction;
                 }
 
-                if (currentTrade.BuyOrder.IsOpened && currentTrade.BuyOrder.Opened.Expired(TimeSpan.FromMinutes(5), ticker.Timestamp))
+                if (currentTrade.BuyOrder.IsOpened && currentTrade.BuyOrder.Opened.Expired(Settings.ExpirationTime, ticker.Timestamp))
                 {
                     return TradeAction.Create(TradeAdvice.Cancel, TradeReason.ExpiredBuyOrder, ticker.Bid);
                 }

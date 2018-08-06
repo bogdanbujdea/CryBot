@@ -78,6 +78,12 @@ namespace CryBot.Core.Services
             await _traderGrain.SetMarketAsync(Market);
             var traderState = await _traderGrain.GetTraderData();
             Trades = traderState.Trades ?? new List<Trade>();
+            /*var backtester = new BackTester(_cryptoApi);
+            var bestSettings = await backtester.FindBestSettings(Market);
+            Console.WriteLine($"Best settings for {Market} are {bestSettings.TraderSettings} with profit of {bestSettings.TraderStats.Profit}");
+            Strategy.Settings = bestSettings.TraderSettings;
+*/
+
             Strategy.Settings = traderState.Settings ?? TraderSettings.Default;
             if (Trades.Count == 0)
             {

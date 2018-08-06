@@ -44,20 +44,19 @@ namespace CryBot.Core.Services
 
         private void LogText(string text)
         {
-            Console.WriteLine(text);
+            //Console.WriteLine(text);
         }
 
         private void GetStats()
         {
-            var totalBTC = _trades.Where(t => t.IsActive).Sum(t => t.CurrentValue);
-            _stats.Closed = _trades.Count(t => t.IsActive == false);
-            _stats.Opened = _trades.Count(t => t.IsActive);
+            _stats.Closed = _trades.Count(t => t.Status == TradeStatus.Completed);
+            _stats.Opened = _trades.Count(t => t.Status != TradeStatus.Completed);
             LogText($"BTC: {_profitBTC.RoundSatoshi()}");
             LogText($"Trade count: {_newTradeCount}");
             LogText($"Diff BTC: {(_profitBTC - _stats.InvestedBTC).RoundSatoshi()}");
             LogText($"Triggered buys: {_trades.Count(t => t.TriggeredBuy)}");
             LogText($"Closed trades count: {_stats.Closed}");
-            LogText($"Opened trades count: {_trades.Count(t => t.IsActive)}");
+            LogText($"Opened trades count: {_trades.Count(t => t.Status != TradeStatus.Completed)}");
             _stats.Profit = _stats.InvestedBTC.GetReadablePercentageChange(_stats.InvestedBTC + _profitBTC);
         }
 
@@ -65,7 +64,7 @@ namespace CryBot.Core.Services
         {
             Trade newTrade = null;
             newTrade = null;
-            foreach (var trade in _trades.Where(t => t.IsActive))
+            foreach (var trade in _trades.Where(t => t.Status != TradeStatus.Completed))
             {
                 if (trade.BuyOrder.IsClosed == false)
                 {
@@ -82,7 +81,7 @@ namespace CryBot.Core.Services
                 var tradeAction = Strategy.CalculateTradeAction(ticker, trade);
                 if (tradeAction.TradeAdvice == TradeAdvice.Cancel)
                 {
-                    trade.IsActive = false;
+                    trade.Status = TradeStatus.Empty;
                     trade.Profit = 0;
                     trade.CurrentTicker = new Ticker();
                     newTrade = CreateLowerTrade(ticker);
@@ -151,7 +150,7 @@ namespace CryBot.Core.Services
             trade.SellOrder.Price = Math.Round(fullPrice, 8);
             trade.SellOrder.Quantity = trade.BuyOrder.Quantity;
             trade.SellOrder.Uuid = Guid.NewGuid().ToString();
-            trade.IsActive = false;
+            trade.Status = TradeStatus.Completed;
         }
 
         private Trade CreateTrade(string market, Ticker ticker, decimal budget)
@@ -163,7 +162,7 @@ namespace CryBot.Core.Services
 
                 trade.Market = market;
                 trade.CurrentTicker = ticker;
-                trade.IsActive = true;
+                trade.Status = TradeStatus.Buying;
                 trade.Strategy = Strategy;
                 trade.BuyOrder = new CryptoOrder();
                 trade.BuyOrder.Market = market;

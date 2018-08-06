@@ -29,7 +29,7 @@ namespace CryBot.Silo
                 .ConfigureLogging(logging => logging.AddConsole())
                 .ConfigureApplicationParts(manager =>
                     {
-                        manager.AddApplicationPart(typeof(CryptoTrader).Assembly).WithReferences();
+                        manager.AddApplicationPart(typeof(CoinTrader).Assembly).WithReferences();
                     });
             var invariant = "System.Data.SqlClient"; // for Microsoft SQL Server
             var connectionString = "Server=tcp:windevcryptodb.database.windows.net,1433;Initial Catalog=cryptodb;Persist Security Info=False;User ID=crypto;Password=CrbogdaN12!;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;";

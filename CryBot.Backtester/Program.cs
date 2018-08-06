@@ -19,8 +19,8 @@ namespace CryBot.Backtester
                 var market = Console.ReadLine();
                 var bittrexApi = new BittrexApi(null);                
                 bittrexApi.Initialize(Resources.BittrexApiKey, Resources.BittrexApiSecret);
-                await TestStrategy(bittrexApi, market);
-                return;
+                /*await TestStrategy(bittrexApi, market);
+                return;*/
                 var backTester = new BackTester(bittrexApi);
                 var stats = await backTester.FindBestSettings(market);
                 Console.WriteLine($"Best settings for market {market} are {stats.TradingStrategy.Settings} with profit of {stats.TraderStats.Profit}");
@@ -45,6 +45,7 @@ namespace CryBot.Backtester
             backtester.Strategy.Settings.HighStopLossPercentage = -0.1M;
             backtester.Strategy.Settings.StopLoss = -4;
             backtester.Strategy.Settings.BuyTrigger= -2;
+            backtester.Strategy.Settings.ExpirationTime= TimeSpan.FromHours(2);
             backtester.Candles = cryptoResponse.Content;
             /*backtester.Candles = new List<Candle>
             {

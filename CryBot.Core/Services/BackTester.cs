@@ -34,21 +34,7 @@ namespace CryBot.Core.Services
                                   buyTriggerRange.Count * minimumTakeProfitRange.Count;
 
             var it = 0;
-            var strategies = new List<HoldUntilPriceDropsStrategy>
-            {
-                new HoldUntilPriceDropsStrategy
-                {
-                    Settings = new TraderSettings
-                    {
-                        TradingBudget = 0.0012M,
-                        BuyLowerPercentage = -4,
-                        MinimumTakeProfit = 1,
-                        HighStopLossPercentage = -23,
-                        StopLoss = -2,
-                        BuyTrigger = -8
-                    }
-                }
-            };
+            var strategies = new List<HoldUntilPriceDropsStrategy>();
             foreach (var buy in buyLowerRange)
             {
                 foreach (var highStopLoss in highStopLossRange)

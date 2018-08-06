@@ -43,8 +43,8 @@ namespace CryBot.Core.Services
         {
             _cryptoApi.IsInTestMode = true;
             await _cryptoApi.GetCandlesAsync(market, TickInterval.OneHour);
-            var cryptoTrader = new CryptoTrader(_cryptoApi, _clusterClient, _hubNotifier);
-            await cryptoTrader.StartAsync(market);
+            var cryptoTrader = new CoinTrader(_cryptoApi, _clusterClient, _hubNotifier);
+            await cryptoTrader.StartAsync();
             await Task.Run(() => _cryptoApi.SendMarketUpdates(market));
         }
     }
