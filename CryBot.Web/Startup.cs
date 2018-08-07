@@ -23,11 +23,14 @@ using System;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Orleans.Hosting;
 
 namespace CryBot.Web
 {
     public class Startup
     {
+        private static ISiloHost _siloHost;
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -58,9 +61,55 @@ namespace CryBot.Web
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        private static async Task StartSilo()
         {
+            //var ipAddress = Dns.GetHostEntry("crybot-silo.azurewebsites.net").AddressList[0];
+            //Console.WriteLine($"Hello, found ip {ipAddress}");
+            var siloBuilder = new SiloHostBuilder()
+                .UseLocalhostClustering()
+                .UseDashboard(options => { })
+                .Configure<ClusterOptions>(options =>
+                {
+                    options.ClusterId = "dev";
+                    options.ServiceId = "OrleansService";
+                })
+                .ConfigureEndpoints(IPAddress.Loopback, 11111, 30000, listenOnAnyHostAddress: true)
+                //.ConfigureEndpoints(ipAddress, 11111, 30000, listenOnAnyHostAddress: true)
+                .ConfigureLogging(logging => logging.AddConsole())
+                .ConfigureApplicationParts(manager =>
+                {
+                    manager.AddApplicationPart(typeof(CoinTrader).Assembly).WithReferences();
+                });
+            var invariant = "System.Data.SqlClient"; // for Microsoft SQL Server
+            var connectionString =
+                "Server=tcp:windevcryptodb.database.windows.net,1433;Initial Catalog=cryptodb;Persist Security Info=False;User ID=crypto;Password=CrbogdaN12!;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;";
+            siloBuilder.UseAdoNetClustering(options =>
+            {
+                options.Invariant = invariant;
+                options.ConnectionString = connectionString;
+            });
+            //use AdoNet for reminder service
+            siloBuilder.UseAdoNetReminderService(options =>
+            {
+                options.Invariant = invariant;
+                options.ConnectionString = connectionString;
+            });
+            //use AdoNet for Persistence
+            siloBuilder.AddAdoNetGrainStorage("OrleansSqlStore", options =>
+            {
+                options.Invariant = invariant;
+                options.ConnectionString = connectionString;
+                options.UseJsonFormat = false;
+            });
+
+            _siloHost = siloBuilder.Build();
+            await _siloHost.StartAsync();
+        }
+
+        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime applicationLifetime)
+        {
+            applicationLifetime.ApplicationStopping.Register(async () => await _siloHost.StopAsync());
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -75,7 +124,7 @@ namespace CryBot.Web
             }
             app.UseCors("MyPolicy");
             app.UseStaticFiles();
-            app.UseSignalR(routes => 
+            app.UseSignalR(routes =>
             {
                 routes.MapHub<ApplicationHub>("/app");
             });
@@ -97,8 +146,12 @@ namespace CryBot.Web
             {
                 try
                 {
+                    StartSilo().Wait();
+                    //var ipAddress = Dns.GetHostEntry("crybot-silo.azurewebsites.net").AddressList[0];
+                    //Console.WriteLine($"Hello, found ip {ipAddress}");
                     var clientBuilder = new ClientBuilder()
-                        .UseStaticClustering(new IPEndPoint(IPAddress.Parse("172.31.197.65"), 30000))
+                        //.UseStaticClustering(new IPEndPoint(ipAddress, 30000))
+                        .UseStaticClustering(new IPEndPoint(IPAddress.Loopback, 30000))
                         .Configure<ClusterOptions>(options =>
                         {
                             options.ClusterId = "dev";
@@ -106,8 +159,8 @@ namespace CryBot.Web
                         })
                         .ConfigureLogging(logging => logging.AddConsole())
                         .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(TraderGrain).Assembly).WithReferences());
-                    
-                    
+
+
                     var client = clientBuilder.Build();
                     client.Connect().Wait();
 

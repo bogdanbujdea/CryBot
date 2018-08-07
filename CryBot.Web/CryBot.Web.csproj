@@ -37,6 +37,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CryBot.Core\CryBot.Core.csproj" />
+    <ProjectReference Include="..\CryBot.Silo\CryBot.Silo.csproj" />
   </ItemGroup>
 
   <ItemGroup>

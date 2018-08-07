@@ -16,21 +16,29 @@ namespace CryBot.Silo
     {
         public static async Task Main(string[] args)
         {
+            await StartSilo();
+        }
+
+        private static async Task StartSilo()
+        {
+            var ipAddress = Dns.GetHostEntry("crybot-silo.azurewebsites.net").AddressList[0];
+            Console.WriteLine($"Hello, found ip {ipAddress}");
             var siloBuilder = new SiloHostBuilder()
                 .UseLocalhostClustering()
                 .UseDashboard(options => { })
                 .Configure<ClusterOptions>(options =>
                 {
                     options.ClusterId = "dev";
-                    options.ServiceId = "OrleansService";                    
-                }).ConfigureEndpoints(IPAddress.Parse("172.31.197.65"), 11111, 30000, listenOnAnyHostAddress:true)
+                    options.ServiceId = "OrleansService";
+                }).ConfigureEndpoints(ipAddress, 11111, 30000, listenOnAnyHostAddress: true)
                 .ConfigureLogging(logging => logging.AddConsole())
                 .ConfigureApplicationParts(manager =>
-                    {
-                        manager.AddApplicationPart(typeof(CoinTrader).Assembly).WithReferences();
-                    });
+                {
+                    manager.AddApplicationPart(typeof(CoinTrader).Assembly).WithReferences();
+                });
             var invariant = "System.Data.SqlClient"; // for Microsoft SQL Server
-            var connectionString = "Server=tcp:windevcryptodb.database.windows.net,1433;Initial Catalog=cryptodb;Persist Security Info=False;User ID=crypto;Password=CrbogdaN12!;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;";
+            var connectionString =
+                "Server=tcp:windevcryptodb.database.windows.net,1433;Initial Catalog=cryptodb;Persist Security Info=False;User ID=crypto;Password=CrbogdaN12!;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;";
             siloBuilder.UseAdoNetClustering(options =>
             {
                 options.Invariant = invariant;
@@ -51,11 +59,10 @@ namespace CryBot.Silo
             });
 
             using (var host = siloBuilder.Build())
-            {                
+            {
                 await host.StartAsync();
                 Console.ReadLine();
             }
         }
-
     }
 }
