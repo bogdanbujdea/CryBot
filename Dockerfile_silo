@@ -11,5 +11,7 @@ WORKDIR /app/CryBot.Silo
 RUN ["dotnet", "publish", "-c", "Release"]
 
 EXPOSE 30000/tcp
+EXPOSE 40000/tcp
+EXPOSE 8080/tcp
 
 ENTRYPOINT ["dotnet", "run"]

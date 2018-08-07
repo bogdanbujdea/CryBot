@@ -12,5 +12,6 @@ WORKDIR /app/CryBot.Web
 RUN ["dotnet", "publish", "-c", "Release"]
 
 EXPOSE 80/tcp
+EXPOSE 30000/tcp
 
 ENTRYPOINT ["dotnet", "run"]

@@ -98,8 +98,7 @@ namespace CryBot.Web
                 try
                 {
                     var clientBuilder = new ClientBuilder()
-                        .UseLocalhostClustering()
-                        //.UseStaticClustering(new IPEndPoint(IPAddress.Parse("172.31.197.65"), 30000))
+                        .UseStaticClustering(new IPEndPoint(IPAddress.Parse("172.31.197.65"), 30000))
                         .Configure<ClusterOptions>(options =>
                         {
                             options.ClusterId = "dev";
