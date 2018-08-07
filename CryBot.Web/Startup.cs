@@ -61,54 +61,18 @@ namespace CryBot.Web
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
-        private static async Task StartSilo()
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime applicationLifetime, ILoggerFactory loggerFactory)
         {
-            //var ipAddress = Dns.GetHostEntry("crybot-silo.azurewebsites.net").AddressList[0];
-            //Console.WriteLine($"Hello, found ip {ipAddress}");
-            var siloBuilder = new SiloHostBuilder()
-                .UseLocalhostClustering()
-                .UseDashboard(options => { })
-                .Configure<ClusterOptions>(options =>
-                {
-                    options.ClusterId = "dev";
-                    options.ServiceId = "OrleansService";
-                })
-                .ConfigureEndpoints(IPAddress.Loopback, 11111, 30000, listenOnAnyHostAddress: true)
-                //.ConfigureEndpoints(ipAddress, 11111, 30000, listenOnAnyHostAddress: true)
-                .ConfigureLogging(logging => logging.AddConsole())
-                .ConfigureApplicationParts(manager =>
-                {
-                    manager.AddApplicationPart(typeof(CoinTrader).Assembly).WithReferences();
-                });
-            var invariant = "System.Data.SqlClient"; // for Microsoft SQL Server
-            var connectionString =
-                "Server=tcp:windevcryptodb.database.windows.net,1433;Initial Catalog=cryptodb;Persist Security Info=False;User ID=crypto;Password=CrbogdaN12!;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;";
-            siloBuilder.UseAdoNetClustering(options =>
+            try
             {
-                options.Invariant = invariant;
-                options.ConnectionString = connectionString;
-            });
-            //use AdoNet for reminder service
-            siloBuilder.UseAdoNetReminderService(options =>
+                var fileName = $"../../Logs/bot-trader-{DateTime.UtcNow:yy-MMM-dd ddd h-mm-ss}.txt";
+                loggerFactory.AddFile(fileName);
+            }
+            catch (Exception)
             {
-                options.Invariant = invariant;
-                options.ConnectionString = connectionString;
-            });
-            //use AdoNet for Persistence
-            siloBuilder.AddAdoNetGrainStorage("OrleansSqlStore", options =>
-            {
-                options.Invariant = invariant;
-                options.ConnectionString = connectionString;
-                options.UseJsonFormat = false;
-            });
 
-            _siloHost = siloBuilder.Build();
-            await _siloHost.StartAsync();
-        }
+            }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime applicationLifetime)
-        {
             applicationLifetime.ApplicationStopping.Register(async () => await _siloHost.StopAsync());
             if (env.IsDevelopment())
             {
@@ -140,6 +104,49 @@ namespace CryBot.Web
             });
         }
 
+        private static async Task StartSilo()
+        {
+            var siloBuilder = new SiloHostBuilder()
+                .UseLocalhostClustering()
+                .UseDashboard(options => { })
+                .Configure<ClusterOptions>(options =>
+                {
+                    options.ClusterId = "dev";
+                    options.ServiceId = "OrleansService";
+                })
+                .ConfigureEndpoints(IPAddress.Loopback, 11111, 30000, listenOnAnyHostAddress: true)
+                .ConfigureLogging(logging => logging.AddConsole())
+                .ConfigureApplicationParts(manager =>
+                {
+                    manager.AddApplicationPart(typeof(CoinTrader).Assembly).WithReferences();
+                });
+            var invariant = "System.Data.SqlClient"; // for Microsoft SQL Server
+            var connectionString =
+                "Server=tcp:windevcryptodb.database.windows.net,1433;Initial Catalog=cryptodb;Persist Security Info=False;User ID=crypto;Password=CrbogdaN12!;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;";
+            siloBuilder.UseAdoNetClustering(options =>
+            {
+                options.Invariant = invariant;
+                options.ConnectionString = connectionString;
+            });
+            //use AdoNet for reminder service
+            siloBuilder.UseAdoNetReminderService(options =>
+            {
+                options.Invariant = invariant;
+                options.ConnectionString = connectionString;
+            });
+            //use AdoNet for Persistence
+            siloBuilder.AddAdoNetGrainStorage("OrleansSqlStore", options =>
+            {
+                options.Invariant = invariant;
+                options.ConnectionString = connectionString;
+                options.UseJsonFormat = false;
+            });
+
+            _siloHost = siloBuilder.Build();
+            await _siloHost.StartAsync();
+        }
+
+
         private IClusterClient CreateOrleansClient()
         {
             while (true) // keep trying to connect until silo is available
@@ -147,11 +154,9 @@ namespace CryBot.Web
                 try
                 {
                     StartSilo().Wait();
-                    //var ipAddress = Dns.GetHostEntry("crybot-silo.azurewebsites.net").AddressList[0];
-                    //Console.WriteLine($"Hello, found ip {ipAddress}");
                     var clientBuilder = new ClientBuilder()
                         //.UseStaticClustering(new IPEndPoint(ipAddress, 30000))
-                        .UseStaticClustering(new IPEndPoint(IPAddress.Loopback, 30000))
+                        .UseLocalhostClustering()
                         .Configure<ClusterOptions>(options =>
                         {
                             options.ClusterId = "dev";
@@ -169,7 +174,7 @@ namespace CryBot.Web
                 catch (Exception e)
                 {
                     Thread.Sleep(3000);
-                    // log a warning or something
+                    Console.WriteLine(e);
                 }
             }
         }

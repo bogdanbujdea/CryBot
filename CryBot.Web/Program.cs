@@ -13,6 +13,7 @@ namespace CryBot.Web
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
+                .UseUrls("http://*:80")
                 .Build();
     }
 }

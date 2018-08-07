@@ -37,6 +37,7 @@ namespace CryBot.Web.Infrastructure
             _hubContext = hubContext;
             _tradersManager = tradersManager;
             _hubNotifier = new HubNotifier(_hubContext);
+            Console.WriteLine($"Bittrex api key {options.Value.BittrexApiKey}");
             _cryptoApi.Initialize(options.Value.BittrexApiKey, options.Value.BittrexApiSecret);
         }
 
