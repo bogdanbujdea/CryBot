@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -6,18 +6,14 @@
 
   <ItemGroup>
     <PackageReference Include="Bittrex.Net" Version="2.1.10" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.0.2" />
+    <PackageReference Include="Microsoft.Orleans.Core" Version="2.0.3" />
     <PackageReference Include="Microsoft.Orleans.Core.Abstractions" Version="2.0.0" />
     <PackageReference Include="Microsoft.Orleans.OrleansCodeGenerator.Build" Version="2.0.3" />
     <PackageReference Include="System.Reactive" Version="4.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Microsoft.AspNetCore.SignalR.Core">
-      <HintPath>..\..\..\..\..\.nuget\packages\microsoft.aspnetcore.signalr.core\1.0.1\lib\netstandard2.0\Microsoft.AspNetCore.SignalR.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Orleans.Core">
-      <HintPath>..\..\..\..\..\.nuget\packages\microsoft.orleans.core\2.0.3\lib\netstandard2.0\Orleans.Core.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup>

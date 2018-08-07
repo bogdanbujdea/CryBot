@@ -32,13 +32,11 @@ module.exports = (env) => {
                 manifest: require('./wwwroot/dist/vendor-manifest.json')
             }),
             new AureliaPlugin({ aureliaApp: 'boot' })
-        ].concat(isDevBuild ? [
+        ].concat([
             new webpack.SourceMapDevToolPlugin({
                 filename: '[file].map', // Remove this line if you prefer inline source maps
                 moduleFilenameTemplate: path.relative(bundleOutputDir, '[resourcePath]')  // Point sourcemap entries to the original file locations on disk
             })
-        ] : [
-            new webpack.optimize.UglifyJsPlugin()
         ])
     }];
 }

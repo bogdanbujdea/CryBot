@@ -1,0 +1,21 @@
+version: '3.4'
+
+services:
+  orleans-silo:  
+    build:  
+      context: .  
+      dockerfile: Dockerfile_silo  
+    image: thewindev/crybot-silo  
+    ports:  
+      - "8090:80"
+    environment:  
+      - "ConnectionString=Server=tcp:windevcryptodb.database.windows.net,1433;Initial Catalog=cryptodb;Persist Security Info=False;User ID=crypto;Password=CrbogdaN12!;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+  orleans-client:  
+    build:  
+      context: .  
+      dockerfile: Dockerfile_client  
+    image: thewindev/crybot  
+    ports:  
+      - "8080:80"   
+    depends_on:  
+      - orleans-silo

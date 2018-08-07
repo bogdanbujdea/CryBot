@@ -1,0 +1,15 @@
+FROM microsoft/dotnet:2.1-sdk AS build-env
+COPY . /app
+
+ENV BuildVersion 1.0.0.0
+ENV ASPNETCORE_ENVIRONMENT=Development
+
+WORKDIR /app/CryBot.Core
+RUN ["dotnet", "build", "-c", "Release"]
+
+WORKDIR /app/CryBot.Silo
+RUN ["dotnet", "publish", "-c", "Release"]
+
+EXPOSE 30000/tcp
+
+ENTRYPOINT ["dotnet", "run"]

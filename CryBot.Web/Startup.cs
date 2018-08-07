@@ -20,7 +20,9 @@ using Orleans;
 using Orleans.Configuration;
 
 using System;
+using System.Net;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace CryBot.Web
 {
@@ -97,6 +99,7 @@ namespace CryBot.Web
                 {
                     var clientBuilder = new ClientBuilder()
                         .UseLocalhostClustering()
+                        //.UseStaticClustering(new IPEndPoint(IPAddress.Parse("172.31.197.65"), 30000))
                         .Configure<ClusterOptions>(options =>
                         {
                             options.ClusterId = "dev";
@@ -104,13 +107,14 @@ namespace CryBot.Web
                         })
                         .ConfigureLogging(logging => logging.AddConsole())
                         .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(TraderGrain).Assembly).WithReferences());
-
+                    
+                    
                     var client = clientBuilder.Build();
                     client.Connect().Wait();
 
                     return client;
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
                     Thread.Sleep(3000);
                     // log a warning or something

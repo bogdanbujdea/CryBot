@@ -23,9 +23,7 @@ namespace CryBot.Silo
                 {
                     options.ClusterId = "dev";
                     options.ServiceId = "OrleansService";                    
-                })
-                .Configure<EndpointOptions>(options =>                    
-                    options.AdvertisedIPAddress = IPAddress.Loopback)
+                }).ConfigureEndpoints(IPAddress.Parse("127.0.0.1"), 11111, 30000, listenOnAnyHostAddress:true)
                 .ConfigureLogging(logging => logging.AddConsole())
                 .ConfigureApplicationParts(manager =>
                     {
@@ -51,6 +49,7 @@ namespace CryBot.Silo
                 options.ConnectionString = connectionString;
                 options.UseJsonFormat = false;
             });
+
             using (var host = siloBuilder.Build())
             {                
                 await host.StartAsync();
