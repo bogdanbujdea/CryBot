@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
 using System.Threading.Tasks;
+using Bittrex.Net.Objects;
+using CryBot.Web.Infrastructure;
 
 namespace CryBot.Web.Controllers
 {
@@ -12,16 +14,19 @@ namespace CryBot.Web.Controllers
     public class WalletController : Controller
     {
         private readonly ICryptoApi _cryptoApi;
+        private readonly IPushManager _pushManager;
 
-        public WalletController(ICryptoApi cryptoApi, IOptions<EnvironmentConfig> options)
+        public WalletController(ICryptoApi cryptoApi, IOptions<EnvironmentConfig> options, IPushManager pushManager)
         {
             _cryptoApi = cryptoApi;
+            _pushManager = pushManager;
             _cryptoApi.Initialize(options.Value.BittrexApiKey, options.Value.BittrexApiSecret);
         }
 
         [HttpGet]
         public async Task<IActionResult> GetWallet()
         {
+            await _pushManager.TriggerPush(new PushMessage("Hello", "BTC", OrderBookType.Buy));
             var walletResponse = await _cryptoApi.GetWalletAsync();
             if (walletResponse.IsSuccessful)
                 return Ok(new { wallet = walletResponse.Content, isSuccessful = true});

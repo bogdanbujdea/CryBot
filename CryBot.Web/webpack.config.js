@@ -9,7 +9,7 @@ module.exports = (env) => {
         stats: { modules: false },
         entry: { 'app': 'aurelia-bootstrapper' },
         resolve: {
-            extensions: ['.ts', '.js'],
+            extensions: ['.ts', '.js', '.json'],
             modules: ['ClientApp', 'node_modules'],
         },
         output: {

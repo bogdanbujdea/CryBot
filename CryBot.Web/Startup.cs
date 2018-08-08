@@ -48,6 +48,8 @@ namespace CryBot.Web
             services.AddSingleton(typeof(IBittrexClient), typeof(BittrexClient));
             services.AddSingleton(typeof(ITradersManager), typeof(TradersManager));
             services.AddSingleton(typeof(IHubNotifier), typeof(HubNotifier));
+            services.AddSingleton(typeof(IPushManager), typeof(PushManager));
+            services.AddSingleton(typeof(ISubscriptionsRepository), typeof(SubscriptionsRepository));
 
             var orleansClient = CreateOrleansClient();
             services.AddSingleton(orleansClient);

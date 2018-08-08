@@ -9,7 +9,7 @@
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.0.2" />
     <PackageReference Include="Microsoft.Orleans.Core" Version="2.0.3" />
     <PackageReference Include="Microsoft.Orleans.Core.Abstractions" Version="2.0.0" />
-    <PackageReference Include="Microsoft.Orleans.OrleansCodeGenerator.Build" Version="2.0.3" />
+    <PackageReference Include="Microsoft.Orleans.OrleansCodeGenerator.Build" Version="2.0.4" />
     <PackageReference Include="System.Reactive" Version="4.0.0" />
   </ItemGroup>
 

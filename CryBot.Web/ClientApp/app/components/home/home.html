@@ -1,6 +1,7 @@
 <template>
     <h3>Version: ${version}</h3>
     <p if.bind="!wallet"><em>Loading...</em></p>
+    <button title="subscribe to push notifications" id="subscribePushNotifications" if.bind="pushIsSupported" click.delegate="subscribeToPushNotifications()">Subscribe</button>
     <h3>Bitcoin: ${ wallet.bitcoinBalance.available } / ${ wallet.bitcoinBalance.quantity }</h3>
     <table if.bind="wallet.coins" class="table">
         <thead>
