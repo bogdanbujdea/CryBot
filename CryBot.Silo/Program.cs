@@ -21,8 +21,6 @@ namespace CryBot.Silo
 
         private static async Task StartSilo()
         {
-            var ipAddress = Dns.GetHostEntry("crybot-silo.azurewebsites.net").AddressList[0];
-            Console.WriteLine($"Hello, found ip {ipAddress}");
             var siloBuilder = new SiloHostBuilder()
                 .UseLocalhostClustering()
                 .UseDashboard(options => { })
@@ -30,11 +28,12 @@ namespace CryBot.Silo
                 {
                     options.ClusterId = "dev";
                     options.ServiceId = "OrleansService";
-                }).ConfigureEndpoints(ipAddress, 11111, 30000, listenOnAnyHostAddress: true)
+                })
+                .ConfigureEndpoints(IPAddress.Loopback, 11111, 30000, listenOnAnyHostAddress: true)
                 .ConfigureLogging(logging => logging.AddConsole())
                 .ConfigureApplicationParts(manager =>
                 {
-                    manager.AddApplicationPart(typeof(CoinTrader).Assembly).WithReferences();
+                    manager?.AddApplicationPart(typeof(CoinTrader).Assembly).WithReferences();
                 });
             var invariant = "System.Data.SqlClient"; // for Microsoft SQL Server
             var connectionString =

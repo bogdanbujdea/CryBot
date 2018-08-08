@@ -29,7 +29,7 @@ namespace CryBot.Core.Services
         {
             var marketsResponse = await _cryptoApi.GetMarketsAsync();
             var traderStates = new List<TraderState>();
-            foreach (var market in new List<string> { "BTC-ETC", "BTC-XLM", "BTC-XRP", "BTC-XMR"})
+            foreach (var market in new List<string> { "BTC-ETC", "BTC-XLM"})
             {
                 var traderGrain = _clusterClient.GetGrain<ITraderGrain>(market);
                 await traderGrain.SetMarketAsync(market);

@@ -20,12 +20,12 @@ namespace CryBot.Core.Models
 
         public static TraderSettings Default { get; } = new TraderSettings
         {
-            BuyLowerPercentage = 0,
+            BuyLowerPercentage = -1,
             TradingBudget = 0.0012M,
             MinimumTakeProfit = 0M,
             HighStopLossPercentage = -0.5M,
             StopLoss = -2,
-            BuyTrigger = -0.8M,
+            BuyTrigger = -2M,
             ExpirationTime = TimeSpan.FromHours(2)
         };
 

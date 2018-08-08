@@ -161,12 +161,12 @@ namespace CryBot.Core.Services
             {
                 case TradeAdvice.Buy:
                     await _pushManager.TriggerPush(PushMessage.FromMessage($"Got buy signal {tradeAction.Reason}"));
-                    var buyOrder = await CreateBuyOrder(tradeAction.OrderPricePerUnit);
                     if (tradeAction.Reason == TradeReason.BuyTrigger)
                     {
                         Console.WriteLine($"Buy trigger at {Ticker.Bid}");
                         return new Trade { Status = TradeStatus.Empty };
                     }
+                    var buyOrder = await CreateBuyOrder(tradeAction.OrderPricePerUnit);
                     trade.BuyOrder = buyOrder;
                     trade.Status = TradeStatus.Buying;
                     break;

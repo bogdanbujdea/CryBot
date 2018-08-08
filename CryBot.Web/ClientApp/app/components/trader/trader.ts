@@ -39,8 +39,10 @@ export class Trader {
         this.httpClient.fetch('api/traders?market=' + this.market)
             .then(result => result.json() as Promise<ITraderResponse>)
             .then(data => {
-                if (data.isSuccessful)
-                    this.traderData = data.trader;
+                if (data.isSuccessful) {
+                    this.traderData = data.trader;                    
+                }
+                
             });
         this.connectionPromise = this.chatHubConnection.start();
     }

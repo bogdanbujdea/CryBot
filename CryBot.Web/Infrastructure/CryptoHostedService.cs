@@ -60,6 +60,7 @@ namespace CryBot.Web.Infrastructure
 
         public async Task StartTrading()
         {
+            await _pushManager.TriggerPush(PushMessage.FromMessage("Started trading"));
             var traderStates = await _tradersManager.GetAllTraders();
             foreach (var market in traderStates.Select(t => t.Market))
             {
