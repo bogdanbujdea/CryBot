@@ -73,6 +73,7 @@ namespace CryBot.Core.Services
                         trade.BuyOrder.Uuid = _trades.IndexOf(trade).ToString();
                         LogText($"FILLED BUY\t{trade.BuyOrder.PricePerUnit}\t{ticker.Timestamp:F}\t{trade.BuyOrder.Price} BTC\t\t{trade.BuyOrder.Uuid}");
                         trade.BuyOrder.IsClosed = true;
+                        trade.Status = TradeStatus.Bought;
                         continue;
                     }
 

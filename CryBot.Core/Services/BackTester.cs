@@ -24,8 +24,8 @@ namespace CryBot.Core.Services
             var candlesResponse = await _cryptoApi.GetCandlesAsync(market, TickInterval.OneMinute);
             var candles = candlesResponse.Content;
             var buyLowerRange = new List<decimal> { -5, -4, -3, -2, -1 };
-            var minimumTakeProfitRange = new List<decimal> { -1, 0, 0.1M, 0.25M, 0.5M, 0.75M, 1M, 3, 5 };
-            var highStopLossRange = new List<decimal> { -50, -30, -20, -10, -5, -4, -3, -2, -1, -0.1M };
+            var minimumTakeProfitRange = new List<decimal> {  0, 0.1M, 0.5M, 3, 5 };
+            var highStopLossRange = new List<decimal> { -30,  -5, -4, -3, -2, -1, -0.1M };
             var stopLossRange = new List<decimal> { -30, -20, -10, -5, -4, -3 };
             var buyTriggerRange = new List<decimal> { -7, -6, -5, -4, -3, -2 };
             var bestSettings = TraderSettings.Default;
@@ -43,8 +43,6 @@ namespace CryBot.Core.Services
                     {
                         foreach (var trigger in buyTriggerRange)
                         {
-                            if (trigger >= stopLoss)
-                                continue;
                             foreach (var minProfit in minimumTakeProfitRange)
                             {
                                 var strategy = new HoldUntilPriceDropsStrategy();
