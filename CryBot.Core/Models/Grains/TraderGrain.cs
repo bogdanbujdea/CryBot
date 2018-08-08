@@ -1,10 +1,9 @@
-﻿using Orleans;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Orleans;
 using Orleans.Providers;
 
-using System.Threading.Tasks;
-using System.Collections.Generic;
-
-namespace CryBot.Core.Models
+namespace CryBot.Core.Models.Grains
 {
     [StorageProvider(ProviderName = "OrleansSqlStore")]
     public class TraderGrain : Grain<TraderState>, ITraderGrain

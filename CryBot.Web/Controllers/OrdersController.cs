@@ -17,7 +17,7 @@ namespace CryBot.Web.Controllers
         public OrdersController(ICryptoApi cryptoApi, IOptions<EnvironmentConfig> options)
         {
             _cryptoApi = cryptoApi;
-            _cryptoApi.Initialize(options.Value.BittrexApiKey, options.Value.BittrexApiSecret, false);
+            _cryptoApi.Initialize(options.Value.BittrexApiKey, options.Value.BittrexApiSecret, options.Value.TestMode);
         }
 
         [HttpGet]

@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using Orleans;
 
 using System.Threading.Tasks;
+using CryBot.Core.Models.Grains;
 
 namespace CryBot.Web.Controllers
 {

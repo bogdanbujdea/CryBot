@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Orleans;
 
-namespace CryBot.Core.Models
+namespace CryBot.Core.Models.Grains
 {
     public interface ISubscriptionGrain: IGrainWithStringKey
     {

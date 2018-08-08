@@ -25,6 +25,7 @@ using System;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using CryBot.Core.Models.Grains;
 
 namespace CryBot.Web
 {

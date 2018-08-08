@@ -9,7 +9,7 @@ using Orleans;
 
 using System.Threading.Tasks;
 using System.Collections.Generic;
-
+using CryBot.Core.Models.Grains;
 using Xunit;
 
 namespace CryBot.UnitTests.Services

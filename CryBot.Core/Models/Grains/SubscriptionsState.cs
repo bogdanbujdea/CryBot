@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
-using Orleans;
 
-namespace CryBot.Core.Models
+namespace CryBot.Core.Models.Grains
 {
     public class SubscriptionsState
     {

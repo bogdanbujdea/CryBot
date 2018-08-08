@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Orleans;
 using Orleans.Providers;
 
-namespace CryBot.Core.Models
+namespace CryBot.Core.Models.Grains
 {
     [StorageProvider(ProviderName = "OrleansSqlStore")]
     public class SubscriptionsGrain : Grain<SubscriptionsState>, ISubscriptionGrain

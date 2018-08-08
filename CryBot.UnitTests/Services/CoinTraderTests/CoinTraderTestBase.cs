@@ -7,6 +7,7 @@ using Moq;
 
 using System.Threading.Tasks;
 using System.Reactive.Subjects;
+using CryBot.Core.Models.Grains;
 
 namespace CryBot.UnitTests.Services.CoinTraderTests
 {

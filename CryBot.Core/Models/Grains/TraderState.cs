@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace CryBot.Core.Models
+namespace CryBot.Core.Models.Grains
 {
     public class TraderState
     {
