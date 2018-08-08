@@ -1,5 +1,6 @@
 using Bittrex.Net;
 using Bittrex.Net.Interfaces;
+
 using CryBot.Core.Hubs;
 using CryBot.Core.Models;
 using CryBot.Core.Services;
@@ -17,13 +18,13 @@ using Microsoft.Extensions.DependencyInjection;
 using IHostingEnvironment = Microsoft.Extensions.Hosting.IHostingEnvironment;
 
 using Orleans;
+using Orleans.Hosting;
 using Orleans.Configuration;
 
 using System;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Orleans.Hosting;
 
 namespace CryBot.Web
 {
@@ -36,7 +37,7 @@ namespace CryBot.Web
             Configuration = configuration;
         }
 
-        public IConfiguration Configuration { get; }
+        public IConfiguration Configuration { get; set; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -104,7 +105,7 @@ namespace CryBot.Web
             });
         }
 
-        private static async Task StartSilo()
+        private async Task StartSilo()
         {
             var siloBuilder = new SiloHostBuilder()
                 .UseLocalhostClustering()
@@ -121,8 +122,7 @@ namespace CryBot.Web
                     manager.AddApplicationPart(typeof(CoinTrader).Assembly).WithReferences();
                 });
             var invariant = "System.Data.SqlClient"; // for Microsoft SQL Server
-            var connectionString =
-                "Server=tcp:windevcryptodb.database.windows.net,1433;Initial Catalog=cryptodb;Persist Security Info=False;User ID=crypto;Password=CrbogdaN12!;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;";
+            var connectionString = Configuration["connectionString"].ToString();
             siloBuilder.UseAdoNetClustering(options =>
             {
                 options.Invariant = invariant;

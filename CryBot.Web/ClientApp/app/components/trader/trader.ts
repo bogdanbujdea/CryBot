@@ -34,7 +34,6 @@ export class Trader {
         });
         this.chatHubConnection.on('priceUpdate:' + this.market, (newTicker: Ticker) => {
             this.traderData.currentTicker = newTicker;
-            console.log(newTicker.market + "-" + newTicker.last);
             this.tickerLog.unshift(newTicker);
         });
         this.httpClient.fetch('api/traders?market=' + this.market)
