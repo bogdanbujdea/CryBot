@@ -20,6 +20,7 @@ namespace CryBot.Web.Infrastructure
     public class CryptoHostedService : IHostedService, IDisposable
     {
         private readonly IOptions<EnvironmentConfig> _options;
+        private readonly IPushManager _pushManager;
         private readonly ICryptoApi _cryptoApi;
         private readonly IClusterClient _clusterClient;
         private readonly IHubContext<ApplicationHub> _hubContext;
@@ -29,9 +30,10 @@ namespace CryBot.Web.Infrastructure
         private Guid _hostedServiceId;
         private HubNotifier _hubNotifier;
 
-        public CryptoHostedService(IOptions<EnvironmentConfig> options, ICryptoApi cryptoApi, IClusterClient clusterClient, IHubContext<ApplicationHub> hubContext, ITradersManager tradersManager)
+        public CryptoHostedService(IOptions<EnvironmentConfig> options, IPushManager pushManager, ICryptoApi cryptoApi, IClusterClient clusterClient, IHubContext<ApplicationHub> hubContext, ITradersManager tradersManager)
         {
             _options = options;
+            _pushManager = pushManager;
             _cryptoApi = cryptoApi;
             _clusterClient = clusterClient;
             _hubContext = hubContext;
@@ -47,14 +49,13 @@ namespace CryBot.Web.Infrastructure
 
             _cancellationTokenSource = new CancellationTokenSource();
             
-            _cryptoApi.IsInTestMode = true;
-            var market = "BTC-ETC";
-            await _cryptoApi.GetCandlesAsync(market, TickInterval.OneMinute);
-            var coinTrader = new CoinTrader(_cryptoApi, _clusterClient, _hubNotifier);
+            _cryptoApi.IsInTestMode = _options.Value.TestMode;
+            //await _cryptoApi.GetCandlesAsync(market, TickInterval.OneMinute);
+            /*var coinTrader = new CoinTrader(_cryptoApi, _clusterClient, _hubNotifier);
             coinTrader.Initialize(market);
-            await coinTrader.StartAsync();
-            await Task.Run(() => _cryptoApi.SendMarketUpdates(market));
-            //await StartTrading();
+            await coinTrader.StartAsync();*/
+            //await Task.Run(() => _cryptoApi.SendMarketUpdates(market));
+            await StartTrading();
         }
 
         public async Task StartTrading()
@@ -62,7 +63,7 @@ namespace CryBot.Web.Infrastructure
             var traderStates = await _tradersManager.GetAllTraders();
             foreach (var market in traderStates.Select(t => t.Market))
             {
-                var coinTrader = new CoinTrader(_cryptoApi, _clusterClient, _hubNotifier);
+                var coinTrader = new CoinTrader(_cryptoApi, _clusterClient, _hubNotifier, _pushManager);
                 coinTrader.Initialize(market);
                 await coinTrader.StartAsync();
             }

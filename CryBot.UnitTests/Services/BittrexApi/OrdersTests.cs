@@ -89,12 +89,6 @@ namespace CryBot.UnitTests.Services.BittrexApi
             ordersResponse.Content[0].Market.Should().Be("BTC-XLM");
         }
 
-        [Fact]
-        public async Task BuyCoin_Should_HaveValidOrder()
-        {
-            await _bittrexApi.BuyCoinAsync(new CryptoOrder());
-        }
-
         private static CallResult<BittrexOrderHistoryOrder[]> CreateCompletedOrdersResponse(
             List<BittrexOrderHistoryOrder> bittrexOrders,
             Error serverError)

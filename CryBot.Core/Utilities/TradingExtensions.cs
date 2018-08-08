@@ -40,6 +40,7 @@ namespace CryBot.Core.Utilities
         public static CryptoOrder ToCryptoOrder(this BittrexStreamOrderData closedOrderData)
         {
             var closedOrder = closedOrderData.Order;
+            Console.WriteLine(closedOrder.OrderId);
             return new CryptoOrder
             {
                 Market = closedOrder.Market,
@@ -49,7 +50,7 @@ namespace CryBot.Core.Utilities
                 PricePerUnit = closedOrder.Limit.RoundSatoshi(),
                 CommissionPaid = closedOrder.CommissionPaid.RoundSatoshi(),
                 Canceled = closedOrder.CancelInitiated,
-                Uuid = closedOrder.Uuid.ToString(),
+                Uuid = closedOrder.OrderId.ToString(),
                 Opened = closedOrder.Opened,
                 Closed = closedOrder.Closed.GetValueOrDefault(),
                 Limit = closedOrder.Limit.RoundSatoshi(),

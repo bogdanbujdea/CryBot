@@ -16,10 +16,6 @@ export class Traders {
             .then(data => {
                 if (data.isSuccessful) {
                     this.traders = data.traders;
-                    /*this.traders.forEach(t => {
-                        var trader = new Trader(http);
-                        trader.initialize(http, t.market);
-                    });*/
                 }          
             });
     }

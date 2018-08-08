@@ -1,5 +1,6 @@
 using Bittrex.Net.Objects;
 using CryBot.Core.Models;
+using CryBot.Core.Services;
 using CryBot.Web.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 

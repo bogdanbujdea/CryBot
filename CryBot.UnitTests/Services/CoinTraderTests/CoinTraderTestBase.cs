@@ -19,7 +19,8 @@ namespace CryBot.UnitTests.Services.CoinTraderTests
         protected CoinTraderTestBase()
         {
             Market = "BTC-ETC";
-            CoinTrader = new CoinTrader(CryptoApiMock.Object, OrleansClientMock.Object, HubNotifierMock.Object)
+            var pushManagerMock = new Mock<IPushManager>();
+            CoinTrader = new CoinTrader(CryptoApiMock.Object, OrleansClientMock.Object, HubNotifierMock.Object, pushManagerMock.Object)
             {
                 Strategy = Strategy.Object
             };
@@ -28,6 +29,7 @@ namespace CryBot.UnitTests.Services.CoinTraderTests
             CryptoApiMock.SetupGet(c => c.TickerUpdated).Returns(tickerSubject);
             CryptoApiMock.SetupGet(c => c.OrderUpdated).Returns(orderSubject);
             TraderGrainMock.Setup(t => t.IsInitialized()).ReturnsAsync(true);
+            pushManagerMock.Setup(p => p.TriggerPush(It.IsAny<PushMessage>())).Returns(Task.CompletedTask);
             TraderGrainMock.Setup(c => c.GetTraderData()).ReturnsAsync(new TraderState { Trades = new List<Trade>() });
             OrleansClientMock.Setup(c => c.GetGrain<ITraderGrain>(It.Is<string>(t => t == Market), It.IsAny<string>()))
                 .Returns(TraderGrainMock.Object);

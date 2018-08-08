@@ -99,7 +99,7 @@ namespace CryBot.UnitTests.Strategies
         [Fact]
         public void EmptyTrade_Should_ReturnBuyAdvice()
         {
-            var tradeAction = _strategy.CalculateTradeAction(new Ticker { Bid = 98 }, new Trade { Status = TradeStatus.Empty });
+            var tradeAction = _strategy.CalculateTradeAction(new Ticker { Bid = 98, Ask = 100 }, new Trade { Status = TradeStatus.Empty });
             tradeAction.TradeAdvice.Should().Be(TradeAdvice.Buy);
             tradeAction.Reason.Should().Be(TradeReason.FirstTrade);
             tradeAction.OrderPricePerUnit.Should().Be(98);

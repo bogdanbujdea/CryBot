@@ -44,7 +44,10 @@ namespace CryBot.Web
         {
             services.Configure<EnvironmentConfig>(Configuration);
             services.AddSingleton<IHostedService, CryptoHostedService>();
-            services.AddSingleton(typeof(ICryptoApi), typeof(FakeBittrexApi));
+            if (Configuration["testMode"] == "False")
+                services.AddSingleton(typeof(ICryptoApi), typeof(BittrexApi));
+            else
+                services.AddSingleton(typeof(ICryptoApi), typeof(FakeBittrexApi));
             services.AddSingleton(typeof(IBittrexClient), typeof(BittrexClient));
             services.AddSingleton(typeof(ITradersManager), typeof(TradersManager));
             services.AddSingleton(typeof(IHubNotifier), typeof(HubNotifier));
@@ -121,7 +124,7 @@ namespace CryBot.Web
                 .ConfigureLogging(logging => logging.AddConsole())
                 .ConfigureApplicationParts(manager =>
                 {
-                    manager.AddApplicationPart(typeof(CoinTrader).Assembly).WithReferences();
+                    manager?.AddApplicationPart(typeof(CoinTrader).Assembly).WithReferences();
                 });
             var invariant = "System.Data.SqlClient"; // for Microsoft SQL Server
             var connectionString = Configuration["connectionString"].ToString();

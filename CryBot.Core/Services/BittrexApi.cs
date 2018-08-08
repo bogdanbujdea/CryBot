@@ -48,8 +48,8 @@ namespace CryBot.Core.Services
                 ApiCredentials = apiCredentials
             });
 
-            //_bittrexSocketClient.SubscribeToMarketSummariesUpdate(OnMarketsUpdate);
-            //_bittrexSocketClient.SubscribeToOrderUpdates(OnOrderUpdate);
+            _bittrexSocketClient.SubscribeToMarketSummariesUpdate(OnMarketsUpdate);
+            _bittrexSocketClient.SubscribeToOrderUpdates(OnOrderUpdate);
         }
 
         public async Task<CryptoResponse<Wallet>> GetWalletAsync()
@@ -99,8 +99,14 @@ namespace CryBot.Core.Services
 
         public virtual async Task<CryptoResponse<CryptoOrder>> BuyCoinAsync(CryptoOrder cryptoOrder)
         {
-            OrderUpdated.OnNext(cryptoOrder);
-            return new CryptoResponse<CryptoOrder>(cryptoOrder);
+            var buyResult = await _bittrexClient.PlaceOrderAsync(OrderSide.Buy, cryptoOrder.Market, cryptoOrder.Quantity, cryptoOrder.Limit);
+            if (buyResult.Success)
+            {
+                cryptoOrder.Uuid = buyResult.Data.Uuid.ToString();
+                return new CryptoResponse<CryptoOrder>(cryptoOrder);
+            }
+            else
+                return new CryptoResponse<CryptoOrder>(buyResult.Error.Message);
         }
 
         public async Task<CryptoResponse<Ticker>> GetTickerAsync(string market)
@@ -125,9 +131,16 @@ namespace CryBot.Core.Services
             return new CryptoResponse<Ticker>(tickerResponse.Error.Message);
         }
 
-        public virtual Task<CryptoResponse<CryptoOrder>> SellCoinAsync(CryptoOrder sellOrder)
+        public virtual async Task<CryptoResponse<CryptoOrder>> SellCoinAsync(CryptoOrder sellOrder)
         {
-            throw new NotImplementedException();
+            var sellResult = await _bittrexClient.PlaceOrderAsync(OrderSide.Sell, sellOrder.Market, sellOrder.Quantity, sellOrder.Limit);
+            if (sellResult.Success)
+            {
+                sellOrder.Uuid = sellResult.Data.Uuid.ToString();
+                return new CryptoResponse<CryptoOrder>(sellOrder);
+            }
+            else
+                return new CryptoResponse<CryptoOrder>(sellResult.Error.Message);
         }
 
         public async Task<CryptoResponse<List<Market>>> GetMarketsAsync()
@@ -190,9 +203,10 @@ namespace CryBot.Core.Services
             }
         }
 
-        public virtual Task<CryptoResponse<CryptoOrder>> CancelOrder(string orderId)
+        public virtual async Task<CryptoResponse<CryptoOrder>> CancelOrder(string orderId)
         {
-            throw new NotImplementedException();
+            await _bittrexClient.CancelOrderAsync(Guid.Parse(orderId));
+            return new CryptoResponse<CryptoOrder>(new CryptoOrder());
         }
 
         protected void OnMarketsUpdate(List<BittrexStreamMarketSummary> markets)

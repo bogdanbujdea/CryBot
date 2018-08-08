@@ -34,7 +34,7 @@ namespace CryBot.UnitTests.Services
             _clusterClientMock.Setup(c => c.GetGrain<ITraderGrain>(It.Is<string>(t => t == "BTC-ETC"), It.IsAny<string>())).Returns(_initializedTraderGrainMock.Object);
             _clusterClientMock.Setup(c => c.GetGrain<ITraderGrain>(It.Is<string>(t => t == "BTC-ETH"), It.IsAny<string>())).Returns(_notInitializedTraderGrainMock.Object);
             _initializedTraderGrainMock.Setup(c => c.GetTraderData()).ReturnsAsync(new TraderState());
-            _tradersManager = new TradersManager(_cryptoApiMock.Object, _clusterClientMock.Object, null);
+            _tradersManager = new TradersManager(_cryptoApiMock.Object, _clusterClientMock.Object, null, null);
         }
 
         [Fact]

@@ -24,7 +24,7 @@
         <tbody>
             <tr repeat.for="trade of traderData.trades">
                 <td>${ trade.buyOrder.uuid }</td>
-                <td>${ trade.buyOrder.opened } - ${ trade.buyOrder.opened | dateFormat:traderData.currentTicker.timestamp:trade.status:trade.sellOrder.closed}</td>
+                <td>${ trade.buyOrder.opened } </td>
                 <td>${ trade.status | tradeStatus }</td>
                 <td>${ trade.buyOrder.pricePerUnit }</td>
                 <td>${ trade.maxPricePerUnit }</td>

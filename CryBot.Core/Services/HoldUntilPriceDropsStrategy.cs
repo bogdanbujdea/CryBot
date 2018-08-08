@@ -27,7 +27,7 @@ namespace CryBot.Core.Services
 
                 if (currentTrade.Status == TradeStatus.Empty)
                 {
-                    tradeAction.OrderPricePerUnit = ticker.Bid;
+                    tradeAction.OrderPricePerUnit = ticker.Ask;
                     tradeAction.Reason = TradeReason.FirstTrade;
                     tradeAction.TradeAdvice = TradeAdvice.Buy;
                     return tradeAction;

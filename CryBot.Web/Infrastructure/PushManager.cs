@@ -7,16 +7,11 @@ using Newtonsoft.Json.Serialization;
 
 using System;
 using System.Threading.Tasks;
-
+using CryBot.Core.Services;
 using WebPush;
 
 namespace CryBot.Web.Infrastructure
 {
-    public interface IPushManager
-    {
-        Task TriggerPush(PushMessage pushMessage);
-    }
-
     public class PushManager : IPushManager
     {
         private readonly ISubscriptionsRepository _subscriptionsRepository;

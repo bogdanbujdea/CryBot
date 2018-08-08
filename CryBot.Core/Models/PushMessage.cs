@@ -21,5 +21,10 @@ namespace CryBot.Core.Models
             OrderType = orderType;
             Timestamp = DateTime.UtcNow.ToString("F");
         }
+
+        public static PushMessage FromMessage(string message)
+        {
+            return new PushMessage(message);
+        }
     }
 }
