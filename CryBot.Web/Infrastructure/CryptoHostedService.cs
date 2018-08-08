@@ -40,7 +40,7 @@ namespace CryBot.Web.Infrastructure
             _tradersManager = tradersManager;
             _hubNotifier = new HubNotifier(_hubContext);
             Console.WriteLine($"Bittrex api key {options.Value.BittrexApiKey}");
-            _cryptoApi.Initialize(options.Value.BittrexApiKey, options.Value.BittrexApiSecret);
+            _cryptoApi.Initialize(options.Value.BittrexApiKey, options.Value.BittrexApiSecret, options.Value.TestMode);
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -48,13 +48,19 @@ namespace CryBot.Web.Infrastructure
             _hostedServiceId = Guid.NewGuid();
 
             _cancellationTokenSource = new CancellationTokenSource();
-            
+
             _cryptoApi.IsInTestMode = _options.Value.TestMode;
-            //await _cryptoApi.GetCandlesAsync(market, TickInterval.OneMinute);
-            /*var coinTrader = new CoinTrader(_cryptoApi, _clusterClient, _hubNotifier);
-            coinTrader.Initialize(market);
-            await coinTrader.StartAsync();*/
-            //await Task.Run(() => _cryptoApi.SendMarketUpdates(market));
+            if (_options.Value.TestMode)
+            {
+                var market = "BTC-ETC";
+                await _cryptoApi.GetCandlesAsync(market, TickInterval.OneMinute);
+                var coinTrader = new CoinTrader(_cryptoApi, _clusterClient, _hubNotifier, _pushManager);
+                coinTrader.Initialize(market);
+                await coinTrader.StartAsync();
+                await Task.Run(() => _cryptoApi.SendMarketUpdates(market));
+                return;
+            }
+
             await StartTrading();
         }
 

@@ -36,7 +36,7 @@ namespace CryBot.Core.Services
 
         public bool IsInTestMode { get; set; }
 
-        public void Initialize(string apiKey, string apiSecret)
+        public void Initialize(string apiKey, string apiSecret, bool isInTestMode)
         {
             var apiCredentials = new ApiCredentials(apiKey, apiSecret);
             _bittrexClient = new BittrexClient(new BittrexClientOptions
@@ -48,8 +48,11 @@ namespace CryBot.Core.Services
                 ApiCredentials = apiCredentials
             });
 
-            _bittrexSocketClient.SubscribeToMarketSummariesUpdate(OnMarketsUpdate);
-            _bittrexSocketClient.SubscribeToOrderUpdates(OnOrderUpdate);
+            if (!isInTestMode)
+            {
+                _bittrexSocketClient.SubscribeToMarketSummariesUpdate(OnMarketsUpdate);
+                _bittrexSocketClient.SubscribeToOrderUpdates(OnOrderUpdate);
+            }
         }
 
         public async Task<CryptoResponse<Wallet>> GetWalletAsync()
@@ -193,7 +196,7 @@ namespace CryBot.Core.Services
                             Ask = candle.High,
                             Timestamp = candle.Timestamp
                         });
-                        await Task.Delay(2000);
+                        await Task.Delay(500);
                     }
                     catch (Exception e)
                     {

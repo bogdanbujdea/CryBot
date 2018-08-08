@@ -20,7 +20,7 @@ namespace CryBot.Web.Controllers
         {
             _cryptoApi = cryptoApi;
             _pushManager = pushManager;
-            _cryptoApi.Initialize(options.Value.BittrexApiKey, options.Value.BittrexApiSecret);
+            _cryptoApi.Initialize(options.Value.BittrexApiKey, options.Value.BittrexApiSecret, false);
         }
 
         [HttpGet]

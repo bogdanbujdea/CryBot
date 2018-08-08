@@ -25,7 +25,7 @@ namespace CryBot.Core.Models
             MinimumTakeProfit = 0M,
             HighStopLossPercentage = -0.5M,
             StopLoss = -2,
-            BuyTrigger = -2M,
+            BuyTrigger = -1M,
             ExpirationTime = TimeSpan.FromHours(2)
         };
 

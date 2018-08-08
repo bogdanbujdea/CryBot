@@ -60,7 +60,7 @@ namespace CryBot.Core.Services
         public async Task<Unit> UpdatePrice(Ticker ticker)
         {
             //Console.WriteLine($"{ticker.Id} - {Budget}");
-            ticker.Timestamp = DateTime.UtcNow;
+            
             Ticker = ticker;
             await UpdateTrades();
             Task.Run(async () =>

@@ -16,7 +16,7 @@ namespace CryBot.Core.Services
 
         bool IsInTestMode { get; set; }
 
-        void Initialize(string apiKey, string apiSecret);
+        void Initialize(string apiKey, string apiSecret, bool isInTestMode);
 
         Task<CryptoResponse<Wallet>> GetWalletAsync();
 

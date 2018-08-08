@@ -18,7 +18,7 @@ namespace CryBot.Backtester
                 Console.Write("Market: ");
                 var market = Console.ReadLine();
                 var bittrexApi = new BittrexApi(null);                
-                bittrexApi.Initialize(Resources.BittrexApiKey, Resources.BittrexApiSecret);
+                bittrexApi.Initialize(Resources.BittrexApiKey, Resources.BittrexApiSecret, true);
                 /*await TestStrategy(bittrexApi, market);
                 return;*/
                 var backTester = new BackTester(bittrexApi);

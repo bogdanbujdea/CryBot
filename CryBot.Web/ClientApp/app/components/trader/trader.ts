@@ -30,6 +30,7 @@ export class Trader {
                 this.traderData = trader;
                 this.profit = 0;
                 trader.trades.forEach(t => this.profit += t.profit);
+                this.profit = Math.round(this.profit * 100) / 100;
             }
         });
         this.chatHubConnection.on('priceUpdate:' + this.market, (newTicker: Ticker) => {
@@ -57,8 +58,6 @@ export class Trader {
             console.warn('Chat: No connection to the server.');
         }
         await this.connectionPromise;
-        //this.chatHubConnection.invoke('sendMessage', this.currentTicker);
-        //this.currentTicker.text = '';
     }
 
     httpClient: HttpClient;
