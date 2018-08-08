@@ -52,7 +52,6 @@ namespace CryBot.Web.Infrastructure
                 catch (Exception exception)
                 {
                     Console.WriteLine(exception);
-                    await _subscriptionsRepository.RemoveSubscription(sub);
                 }
             }
         }
