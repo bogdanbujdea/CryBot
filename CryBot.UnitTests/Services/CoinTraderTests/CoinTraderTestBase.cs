@@ -30,9 +30,12 @@ namespace CryBot.UnitTests.Services.CoinTraderTests
             CryptoApiMock.SetupGet(c => c.TickerUpdated).Returns(tickerSubject);
             CryptoApiMock.SetupGet(c => c.OrderUpdated).Returns(orderSubject);
             TraderGrainMock.Setup(t => t.IsInitialized()).ReturnsAsync(true);
+            HubNotifierMock.Setup(h => h.UpdateTrader(It.IsAny<TraderState>())).Returns(Task.CompletedTask);
+            HubNotifierMock.Setup(h => h.UpdateTicker(It.IsAny<Ticker>())).Returns(Task.CompletedTask);
+            TraderGrainMock.Setup(t => t.UpdateTrades(It.IsAny<List<Trade>>())).Returns(Task.CompletedTask);
             pushManagerMock.Setup(p => p.TriggerPush(It.IsAny<PushMessage>())).Returns(Task.CompletedTask);
             TraderGrainMock.Setup(c => c.GetTraderData()).ReturnsAsync(new TraderState { Trades = new List<Trade>() });
-            OrleansClientMock.Setup(c => c.GetGrain<ITraderGrain>(It.Is<string>(t => t == Market), It.IsAny<string>()))
+            OrleansClientMock.Setup(c => c.GetGrain<ITraderGrain>(It.IsAny<string>(), It.IsAny<string>()))
                 .Returns(TraderGrainMock.Object);
         }
 

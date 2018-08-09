@@ -8,6 +8,14 @@
     <UserSecretsId>e76ccd70-73df-4992-8d68-8c8f2945031f</UserSecretsId>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <LangVersion>7.1</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <LangVersion>7.1</LangVersion>
+  </PropertyGroup>
+
   <ItemGroup>
     <None Remove="ClientApp\app\components\traders\CryptoOrder.ts" />
     <None Remove="ClientApp\app\components\traders\CryptoOrderType.ts" />

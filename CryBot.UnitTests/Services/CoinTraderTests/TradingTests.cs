@@ -33,12 +33,12 @@ namespace CryBot.UnitTests.Services.CoinTraderTests
         public async Task PriceUpdate_Should_UpdateTraderProfit()
         {
             CryptoApiMock.MockBuyingTrade(new CryptoOrder());
+            await CoinTrader.StartAsync();
             var trade = new Trade();
             trade.BuyOrder.PricePerUnit = 100;
-            CoinTrader.Trades.Add(trade);
+            CoinTrader.Trades = new List<Trade> { trade };
             trade.Status = TradeStatus.Bought;
             CoinTrader.Strategy = new HoldUntilPriceDropsStrategy();
-
             await CoinTrader.UpdatePrice(_newPriceTicker);
 
             CoinTrader.Trades[0].Profit.Should().Be(19.4M);
@@ -174,7 +174,8 @@ namespace CryBot.UnitTests.Services.CoinTraderTests
         public async Task BoughtOrder_Should_UpdateTraderStatus()
         {
             var trade = new Trade();
-            CoinTrader.Trades.Add(trade);
+            await CoinTrader.StartAsync();
+            CoinTrader.Trades = new List<Trade> { trade };
             trade.BuyOrder.Uuid = "B";
             var buyOrder = new CryptoOrder
             {

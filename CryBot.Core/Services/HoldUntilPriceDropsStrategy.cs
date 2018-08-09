@@ -1,8 +1,6 @@
 ﻿using CryBot.Core.Models;
 using CryBot.Core.Utilities;
 
-using System;
-
 namespace CryBot.Core.Services
 {
     public class HoldUntilPriceDropsStrategy : ITradingStrategy
@@ -25,24 +23,28 @@ namespace CryBot.Core.Services
 
                 UpdateTrade(ticker, currentTrade);
 
+                //return a buy trade if the trader is new
                 if (currentTrade.Status == TradeStatus.Empty)
                 {
-                    tradeAction.OrderPricePerUnit = ticker.Ask;
+                    tradeAction.OrderPricePerUnit = ticker.Bid;
                     tradeAction.Reason = TradeReason.FirstTrade;
                     tradeAction.TradeAdvice = TradeAdvice.Buy;
                     return tradeAction;
                 }
 
+                //cancel order if a buy expired
                 if (currentTrade.BuyOrder.IsOpened && currentTrade.BuyOrder.Opened.Expired(Settings.ExpirationTime, ticker.Timestamp))
                 {
                     return TradeAction.Create(TradeAdvice.Cancel, TradeReason.ExpiredBuyOrder, ticker.Bid);
                 }
 
+                //don't do anything else while an order is opened
                 if (currentTrade.Status == TradeStatus.Buying || currentTrade.Status == TradeStatus.Selling)
                 {
                     return TradeAction.Create(TradeAdvice.Hold);
                 }
 
+                //sell if there is a profit and the price is going down
                 if (currentTrade.Profit > Settings.MinimumTakeProfit &&
                     ticker.Bid.ReachedHighStopLoss(currentTrade.MaxPricePerUnit,
                         currentTrade.BuyOrder.PricePerUnit * Settings.MinimumTakeProfit.ToPercentageMultiplier() * Consts.BittrexCommission,
@@ -51,6 +53,7 @@ namespace CryBot.Core.Services
                     return TradeAction.Create(TradeAdvice.Sell, TradeReason.TakeProfit, ticker.Bid);
                 }
 
+                //buy if the price went down a little bit
                 if (currentTrade.TriggeredBuy == false && ticker.Bid.ReachedBuyPrice(currentTrade.BuyOrder.PricePerUnit, Settings.BuyTrigger))
                 {
                     tradeAction.Reason = TradeReason.BuyTrigger;
@@ -60,6 +63,7 @@ namespace CryBot.Core.Services
                     return tradeAction;
                 }
 
+                //sell if the stop loss price is reached
                 if (ticker.Bid.ReachedStopLoss(currentTrade.BuyOrder.PricePerUnit, Settings.StopLoss))
                 {
                     return TradeAction.Create(TradeAdvice.Sell, TradeReason.StopLoss, ticker.Bid);

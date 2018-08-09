@@ -59,19 +59,12 @@ namespace CryBot.Core.Services
 
         public async Task<Unit> UpdatePrice(Ticker ticker)
         {
-            //Console.WriteLine($"{ticker.Id} - {Budget}");
-            if(ticker.Timestamp == default(DateTime))
+            if(ticker.Timestamp == default)
                 ticker.Timestamp = DateTime.UtcNow;
             Ticker = ticker;
             await UpdateTrades();
-            Task.Run(async () =>
-            {
-                await _traderGrain.UpdateTrades(Trades);
-                await _hubNotifier.UpdateTicker(ticker);
-                var traderData = await _traderGrain.GetTraderData();
-                traderData.CurrentTicker = ticker;
-                await _hubNotifier.UpdateTrader(traderData);
-            });
+            await _traderGrain.UpdateTrades(Trades);
+            await _hubNotifier.UpdateTicker(ticker);
             return Unit.Default;
         }
 
@@ -81,12 +74,6 @@ namespace CryBot.Core.Services
             await _traderGrain.SetMarketAsync(Market);
             var traderState = await _traderGrain.GetTraderData();
             Trades = traderState.Trades ?? new List<Trade>();
-
-            /*var backtester = new BackTester(_cryptoApi);
-            var bestSettings = await backtester.FindBestSettings(Market);
-            Console.WriteLine($"Best settings for {Market} are {bestSettings.TraderSettings} with profit of {bestSettings.TraderStats.Profit}");
-            Strategy.Settings = bestSettings.TraderSettings;
-*/
 
             Strategy.Settings = traderState.Settings ?? TraderSettings.Default;
             if (Trades.Count == 0)
@@ -136,7 +123,10 @@ namespace CryBot.Core.Services
                     }
                     break;
             }
-
+            
+            var traderData = await _traderGrain.GetTraderData();
+            traderData.CurrentTicker = Ticker;
+            await _hubNotifier.UpdateTrader(traderData);
             return await Task.FromResult(Unit.Default);
         }
 
