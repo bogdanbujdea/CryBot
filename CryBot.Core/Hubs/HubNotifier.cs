@@ -1,10 +1,10 @@
 ﻿using CryBot.Core.Models;
 using CryBot.Core.Services;
+using CryBot.Core.Models.Grains;
 
 using Microsoft.AspNetCore.SignalR;
 
 using System.Threading.Tasks;
-using CryBot.Core.Models.Grains;
 
 namespace CryBot.Core.Hubs
 {

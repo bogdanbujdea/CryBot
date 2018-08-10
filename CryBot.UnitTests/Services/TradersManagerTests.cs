@@ -1,5 +1,6 @@
 ﻿using CryBot.Core.Models;
 using CryBot.Core.Services;
+using CryBot.Core.Models.Grains;
 
 using FluentAssertions;
 
@@ -9,7 +10,7 @@ using Orleans;
 
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using CryBot.Core.Models.Grains;
+
 using Xunit;
 
 namespace CryBot.UnitTests.Services

@@ -1,13 +1,13 @@
 ﻿using Bittrex.Net.Objects;
 
 using CryBot.Core.Models;
+using CryBot.Core.Models.Grains;
 
 using Orleans;
 
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using CryBot.Core.Models.Grains;
 
 namespace CryBot.Core.Services
 {

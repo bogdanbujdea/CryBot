@@ -23,12 +23,10 @@ namespace CryBot.Web.Infrastructure
         private readonly IPushManager _pushManager;
         private readonly ICryptoApi _cryptoApi;
         private readonly IClusterClient _clusterClient;
-        private readonly IHubContext<ApplicationHub> _hubContext;
         private readonly ITradersManager _tradersManager;
 
         private CancellationTokenSource _cancellationTokenSource;
-        private Guid _hostedServiceId;
-        private HubNotifier _hubNotifier;
+        private readonly HubNotifier _hubNotifier;
 
         public CryptoHostedService(IOptions<EnvironmentConfig> options, IPushManager pushManager, ICryptoApi cryptoApi, IClusterClient clusterClient, IHubContext<ApplicationHub> hubContext, ITradersManager tradersManager)
         {
@@ -36,24 +34,21 @@ namespace CryBot.Web.Infrastructure
             _pushManager = pushManager;
             _cryptoApi = cryptoApi;
             _clusterClient = clusterClient;
-            _hubContext = hubContext;
             _tradersManager = tradersManager;
-            _hubNotifier = new HubNotifier(_hubContext);
+            _hubNotifier = new HubNotifier(hubContext);
             Console.WriteLine($"Bittrex api key {options.Value.BittrexApiKey}");
             _cryptoApi.Initialize(options.Value.BittrexApiKey, options.Value.BittrexApiSecret, options.Value.TestMode);
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            _hostedServiceId = Guid.NewGuid();
-
             _cancellationTokenSource = new CancellationTokenSource();
 
             _cryptoApi.IsInTestMode = _options.Value.TestMode;
             if (_options.Value.TestMode)
             {
                 var market = "BTC-ETC";
-                await _cryptoApi.GetCandlesAsync(market, TickInterval.OneMinute);
+                await _cryptoApi.GetCandlesAsync(market, TickInterval.FiveMinutes);
                 var coinTrader = new CoinTrader(_cryptoApi, _clusterClient, _hubNotifier, _pushManager);
                 coinTrader.Initialize(market);
                 await coinTrader.StartAsync();

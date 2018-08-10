@@ -1,13 +1,13 @@
-﻿using System.Collections.Generic;
-using CryBot.Core.Models;
+﻿using CryBot.Core.Models;
 using CryBot.Core.Services;
+using CryBot.Core.Models.Grains;
 using CryBot.UnitTests.Infrastructure;
 
 using Moq;
 
 using System.Threading.Tasks;
 using System.Reactive.Subjects;
-using CryBot.Core.Models.Grains;
+using System.Collections.Generic;
 
 namespace CryBot.UnitTests.Services.CoinTraderTests
 {

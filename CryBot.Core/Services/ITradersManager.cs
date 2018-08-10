@@ -1,8 +1,8 @@
 ﻿using CryBot.Core.Models;
+using CryBot.Core.Models.Grains;
 
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using CryBot.Core.Models.Grains;
 
 namespace CryBot.Core.Services
 {

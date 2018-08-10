@@ -5,6 +5,7 @@ using CryBot.Core.Hubs;
 using CryBot.Core.Models;
 using CryBot.Core.Services;
 using CryBot.Web.Infrastructure;
+using CryBot.Core.Models.Grains;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,7 +26,6 @@ using System;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using CryBot.Core.Models.Grains;
 
 namespace CryBot.Web
 {

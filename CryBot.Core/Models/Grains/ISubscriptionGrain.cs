@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using Orleans;
+
 using System.Threading.Tasks;
-using Orleans;
+using System.Collections.Generic;
 
 namespace CryBot.Core.Models.Grains
 {

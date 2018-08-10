@@ -1,7 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Bittrex.Net.Objects;
+
+using System;
 using System.Text;
-using Bittrex.Net.Objects;
+using System.Collections.Generic;
 
 namespace CryBot.Core.Models
 {

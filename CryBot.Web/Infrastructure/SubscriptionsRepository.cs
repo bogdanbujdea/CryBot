@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using CryBot.Core.Models;
+﻿using CryBot.Core.Models;
 using CryBot.Core.Models.Grains;
+
 using Orleans;
+
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace CryBot.Web.Infrastructure
 {

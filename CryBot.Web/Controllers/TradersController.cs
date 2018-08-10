@@ -1,5 +1,6 @@
 using CryBot.Core.Models;
 using CryBot.Core.Services;
+using CryBot.Core.Models.Grains;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -7,7 +8,6 @@ using Microsoft.Extensions.Options;
 using Orleans;
 
 using System.Threading.Tasks;
-using CryBot.Core.Models.Grains;
 
 namespace CryBot.Web.Controllers
 {

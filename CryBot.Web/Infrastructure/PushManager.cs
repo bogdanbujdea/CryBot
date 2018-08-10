@@ -1,4 +1,5 @@
 ﻿using CryBot.Core.Models;
+using CryBot.Core.Services;
 
 using Microsoft.Extensions.Options;
 
@@ -7,7 +8,7 @@ using Newtonsoft.Json.Serialization;
 
 using System;
 using System.Threading.Tasks;
-using CryBot.Core.Services;
+
 using WebPush;
 
 namespace CryBot.Web.Infrastructure
