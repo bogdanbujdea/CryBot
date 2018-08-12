@@ -5,6 +5,7 @@ using CryBot.Core.Services;
 using CryBot.Backtester.Properties;
 
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace CryBot.Backtester
@@ -19,8 +20,8 @@ namespace CryBot.Backtester
                 var market = Console.ReadLine();
                 var bittrexApi = new BittrexApi(null);                
                 bittrexApi.Initialize(Resources.BittrexApiKey, Resources.BittrexApiSecret, true);
-                /*await TestStrategy(bittrexApi, market);
-                return;*/
+                await TestStrategy(bittrexApi, market);
+                return;
                 var backTester = new BackTester(bittrexApi);
                 var stats = await backTester.FindBestSettings(market);
                 Console.WriteLine($"Best settings for market {market} are {stats.TradingStrategy.Settings} with profit of {stats.TraderStats.Profit}");
@@ -40,13 +41,15 @@ namespace CryBot.Backtester
             {
                 Settings = TraderSettings.Default
             };
-            backtester.Strategy.Settings.BuyLowerPercentage = -1;
+            backtester.Strategy.Settings.BuyLowerPercentage = 0;
+            backtester.Strategy.Settings.TradingBudget = 0.0012M;
             backtester.Strategy.Settings.MinimumTakeProfit = 0M;
-            backtester.Strategy.Settings.HighStopLossPercentage = -0.1M;
-            backtester.Strategy.Settings.StopLoss = -4;
-            backtester.Strategy.Settings.BuyTrigger= -2;
-            backtester.Strategy.Settings.ExpirationTime= TimeSpan.FromHours(2);
-            backtester.Candles = cryptoResponse.Content;
+            backtester.Strategy.Settings.HighStopLossPercentage = -0.001M;
+            backtester.Strategy.Settings.StopLoss = -15;
+            backtester.Strategy.Settings.BuyTrigger = -43M;
+            backtester.Strategy.Settings.ExpirationTime = TimeSpan.FromHours(2);
+            var response = await new FakeBittrexApi(null).GetCandlesAsync(market, TickInterval.OneMinute);
+            backtester.Candles = response.Content.Take(5000).ToList();
             /*backtester.Candles = new List<Candle>
             {
                 new Candle{ Low = 0.00010000M, High = 0.00010100M },

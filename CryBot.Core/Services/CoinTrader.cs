@@ -11,6 +11,8 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 
 using System.Collections.Generic;
+using System.Reactive.Concurrency;
+using System.Threading;
 
 namespace CryBot.Core.Services
 {
@@ -21,6 +23,7 @@ namespace CryBot.Core.Services
         private readonly IHubNotifier _hubNotifier;
         private readonly IPushManager _pushManager;
         private ITraderGrain _traderGrain;
+        private int _tickerIndex;
 
         public CoinTrader(ICryptoApi cryptoApi, IClusterClient orleansClient, IHubNotifier hubNotifier, IPushManager pushManager)
         {
@@ -32,13 +35,15 @@ namespace CryBot.Core.Services
 
         public void Initialize(string market)
         {
+            _tickerIndex = 0;
             Market = market;
             Strategy = new HoldUntilPriceDropsStrategy();
+            
             _cryptoApi.TickerUpdated
                 .Where(t => t.Market == market)
                 .Select(ticker => Observable.FromAsync(token => UpdatePrice(ticker)))
                 .Concat()
-                .Subscribe();
+                .Subscribe(unit => { }, OnCompleted);
 
             _cryptoApi.OrderUpdated
                 .Where(o => o.Market == market)
@@ -56,26 +61,49 @@ namespace CryBot.Core.Services
         public List<Trade> Trades { get; set; } = new List<Trade>();
 
         public Budget Budget { get; set; } = new Budget();
-
+        private Ticker _firstTicker = null;
         public async Task<Unit> UpdatePrice(Ticker ticker)
         {
-            if(ticker.Timestamp == default)
+            if (IsInTestMode)
+            {
+                (_cryptoApi as FakeBittrexApi)?.UpdateBuyOrders(Ticker);
+            }
+
+            Ticker = ticker;           
+            if (_firstTicker == null)
+                _firstTicker = Ticker;
+            if (_tickerIndex == 1784)
+                Console.WriteLine("found one");
+            _tickerIndex++;
+            if (ticker.Timestamp == default)
                 ticker.Timestamp = DateTime.UtcNow;
-            Ticker = ticker;
+            Console.WriteLine($"Update {_tickerIndex}\t{ticker.Bid.GetReadablePercentageChange(_firstTicker.Bid)}%");
+
             await UpdateTrades();
-            await _traderGrain.UpdateTrades(Trades);
-            await _hubNotifier.UpdateTicker(ticker);
+            if (!IsInTestMode)
+            {
+                await _traderGrain.UpdateTrades(Trades);
+                await _hubNotifier.UpdateTicker(ticker);
+            }
+
+            if (IsInTestMode)
+            {
+                (_cryptoApi as FakeBittrexApi)?.UpdateSellOrders(Ticker);
+            }
             return Unit.Default;
         }
+
+        public bool IsInTestMode { get; set; }
 
         public async Task StartAsync()
         {
             _traderGrain = _orleansClient.GetGrain<ITraderGrain>(Market);
+            await _traderGrain.UpdateTrades(new List<Trade>());
             await _traderGrain.SetMarketAsync(Market);
             var traderState = await _traderGrain.GetTraderData();
             Trades = traderState.Trades ?? new List<Trade>();
 
-            Strategy.Settings = traderState.Settings ?? TraderSettings.Default;
+            Strategy.Settings = TraderSettings.Default;
             if (Trades.Count == 0)
             {
                 Trades.Add(new Trade { Status = TradeStatus.Empty });
@@ -84,55 +112,86 @@ namespace CryBot.Core.Services
 
         public async Task<Unit> UpdateOrder(CryptoOrder cryptoOrder)
         {
-            switch (cryptoOrder.OrderType)
+            try
             {
-                case CryptoOrderType.LimitSell:
-                    Budget.Available += cryptoOrder.Price;
-                    var tradeForSellOrder = Trades.FirstOrDefault(t => t.SellOrder.Uuid == cryptoOrder.Uuid);
-                    if (tradeForSellOrder != null)
-                    {
-                        if (cryptoOrder.Canceled)
+                Console.WriteLine($"Closed order {cryptoOrder.Uuid} as {cryptoOrder.OrderType} at {cryptoOrder.Limit}");
+                switch (cryptoOrder.OrderType)
+                {
+                    case CryptoOrderType.LimitSell:
+                        Budget.Available += cryptoOrder.Price;
+                        var tradeForSellOrder = Trades.FirstOrDefault(t => t.SellOrder.Uuid == cryptoOrder.Uuid);
+                        if (tradeForSellOrder != null)
                         {
-                            tradeForSellOrder.Status = TradeStatus.Bought;
-                            tradeForSellOrder.SellOrder.IsOpened = false;
-                            return await Task.FromResult(Unit.Default);
+                            if (cryptoOrder.Canceled)
+                            {
+                                tradeForSellOrder.Status = TradeStatus.Bought;
+                                tradeForSellOrder.SellOrder.IsOpened = false;
+                                return await Task.FromResult(Unit.Default);
+                            }
+                            var tradeProfit = tradeForSellOrder.BuyOrder.Price.GetReadablePercentageChange(tradeForSellOrder.SellOrder.Price);
+                            Budget.Profit += tradeProfit;
+                            Budget.Earned += tradeForSellOrder.SellOrder.Price - tradeForSellOrder.BuyOrder.Price;
+                            Console.WriteLine($"{cryptoOrder.Uuid}: SELL - {tradeProfit}");
+                            await _pushManager.TriggerPush(PushMessage.FromMessage($"Sold {Market} for profit {tradeProfit}%"));
+                            tradeForSellOrder.Profit = tradeProfit;
+                            tradeForSellOrder.Status = TradeStatus.Completed;
+                            tradeForSellOrder.SellOrder = cryptoOrder;
                         }
-                        var tradeProfit = tradeForSellOrder.BuyOrder.Price.GetReadablePercentageChange(tradeForSellOrder.SellOrder.Price);
-                        Budget.Profit += tradeProfit;
-                        Budget.Earned += tradeForSellOrder.SellOrder.Price - tradeForSellOrder.BuyOrder.Price;
-                        Console.WriteLine($"{cryptoOrder.Uuid}: SELL - {tradeProfit}");
-                        await _pushManager.TriggerPush(PushMessage.FromMessage($"Sold {Market} for profit {tradeProfit}%"));
-                        tradeForSellOrder.Profit = tradeProfit;
-                        tradeForSellOrder.Status = TradeStatus.Completed;
-                        tradeForSellOrder.SellOrder = cryptoOrder;
-                    }
-                    break;
-                case CryptoOrderType.LimitBuy:
-                    var tradeForBuyOrder = Trades.FirstOrDefault(t => t.BuyOrder.Uuid == cryptoOrder.Uuid);
-                    if (tradeForBuyOrder != null)
-                    {
-                        await _pushManager.TriggerPush(PushMessage.FromMessage($"Bought {Market} at {cryptoOrder.Limit} BTC"));
-                        if (cryptoOrder.Canceled)
+                        break;
+                    case CryptoOrderType.LimitBuy:
+                        var tradeForBuyOrder = Trades.FirstOrDefault(t => t.BuyOrder.Uuid == cryptoOrder.Uuid);
+                        if (tradeForBuyOrder != null)
                         {
-                            tradeForBuyOrder.Status = TradeStatus.Empty;
-                            tradeForBuyOrder.BuyOrder = new CryptoOrder();
-                            return await Task.FromResult(Unit.Default);
+                            await _pushManager.TriggerPush(PushMessage.FromMessage($"Bought {Market} at {cryptoOrder.Limit} BTC"));
+                            if (cryptoOrder.Canceled)
+                            {
+                                tradeForBuyOrder.Status = TradeStatus.Empty;
+                                tradeForBuyOrder.BuyOrder = new CryptoOrder();
+                                return await Task.FromResult(Unit.Default);
+                            }
+                            tradeForBuyOrder.Status = TradeStatus.Bought;
+                            tradeForBuyOrder.BuyOrder = cryptoOrder;
                         }
-                        tradeForBuyOrder.Status = TradeStatus.Bought;
-                        tradeForBuyOrder.BuyOrder = cryptoOrder;
-                    }
-                    break;
+                        break;
+                }
+
             }
-            
-            var traderData = await _traderGrain.GetTraderData();
-            traderData.CurrentTicker = Ticker;
-            await _hubNotifier.UpdateTrader(traderData);
+            finally
+            {
+                if (!IsInTestMode)
+                {
+                    var traderData = await _traderGrain.GetTraderData();
+                    traderData.CurrentTicker = Ticker;
+                    await _hubNotifier.UpdateTrader(traderData);
+                }
+            }
             return await Task.FromResult(Unit.Default);
+        }
+
+        private async void OnCompleted()
+        {
+            Budget.Profit = Trades.Sum(t => t.Profit);
+            foreach (var trade in Trades)
+            {
+                Console.WriteLine($"{Trades.IndexOf(trade)}\t{trade.Status}\t{trade.Profit}");
+            }
+            Console.WriteLine($"Profit: {Budget.Profit}");
+            Console.WriteLine($"Available: {Budget.Available}");
+            Console.WriteLine($"Invested: {Budget.Invested}");
+            Console.WriteLine($"Earned: {Budget.Earned}");
+            await _traderGrain.UpdateTrades(Trades);
+            await _hubNotifier.UpdateTicker(Ticker);
+            await _hubNotifier.UpdateTrader(await _traderGrain.GetTraderData());
         }
 
         private async Task UpdateTrades()
         {
             List<Trade> newTrades = new List<Trade>();
+            
+            if (Trades.Count == 0)
+            {
+                Trades.Add(new Trade { Status = TradeStatus.Empty });
+            }
             foreach (var trade in Trades.Where(t => t.Status != TradeStatus.Completed))
             {
                 var newTrade = await UpdateTrade(trade);
@@ -141,8 +200,17 @@ namespace CryBot.Core.Services
                     newTrades.Add(newTrade);
                 }
             }
+
             if (newTrades.Count > 0)
+            {
                 Trades.AddRange(newTrades);
+            }
+
+            var canceledTrades = Trades.Where(t => t.Status == TradeStatus.Canceled).ToList();
+            foreach (var canceledTrade in canceledTrades)
+            {
+                Trades.Remove(canceledTrade);
+            }
         }
 
         private async Task<Trade> UpdateTrade(Trade trade)
@@ -152,12 +220,12 @@ namespace CryBot.Core.Services
             {
                 case TradeAdvice.Buy:
                     await _pushManager.TriggerPush(PushMessage.FromMessage($"Got buy signal {tradeAction.Reason}"));
+                    var buyOrder = await CreateBuyOrder(tradeAction.OrderPricePerUnit);
                     if (tradeAction.Reason == TradeReason.BuyTrigger)
                     {
-                        Console.WriteLine($"Buy trigger at {Ticker.Bid}");
-                        return new Trade { Status = TradeStatus.Empty };
+                        Console.WriteLine($"Buy trigger at {tradeAction.OrderPricePerUnit}");
+                        return new Trade { BuyOrder = buyOrder, Status = TradeStatus.Buying };
                     }
-                    var buyOrder = await CreateBuyOrder(tradeAction.OrderPricePerUnit);
                     trade.BuyOrder = buyOrder;
                     trade.Status = TradeStatus.Buying;
                     break;
@@ -172,7 +240,7 @@ namespace CryBot.Core.Services
                     if (cancelResponse.IsSuccessful)
                     {
                         Budget.Available += trade.BuyOrder.Price;
-                        trade.Status = TradeStatus.Empty;
+                        trade.Status = TradeStatus.Canceled;
                     }
                     break;
             }
@@ -190,7 +258,7 @@ namespace CryBot.Core.Services
                 Market = Market,
                 Price = pricePerUnit * trade.BuyOrder.Quantity,
                 Quantity = trade.BuyOrder.Quantity,
-                Uuid = Ticker.Id.ToString()
+                Uuid = $"{trade.BuyOrder.Uuid}-{Ticker.Id}"
             };
             var sellResponse = await _cryptoApi.SellCoinAsync(sellOrder);
             if (sellResponse.IsSuccessful)
@@ -220,7 +288,7 @@ namespace CryBot.Core.Services
                 Limit = pricePerUnit,
                 Opened = Ticker.Timestamp,
                 OrderType = CryptoOrderType.LimitBuy,
-                Uuid = Ticker.Id.ToString()
+                Uuid = $"{Ticker.Id}-{Guid.NewGuid().ToString().Split('-')[0]}"
             };
             var buyResponse = await _cryptoApi.BuyCoinAsync(buyOrder);
             if (buyResponse.IsSuccessful)

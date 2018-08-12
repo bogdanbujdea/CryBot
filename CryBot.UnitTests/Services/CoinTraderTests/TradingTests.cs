@@ -158,16 +158,28 @@ namespace CryBot.UnitTests.Services.CoinTraderTests
 
             CoinTrader.Trades[0].Status.Should().Be(TradeStatus.Selling);
         }
-
+        
         [Fact]
-        public async Task CancellingBuyOrder_Should_UpdateTraderStatus()
+        public async Task CancellingBuyOrder_Should_RemoveTrade()
         {
             CryptoApiMock.MockCancelTrade(new CryptoOrder());
             await InitializeTrader(new TradeAction { TradeAdvice = TradeAdvice.Cancel });
 
             await CoinTrader.UpdatePrice(_newPriceTicker);
 
-            CoinTrader.Trades[0].Status.Should().Be(TradeStatus.Empty);
+            CoinTrader.Trades.Count.Should().Be(0);
+        }
+
+        [Fact]
+        public async Task EmptyTradesList_Should_AddNewTrade()
+        {
+            CryptoApiMock.MockBuyingTrade(new CryptoOrder());
+            await InitializeTrader(new TradeAction { TradeAdvice = TradeAdvice.Buy, OrderPricePerUnit = 98 });
+            CoinTrader.Trades = new List<Trade>();
+
+            await CoinTrader.UpdatePrice(_newPriceTicker);
+
+            CoinTrader.Trades.Count.Should().Be(1);
         }
 
         [Fact]

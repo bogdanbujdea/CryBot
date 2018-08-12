@@ -21,7 +21,6 @@ namespace CryBot.Core.Services
     {
         private IBittrexClient _bittrexClient;
         private BittrexSocketClient _bittrexSocketClient;
-        private List<Candle> _candles;
 
         public BittrexApi(IBittrexClient bittrexClient)
         {
@@ -108,21 +107,12 @@ namespace CryBot.Core.Services
                 cryptoOrder.Uuid = buyResult.Data.Uuid.ToString();
                 return new CryptoResponse<CryptoOrder>(cryptoOrder);
             }
-            else
-                return new CryptoResponse<CryptoOrder>(buyResult.Error.Message);
+
+            return new CryptoResponse<CryptoOrder>(buyResult.Error.Message);
         }
 
-        public async Task<CryptoResponse<Ticker>> GetTickerAsync(string market)
+        public virtual async Task<CryptoResponse<Ticker>> GetTickerAsync(string market)
         {
-            if (IsInTestMode)
-            {
-                return new CryptoResponse<Ticker>(new Ticker
-                {
-                    Ask = _candles[0].High,
-                    Bid = _candles[0].Low,
-                    Timestamp = _candles[0].Timestamp
-                });
-            }
             var tickerResponse = await _bittrexClient.GetTickerAsync(market);
             if (tickerResponse.Success)
                 return new CryptoResponse<Ticker>(new Ticker
@@ -155,7 +145,7 @@ namespace CryBot.Core.Services
             }).ToList());
         }
 
-        public async Task<CryptoResponse<List<Candle>>> GetCandlesAsync(string market, TickInterval interval)
+        public virtual async Task<CryptoResponse<List<Candle>>> GetCandlesAsync(string market, TickInterval interval)
         {
             var callResult = await _bittrexClient.GetCandlesAsync(market, interval);
             var candles = callResult.Data.Select(c => new Candle
@@ -168,42 +158,11 @@ namespace CryBot.Core.Services
                 Close = c.Close,
                 Volume = c.BaseVolume
             }).ToList();
-            _candles = candles.Take(candles.Count).ToList();
             return new CryptoResponse<List<Candle>>(candles);
         }
 
-        public async Task SendMarketUpdates(string market)
+        public virtual async Task SendMarketUpdates(string market)
         {
-            if (IsInTestMode)
-            {
-                var oldPercentage = -1;
-                foreach (var candle in _candles)
-                {
-                    try
-                    {
-                        var percentage = _candles.IndexOf(candle) * 100 / _candles.Count;
-                        if (percentage != oldPercentage)
-                        {
-                            Console.WriteLine($"{percentage}%");
-                            oldPercentage = percentage;
-                        }
-                        //Console.WriteLine($"BAPI: {_candles.IndexOf(candle) + 1}\t{candle.Low}\t{candle.High}");
-                        TickerUpdated.OnNext(new Ticker
-                        {
-                            Id = _candles.IndexOf(candle),
-                            Market = market,
-                            Bid = candle.Low,
-                            Ask = candle.High,
-                            Timestamp = candle.Timestamp
-                        });
-                        await Task.Delay(500);
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                    }
-                }
-            }
         }
 
         public virtual async Task<CryptoResponse<CryptoOrder>> CancelOrder(string orderId)

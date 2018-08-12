@@ -1,13 +1,17 @@
-﻿using Bittrex.Net.Interfaces;
+﻿using Bittrex.Net.Objects;
+using Bittrex.Net.Interfaces;
 
 using CryBot.Core.Models;
 
+using Newtonsoft.Json;
+
 using System;
+using System.IO;
 using System.Linq;
 using System.Reactive;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Reactive.Linq;
 
 namespace CryBot.Core.Services
 {
@@ -15,14 +19,55 @@ namespace CryBot.Core.Services
     {
         private readonly List<CryptoOrder> _pendingBuyOrders = new List<CryptoOrder>();
         private readonly List<CryptoOrder> _pendingSellOrders = new List<CryptoOrder>();
+        private List<Candle> _candles;
 
         public FakeBittrexApi(IBittrexClient bittrexClient) : base(bittrexClient)
         {
-            TickerUpdated
-                .Where(ticker => ticker.Market == "BTC-ETC")
-                .Select(ticker => Observable.FromAsync(token => MarketsUpdatedHandler(ticker)))
-                .Concat()
-                .Subscribe();
+        }
+
+        public override async Task<CryptoResponse<Ticker>> GetTickerAsync(string market)
+        {
+            return new CryptoResponse<Ticker>(new Ticker
+            {
+                Ask = _candles[0].High,
+                Bid = _candles[0].Low,
+                Timestamp = _candles[0].Timestamp
+            });
+        }
+
+        public override async Task<CryptoResponse<List<Candle>>> GetCandlesAsync(string market, TickInterval interval)
+        {
+            var candlesJson = File.ReadAllText("candles.json");
+            _candles = JsonConvert.DeserializeObject<List<Candle>>(candlesJson);
+            return new CryptoResponse<List<Candle>>(_candles);
+        }
+
+        public override async Task SendMarketUpdates(string market)
+        {
+            if (IsInTestMode)
+            {
+                _candles = _candles.Take(5000).ToList();
+                foreach (var candle in _candles)
+                {
+                    try
+                    {
+                        var ticker = new Ticker
+                        {
+                            Id = _candles.IndexOf(candle),
+                            Market = market,
+                            Bid = candle.Low,
+                            Ask = candle.High,
+                            Timestamp = candle.Timestamp
+                        };
+                        TickerUpdated.OnNext(ticker);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+                }
+                TickerUpdated.OnCompleted();
+            }
         }
 
         public override Task<CryptoResponse<CryptoOrder>> BuyCoinAsync(CryptoOrder cryptoOrder)
@@ -52,20 +97,19 @@ namespace CryBot.Core.Services
             return Task.FromResult(new CryptoResponse<CryptoOrder>(existingOrder)); ;
         }
 
-        private async Task<Unit> MarketsUpdatedHandler(Ticker ticker)
+        public void UpdateOrders(Ticker ticker)
         {
             UpdateBuyOrders(ticker);
             UpdateSellOrders(ticker);
-            return await Task.FromResult(Unit.Default);
         }
 
-        private void UpdateSellOrders(Ticker ticker)
+        public void UpdateSellOrders(Ticker ticker)
         {
             List<CryptoOrder> removedOrders = new List<CryptoOrder>();
             foreach (var sellOrder in _pendingSellOrders.Where(s => s.IsClosed == false))
             {
                 if (ticker.Bid >= sellOrder.PricePerUnit || sellOrder.OrderType == CryptoOrderType.ImmediateSell)
-                {                    
+                {
                     sellOrder.IsClosed = true;
                     sellOrder.IsOpened = false;
                     sellOrder.Closed = ticker.Timestamp;
@@ -81,7 +125,7 @@ namespace CryBot.Core.Services
             }
         }
 
-        private void UpdateBuyOrders(Ticker ticker)
+        public void UpdateBuyOrders(Ticker ticker)
         {
             List<CryptoOrder> removedOrders = new List<CryptoOrder>();
             foreach (var buyOrder in _pendingBuyOrders)

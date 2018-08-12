@@ -48,11 +48,19 @@ namespace CryBot.Web.Infrastructure
             if (_options.Value.TestMode)
             {
                 var market = "BTC-ETC";
-                await _cryptoApi.GetCandlesAsync(market, TickInterval.FiveMinutes);
+                try
+                {
+                    await _cryptoApi.GetCandlesAsync(market, TickInterval.OneMinute);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
                 var coinTrader = new CoinTrader(_cryptoApi, _clusterClient, _hubNotifier, _pushManager);
                 coinTrader.Initialize(market);
+                coinTrader.IsInTestMode = true;
                 await coinTrader.StartAsync();
-                await Task.Run(() => _cryptoApi.SendMarketUpdates(market));
+                await Task.Run(() => _cryptoApi.SendMarketUpdates(market), cancellationToken);
                 return;
             }
 

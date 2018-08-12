@@ -26,7 +26,7 @@ namespace CryBot.Core.Services
                 //return a buy trade if the trader is new
                 if (currentTrade.Status == TradeStatus.Empty)
                 {
-                    tradeAction.OrderPricePerUnit = ticker.Bid;
+                    tradeAction.OrderPricePerUnit = ticker.Bid * Settings.BuyLowerPercentage.ToPercentageMultiplier();
                     tradeAction.Reason = TradeReason.FirstTrade;
                     tradeAction.TradeAdvice = TradeAdvice.Buy;
                     return tradeAction;

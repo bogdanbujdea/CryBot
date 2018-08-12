@@ -4,7 +4,7 @@ using CryBot.Core.Services;
 using FluentAssertions;
 
 using System;
-
+using CryBot.Core.Utilities;
 using Xunit;
 
 namespace CryBot.UnitTests.Strategies
@@ -102,7 +102,7 @@ namespace CryBot.UnitTests.Strategies
             var tradeAction = _strategy.CalculateTradeAction(new Ticker { Bid = 98, Ask = 100 }, new Trade { Status = TradeStatus.Empty });
             tradeAction.TradeAdvice.Should().Be(TradeAdvice.Buy);
             tradeAction.Reason.Should().Be(TradeReason.FirstTrade);
-            tradeAction.OrderPricePerUnit.Should().Be(98);
+            tradeAction.OrderPricePerUnit.Should().Be(98*_strategy.Settings.BuyLowerPercentage.ToPercentageMultiplier());
         }
 
         [Fact]
