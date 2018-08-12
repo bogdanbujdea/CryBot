@@ -12,6 +12,7 @@ namespace CryBot.UnitTests.Infrastructure
         protected Mock<IClusterClient> OrleansClientMock { get; set; }       
         protected Mock<IHubNotifier> HubNotifierMock { get; set; }
         protected Mock<ITraderGrain> TraderGrainMock { get; set; }
+        protected Mock<IPushManager> PushManagerMock { get; set; }
 
         public TestBase()
         {
@@ -20,6 +21,7 @@ namespace CryBot.UnitTests.Infrastructure
             OrleansClientMock = new Mock<IClusterClient>();
             HubNotifierMock = new Mock<IHubNotifier>();
             TraderGrainMock = new Mock<ITraderGrain>();
+            PushManagerMock = new Mock<IPushManager>();
         }
     }
 }

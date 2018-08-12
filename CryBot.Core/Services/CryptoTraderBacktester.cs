@@ -63,7 +63,6 @@ namespace CryBot.Core.Services
         private void UpdateTicker(Ticker ticker)
         {
             Trade newTrade = null;
-            newTrade = null;
             foreach (var trade in _trades.Where(t => t.Status != TradeStatus.Completed))
             {
                 if (trade.BuyOrder.IsClosed == false)
@@ -76,7 +75,6 @@ namespace CryBot.Core.Services
                         trade.Status = TradeStatus.Bought;
                         continue;
                     }
-
                 }
 
                 var tradeAction = Strategy.CalculateTradeAction(ticker, trade);

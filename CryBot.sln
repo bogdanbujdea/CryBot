@@ -13,6 +13,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryBot.Core", "CryBot.Core\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryBot.Backtester", "CryBot.Backtester\CryBot.Backtester.csproj", "{248B19CE-AEC2-4929-8663-0E087720252B}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{5ACEDF83-01D5-4039-9B98-A6C06DB5AF48}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{A8BFFF70-C323-46E9-8825-90EFC1255EA7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,6 +46,13 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{403A7CF6-DD3D-4D07-BD35-F13F8EE46F4E} = {A8BFFF70-C323-46E9-8825-90EFC1255EA7}
+		{099FB0EF-9A97-466A-9C8E-CC31E558E8B6} = {5ACEDF83-01D5-4039-9B98-A6C06DB5AF48}
+		{0D15D4AF-1ECE-43A8-A8E9-B5A3ADB8713D} = {A8BFFF70-C323-46E9-8825-90EFC1255EA7}
+		{3192EDA1-114A-4CC3-AF4C-3F00A74C11B7} = {A8BFFF70-C323-46E9-8825-90EFC1255EA7}
+		{248B19CE-AEC2-4929-8663-0E087720252B} = {A8BFFF70-C323-46E9-8825-90EFC1255EA7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C0493BDF-A172-4BD6-A071-3B25B46DE474}

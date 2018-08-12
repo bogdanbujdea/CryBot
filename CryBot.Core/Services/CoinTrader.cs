@@ -11,6 +11,7 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reactive.Concurrency;
 using System.Threading;
 
@@ -31,6 +32,7 @@ namespace CryBot.Core.Services
             _orleansClient = orleansClient;
             _hubNotifier = hubNotifier;
             _pushManager = pushManager;
+            _taskCompletionSource = new TaskCompletionSource<Budget>();
         }
 
         public void Initialize(string market)
@@ -62,6 +64,8 @@ namespace CryBot.Core.Services
 
         public Budget Budget { get; set; } = new Budget();
         private Ticker _firstTicker = null;
+        private TaskCompletionSource<Budget> _taskCompletionSource;
+
         public async Task<Unit> UpdatePrice(Ticker ticker)
         {
             if (IsInTestMode)
@@ -77,7 +81,7 @@ namespace CryBot.Core.Services
             _tickerIndex++;
             if (ticker.Timestamp == default)
                 ticker.Timestamp = DateTime.UtcNow;
-            Console.WriteLine($"Update {_tickerIndex}\t{ticker.Bid.GetReadablePercentageChange(_firstTicker.Bid)}%");
+            Debug.WriteLine($"Update {_tickerIndex}\t{ticker.Bid}\t{ticker.Bid.GetReadablePercentageChange(_firstTicker.Bid)}%");
 
             await UpdateTrades();
             if (!IsInTestMode)
@@ -182,6 +186,7 @@ namespace CryBot.Core.Services
             await _traderGrain.UpdateTrades(Trades);
             await _hubNotifier.UpdateTicker(Ticker);
             await _hubNotifier.UpdateTrader(await _traderGrain.GetTraderData());
+            _taskCompletionSource.SetResult(Budget);
         }
 
         private async Task UpdateTrades()
@@ -301,6 +306,11 @@ namespace CryBot.Core.Services
             }
 
             return buyResponse.Content;
+        }
+
+        public Task<Budget> FinishTest()
+        {
+            return _taskCompletionSource.Task;
         }
     }
 }

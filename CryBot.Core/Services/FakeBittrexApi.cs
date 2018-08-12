@@ -37,8 +37,15 @@ namespace CryBot.Core.Services
 
         public override async Task<CryptoResponse<List<Candle>>> GetCandlesAsync(string market, TickInterval interval)
         {
-            var candlesJson = File.ReadAllText("candles.json");
-            _candles = JsonConvert.DeserializeObject<List<Candle>>(candlesJson);
+            try
+            {
+                var candlesJson = File.ReadAllText("candles.json");
+                _candles = JsonConvert.DeserializeObject<List<Candle>>(candlesJson);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
             return new CryptoResponse<List<Candle>>(_candles);
         }
 
