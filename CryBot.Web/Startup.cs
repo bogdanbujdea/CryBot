@@ -162,14 +162,12 @@ namespace CryBot.Web
                 {
                     StartSilo().Wait();
                     var clientBuilder = new ClientBuilder()
-                        //.UseStaticClustering(new IPEndPoint(ipAddress, 30000))
                         .UseLocalhostClustering()
                         .Configure<ClusterOptions>(options =>
                         {
                             options.ClusterId = "dev";
                             options.ServiceId = "OrleansService";
                         })
-                        .ConfigureLogging(logging => logging.AddConsole())
                         .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(TraderGrain).Assembly).WithReferences());
 
 

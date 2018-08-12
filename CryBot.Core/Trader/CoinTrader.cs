@@ -25,6 +25,7 @@ namespace CryBot.Core.Trader
         private readonly IPushManager _pushManager;
         private ITraderGrain _traderGrain;
         private int _tickerIndex;
+        private readonly TaskCompletionSource<Budget> _taskCompletionSource;
 
         public CoinTrader(ICryptoApi cryptoApi, IClusterClient orleansClient, IHubNotifier hubNotifier, IPushManager pushManager)
         {
@@ -63,8 +64,6 @@ namespace CryBot.Core.Trader
         public List<Trade> Trades { get; set; } = new List<Trade>();
 
         public Budget Budget { get; set; } = new Budget();
-        private Ticker _firstTicker = null;
-        private TaskCompletionSource<Budget> _taskCompletionSource;
 
         public async Task<Unit> UpdatePrice(Ticker ticker)
         {
@@ -74,14 +73,10 @@ namespace CryBot.Core.Trader
             }
 
             Ticker = ticker;           
-            if (_firstTicker == null)
-                _firstTicker = Ticker;
-            if (_tickerIndex == 1784)
-                Console.WriteLine("found one");
             _tickerIndex++;
             if (ticker.Timestamp == default)
                 ticker.Timestamp = DateTime.UtcNow;
-            Debug.WriteLine($"Update {_tickerIndex}\t{ticker.Bid}\t{ticker.Bid.GetReadablePercentageChange(_firstTicker.Bid)}%");
+            Debug.WriteLine($"Update {_tickerIndex}\t{ticker.Bid}");
 
             await UpdateTrades();
             if (!IsInTestMode)
@@ -170,6 +165,11 @@ namespace CryBot.Core.Trader
                 }
             }
             return await Task.FromResult(Unit.Default);
+        }
+
+        public Task<Budget> FinishTest()
+        {
+            return _taskCompletionSource.Task;
         }
 
         private async void OnCompleted()
@@ -306,11 +306,6 @@ namespace CryBot.Core.Trader
             }
 
             return buyResponse.Content;
-        }
-
-        public Task<Budget> FinishTest()
-        {
-            return _taskCompletionSource.Task;
         }
     }
 }

@@ -15,7 +15,7 @@ namespace CryBot.UnitTests.Services.CoinTraderTests
 {
     public abstract class CoinTraderTestBase : TestBase
     {
-        protected readonly CoinTrader CoinTrader;
+        protected CoinTrader CoinTrader;
 
         protected string Market { get; }
 

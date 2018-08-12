@@ -7,8 +7,8 @@ using CryBot.Core.Strategies;
 using FluentAssertions;
 
 using System;
-using System.Linq;
 using System.Threading.Tasks;
+using System.Diagnostics.CodeAnalysis;
 
 using Xunit;
 
@@ -16,8 +16,7 @@ namespace CryBot.UnitTests.Services.CoinTraderTests
 {
     public class HistoryTests: CoinTraderTestBase
     {
-        private CoinTrader CoinTrader;
-
+        [ExcludeFromCodeCoverage]
         [Fact]
         public async Task CheckProfit()
         {
@@ -26,6 +25,7 @@ namespace CryBot.UnitTests.Services.CoinTraderTests
             budget.Profit.Should().Be(5.86M);
         }
 
+        [ExcludeFromCodeCoverage]
         private async Task<CoinTrader> RunHistoryData()
         {
             var fakeBittrexApi = new FakeBittrexApi(null);

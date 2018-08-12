@@ -23,17 +23,17 @@ namespace CryBot.Core.Exchange
         {
         }
 
-        public override async Task<CryptoResponse<Ticker>> GetTickerAsync(string market)
+        public override Task<CryptoResponse<Ticker>> GetTickerAsync(string market)
         {
-            return new CryptoResponse<Ticker>(new Ticker
+            return Task.FromResult(new CryptoResponse<Ticker>(new Ticker
             {
                 Ask = _candles[0].High,
                 Bid = _candles[0].Low,
                 Timestamp = _candles[0].Timestamp
-            });
+            }));
         }
 
-        public override async Task<CryptoResponse<List<Candle>>> GetCandlesAsync(string market, TickInterval interval)
+        public override Task<CryptoResponse<List<Candle>>> GetCandlesAsync(string market, TickInterval interval)
         {
             try
             {
@@ -44,13 +44,15 @@ namespace CryBot.Core.Exchange
             {
                 Console.WriteLine(e);
             }
-            return new CryptoResponse<List<Candle>>(_candles);
+            return Task.FromResult(new CryptoResponse<List<Candle>>(_candles));
         }
 
-        public override async Task SendMarketUpdates(string market)
+        public override Task SendMarketUpdates(string market)
         {
             if (IsInTestMode)
             {
+                if(_candles == null)
+                    _candles = new List<Candle>();
                 _candles = _candles.Take(5000).ToList();
                 foreach (var candle in _candles)
                 {
@@ -73,22 +75,21 @@ namespace CryBot.Core.Exchange
                 }
                 TickerUpdated.OnCompleted();
             }
+            return Task.CompletedTask;
         }
 
         public override Task<CryptoResponse<CryptoOrder>> BuyCoinAsync(CryptoOrder cryptoOrder)
         {
-            //cryptoOrder.Uuid = "BUYORDER-" + BuyOrdersCount++;
             cryptoOrder.IsOpened = true;
             _pendingBuyOrders.Add(cryptoOrder);
-            return Task.FromResult(new CryptoResponse<CryptoOrder>(cryptoOrder)); ;
+            return Task.FromResult(new CryptoResponse<CryptoOrder>(cryptoOrder));
         }
 
         public override Task<CryptoResponse<CryptoOrder>> SellCoinAsync(CryptoOrder sellOrder)
         {
-            //sellOrder.Uuid = "SELLORDER-" + SellOrdersCount++;
             sellOrder.IsOpened = true;
             _pendingSellOrders.Add(sellOrder);
-            return Task.FromResult(new CryptoResponse<CryptoOrder>(sellOrder)); ;
+            return Task.FromResult(new CryptoResponse<CryptoOrder>(sellOrder));
         }
 
         public override Task<CryptoResponse<CryptoOrder>> CancelOrder(string orderId)
@@ -99,13 +100,7 @@ namespace CryBot.Core.Exchange
                 existingOrder.IsOpened = false;
                 _pendingBuyOrders.Remove(existingOrder);
             }
-            return Task.FromResult(new CryptoResponse<CryptoOrder>(existingOrder)); ;
-        }
-
-        public void UpdateOrders(Ticker ticker)
-        {
-            UpdateBuyOrders(ticker);
-            UpdateSellOrders(ticker);
+            return Task.FromResult(new CryptoResponse<CryptoOrder>(existingOrder));
         }
 
         public void UpdateSellOrders(Ticker ticker)
