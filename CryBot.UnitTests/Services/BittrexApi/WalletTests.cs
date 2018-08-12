@@ -17,14 +17,14 @@ namespace CryBot.UnitTests.Services.BittrexApi
     public class WalletTests
     {
         private readonly Mock<IBittrexClient> _bittrexClientMock;
-        private readonly Core.Services.BittrexApi _bittrexApi;
+        private readonly Core.Exchange.BittrexApi _bittrexApi;
 
         public WalletTests()
         {
             _bittrexClientMock = new Mock<IBittrexClient>();
             _bittrexClientMock.Setup(b => b.GetMarketSummariesAsync())
                 .ReturnsAsync(new CallResult<BittrexMarketSummary[]>(new List<BittrexMarketSummary>().ToArray(), null));
-            _bittrexApi = new Core.Services.BittrexApi(_bittrexClientMock.Object);
+            _bittrexApi = new Core.Exchange.BittrexApi(_bittrexClientMock.Object);
         }
 
         [Fact]

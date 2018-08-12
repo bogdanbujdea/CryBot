@@ -1,5 +1,5 @@
-﻿using CryBot.Core.Models;
-using CryBot.Core.Models.Grains;
+﻿using CryBot.Core.Storage;
+using CryBot.Core.Notifications;
 
 using Orleans;
 

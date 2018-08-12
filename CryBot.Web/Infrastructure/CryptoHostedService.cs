@@ -1,8 +1,9 @@
 ﻿using Bittrex.Net.Objects;
 
-using CryBot.Core.Hubs;
-using CryBot.Core.Models;
-using CryBot.Core.Services;
+using CryBot.Core.Trader;
+using CryBot.Core.Exchange;
+using CryBot.Core.Notifications;
+using CryBot.Core.Infrastructure;
 
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;

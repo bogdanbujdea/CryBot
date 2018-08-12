@@ -1,5 +1,5 @@
-﻿using CryBot.Core.Models;
-using CryBot.Core.Services;
+﻿using CryBot.Core.Notifications;
+using CryBot.Core.Infrastructure;
 
 using Microsoft.Extensions.Options;
 

@@ -1,4 +1,5 @@
-﻿using CryBot.Core.Models;
+﻿using CryBot.Core.Strategies;
+using CryBot.Core.Exchange.Models;
 using CryBot.UnitTests.Infrastructure;
 
 using FluentAssertions;

@@ -1,4 +1,5 @@
-﻿using CryBot.Core.Models;
+﻿using CryBot.Core.Notifications;
+
 using System.Threading.Tasks;
 using System.Collections.Generic;
 

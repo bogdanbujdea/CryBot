@@ -1,11 +1,12 @@
 using Bittrex.Net;
 using Bittrex.Net.Interfaces;
 
-using CryBot.Core.Hubs;
-using CryBot.Core.Models;
-using CryBot.Core.Services;
+using CryBot.Core.Trader;
+using CryBot.Core.Storage;
+using CryBot.Core.Exchange;
 using CryBot.Web.Infrastructure;
-using CryBot.Core.Models.Grains;
+using CryBot.Core.Notifications;
+using CryBot.Core.Infrastructure;
 
 using Microsoft.AspNetCore.Mvc;
 

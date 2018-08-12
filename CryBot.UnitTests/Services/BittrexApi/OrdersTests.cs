@@ -1,8 +1,5 @@
 ﻿using Bittrex.Net.Objects;
 using Bittrex.Net.Interfaces;
-
-using CryBot.Core.Models;
-
 using CryptoExchange.Net;
 
 using FluentAssertions;
@@ -19,12 +16,12 @@ namespace CryBot.UnitTests.Services.BittrexApi
     public class OrdersTests
     {
         private readonly Mock<IBittrexClient> _bittrexClientMock;
-        private readonly Core.Services.BittrexApi _bittrexApi;
+        private readonly Core.Exchange.BittrexApi _bittrexApi;
 
         public OrdersTests()
         {
             _bittrexClientMock = new Mock<IBittrexClient>();
-            _bittrexApi = new Core.Services.BittrexApi(_bittrexClientMock.Object);
+            _bittrexApi = new Core.Exchange.BittrexApi(_bittrexClientMock.Object);
             _bittrexClientMock.Setup(b => b.GetOpenOrdersAsync(It.IsAny<string>())).ReturnsAsync(()
                 => CreateOpenOrdersResponse(new List<BittrexOpenOrdersOrder> { new BittrexOpenOrdersOrder() }, null));
         }

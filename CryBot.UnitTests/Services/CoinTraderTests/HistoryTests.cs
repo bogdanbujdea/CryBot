@@ -1,12 +1,15 @@
 ﻿using Bittrex.Net.Objects;
 
-using CryBot.Core.Models;
-using CryBot.Core.Services;
+using CryBot.Core.Trader;
+using CryBot.Core.Exchange;
+using CryBot.Core.Strategies;
+
+using FluentAssertions;
 
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using FluentAssertions;
+
 using Xunit;
 
 namespace CryBot.UnitTests.Services.CoinTraderTests

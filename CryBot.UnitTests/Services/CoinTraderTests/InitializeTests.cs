@@ -1,5 +1,7 @@
-﻿using CryBot.Core.Models;
-using CryBot.Core.Models.Grains;
+﻿using CryBot.Core.Trader;
+using CryBot.Core.Storage;
+using CryBot.Core.Strategies;
+using CryBot.Core.Exchange.Models;
 using CryBot.UnitTests.Infrastructure;
 
 using FluentAssertions;

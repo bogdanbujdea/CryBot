@@ -21,11 +21,4 @@
     <PackageReference Include="System.Reactive" Version="4.1.0-preview.84" />
   </ItemGroup>
 
-  <ItemGroup>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Strategies\" />
-  </ItemGroup>
-
 </Project>

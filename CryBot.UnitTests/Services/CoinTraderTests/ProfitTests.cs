@@ -1,6 +1,8 @@
-﻿using CryBot.Core.Models;
+﻿using CryBot.Core.Trader;
+using CryBot.Core.Exchange.Models;
 
 using FluentAssertions;
+
 using Xunit;
 
 namespace CryBot.UnitTests.Services.CoinTraderTests

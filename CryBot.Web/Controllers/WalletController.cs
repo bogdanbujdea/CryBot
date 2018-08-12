@@ -1,8 +1,9 @@
 using Bittrex.Net.Objects;
 
-using CryBot.Core.Models;
-using CryBot.Core.Services;
+using CryBot.Core.Exchange;
 using CryBot.Web.Infrastructure;
+using CryBot.Core.Notifications;
+using CryBot.Core.Infrastructure;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;

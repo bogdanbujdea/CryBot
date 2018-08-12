@@ -1,6 +1,10 @@
-﻿using CryBot.Core.Models;
-using CryBot.Core.Services;
+﻿using CryBot.Core.Storage;
+using CryBot.Core.Exchange;
+using CryBot.Core.Strategies;
+using CryBot.Core.Notifications;
+
 using Moq;
+
 using Orleans;
 
 namespace CryBot.UnitTests.Infrastructure
