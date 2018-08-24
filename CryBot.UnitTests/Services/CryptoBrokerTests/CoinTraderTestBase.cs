@@ -11,21 +11,28 @@ using System.Threading.Tasks;
 using System.Reactive.Subjects;
 using System.Collections.Generic;
 
-namespace CryBot.UnitTests.Services.CoinTraderTests
+namespace CryBot.UnitTests.Services.CryptoBrokerTests
 {
     public abstract class CoinTraderTestBase : TestBase
     {
-        protected CoinTrader CoinTrader;
+        protected CryptoBroker CryptoBroker;
 
-        protected string Market { get; }
+        protected string Market { get; set; }
 
         protected CoinTraderTestBase()
         {
+            Reset();
+        }
+
+        protected void Reset()
+        {
             Market = "BTC-ETC";
             var pushManagerMock = new Mock<IPushManager>();
-            CoinTrader = new CoinTrader(CryptoApiMock.Object, OrleansClientMock.Object, HubNotifierMock.Object, pushManagerMock.Object)
+            Strategy.SetupGet(strategy => strategy.Settings).Returns(new TraderSettings {TradingBudget = 1000});
+            CryptoBroker = new CryptoBroker(CryptoApiMock.Object)
             {
-                Strategy = Strategy.Object
+                Strategy = Strategy.Object,
+                IsInTestMode = true
             };
             var tickerSubject = new Subject<Ticker>();
             var orderSubject = new Subject<CryptoOrder>();
@@ -36,19 +43,30 @@ namespace CryBot.UnitTests.Services.CoinTraderTests
             HubNotifierMock.Setup(h => h.UpdateTicker(It.IsAny<Ticker>())).Returns(Task.CompletedTask);
             TraderGrainMock.Setup(t => t.UpdateTrades(It.IsAny<List<Trade>>())).Returns(Task.CompletedTask);
             pushManagerMock.Setup(p => p.TriggerPush(It.IsAny<PushMessage>())).Returns(Task.CompletedTask);
-            TraderGrainMock.Setup(c => c.GetTraderData()).ReturnsAsync(new TraderState { Trades = new List<Trade>() });
+            var traderState = new TraderState
+            {
+                Trades = new List<Trade>(),
+                Budget = new Budget(),
+                Settings = new TraderSettings {TradingBudget = 1000}
+            };
+            CryptoBroker.TraderState = traderState;
+            TraderGrainMock.Setup(c => c.GetTraderData()).ReturnsAsync(traderState);
             OrleansClientMock.Setup(c => c.GetGrain<ITraderGrain>(It.IsAny<string>(), It.IsAny<string>()))
                 .Returns(TraderGrainMock.Object);
         }
 
-        protected async Task InitializeTrader(TradeAction tradeAction)
+        protected void InitializeTrader(TradeAction tradeAction)
         {
             CryptoApiMock.MockSellingTrade(new CryptoOrder());
             Strategy.SetupGet(strategy => strategy.Settings).Returns(new TraderSettings { TradingBudget = 1000 });
             Strategy.SetTradeAction(tradeAction);
-            CoinTrader.Initialize(Market);
-            CoinTrader.Strategy = Strategy.Object;
-            await CoinTrader.StartAsync();
+            CryptoBroker.Initialize(new TraderState
+            {
+                Trades = new List<Trade>(),
+                Market = Market,
+                Settings = new TraderSettings { TradingBudget = 1000 }
+            });
+            CryptoBroker.Strategy = Strategy.Object;
         }
     }
 }
