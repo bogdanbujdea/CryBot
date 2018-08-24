@@ -41,7 +41,7 @@ namespace CryBot.Core.Trader
 
         public async Task CreateTraderAsync(string market)
         {
-            var coinTrader = new CoinTrader(_cryptoApi, _clusterClient, _hubNotifier, _pushManager);
+            var coinTrader = new CoinTrader(_clusterClient, _hubNotifier, _pushManager, new CryptoBroker(_cryptoApi));
             coinTrader.Initialize(market);
             await coinTrader.StartAsync();
         }

@@ -17,19 +17,20 @@ namespace CryBot.Core.Exchange
     {
         private readonly List<CryptoOrder> _pendingBuyOrders = new List<CryptoOrder>();
         private readonly List<CryptoOrder> _pendingSellOrders = new List<CryptoOrder>();
-        private List<Candle> _candles;
 
         public FakeBittrexApi(IBittrexClient bittrexClient) : base(bittrexClient)
         {
         }
 
+        public List<Candle> Candles { get; set; }
+
         public override Task<CryptoResponse<Ticker>> GetTickerAsync(string market)
         {
             return Task.FromResult(new CryptoResponse<Ticker>(new Ticker
             {
-                Ask = _candles[0].High,
-                Bid = _candles[0].Low,
-                Timestamp = _candles[0].Timestamp
+                Ask = Candles[0].High,
+                Bid = Candles[0].Low,
+                Timestamp = Candles[0].Timestamp
             }));
         }
 
@@ -38,29 +39,29 @@ namespace CryBot.Core.Exchange
             try
             {
                 var candlesJson = File.ReadAllText("candles.json");
-                _candles = JsonConvert.DeserializeObject<List<Candle>>(candlesJson);
+                Candles = JsonConvert.DeserializeObject<List<Candle>>(candlesJson);
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
             }
-            return Task.FromResult(new CryptoResponse<List<Candle>>(_candles));
+            return Task.FromResult(new CryptoResponse<List<Candle>>(Candles));
         }
 
         public override Task SendMarketUpdates(string market)
         {
             if (IsInTestMode)
             {
-                if(_candles == null)
-                    _candles = new List<Candle>();
-                _candles = _candles.Take(5000).ToList();
-                foreach (var candle in _candles)
+                if(Candles == null)
+                    Candles = new List<Candle>();
+                Candles = Candles.Take(5000).ToList();
+                foreach (var candle in Candles)
                 {
                     try
                     {
                         var ticker = new Ticker
                         {
-                            Id = _candles.IndexOf(candle),
+                            Id = Candles.IndexOf(candle),
                             Market = market,
                             Bid = candle.Low,
                             Ask = candle.High,
@@ -132,7 +133,7 @@ namespace CryBot.Core.Exchange
             {
                 if (ticker.Ask <= buyOrder.PricePerUnit)
                 {
-                    Console.WriteLine($"Closed buy order {buyOrder.Uuid}");
+                    //Console.WriteLine($"Closed buy order {buyOrder.Uuid}");
                     buyOrder.Closed = ticker.Timestamp;
                     buyOrder.IsOpened = false;
                     buyOrder.IsClosed = true;

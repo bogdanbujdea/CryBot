@@ -1,35 +1,65 @@
 ﻿using Bittrex.Net.Objects;
 
+using CryBot.Core.Trader;
 using CryBot.Core.Exchange;
 using CryBot.Core.Strategies;
-using CryBot.Core.Exchange.Models;
+
+using FluentAssertions;
 
 using System;
 using System.Linq;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using CryBot.Core.Exchange.Models;
 using CryBot.Core.Storage;
+using Xunit;
 
-namespace CryBot.Core.Trader.Backtesting
+namespace CryBot.UnitTests.Services.CryptoBrokerTests
 {
-    public class BackTester
+    public class HistoryTests
     {
         private readonly FakeBittrexApi _fakeBittrexApi;
         private string _market;
         private List<Candle> _candles;
-        private readonly ICryptoApi _cryptoApi;
-        private static volatile object _syncObject = new object();
 
-        public BackTester()
+        [ExcludeFromCodeCoverage]
+        public HistoryTests()
         {
             _fakeBittrexApi = new FakeBittrexApi(null);
             _fakeBittrexApi.IsInTestMode = true;
+            _market = "BTC-ETC";
         }
 
-        public async Task<List<KeyValuePair<string, Budget>>> FindBestSettings(string market)
+        [ExcludeFromCodeCoverage]
+        [Fact]
+        public async Task CheckProfit()
         {
-            _market = market;
+            _candles = (await _fakeBittrexApi.GetCandlesAsync((_market), TickInterval.OneHour)).Content;
+            var strategy = new HoldUntilPriceDropsStrategy
+            {
+                Settings = new TraderSettings
+                {
+                    BuyLowerPercentage = 0,
+                    TradingBudget = 0.0012M,
+                    MinimumTakeProfit = 0M,
+                    HighStopLossPercentage = -0.001M,
+                    StopLoss = -15,
+                    BuyTrigger = -43M,
+                    ExpirationTime = TimeSpan.FromHours(2)
+                }
+            };
+
+            var coinTrader = await RunHistoryData(strategy);
+            var budget = await coinTrader.FinishTest();
+            budget.Profit.Should().Be(5.86M);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [Fact]
+        public async Task FindBestSettings()
+        {
             _candles = (await _fakeBittrexApi.GetCandlesAsync((_market), TickInterval.OneHour)).Content;
             var buyLowerRange = new List<decimal> { -3, -2, -1, 0 };
             var minimumTakeProfitRange = new List<decimal> { 0, 1 };
@@ -46,7 +76,7 @@ namespace CryBot.Core.Trader.Backtesting
             var bestSettings = TraderSettings.Default;
             var bestProfit = -1000M;
             var totalIterations = buyLowerRange.Count * highStopLossRange.Count * stopLossRange.Count *
-                                  buyTriggerRange.Count * minimumTakeProfitRange.Count * expirationRange.Count;
+                                  buyTriggerRange.Count * minimumTakeProfitRange.Count;
 
             var it = 0;
             var strategies = new List<HoldUntilPriceDropsStrategy>();
@@ -81,27 +111,28 @@ namespace CryBot.Core.Trader.Backtesting
                 }
             }
             var dict = new Dictionary<string, Budget>();
-            int oldPercentage = -1;
+            var oldPercentage = -1;
+            var index = 1;
             Parallel.ForEach(strategies.Take(1), (strategy) =>
             {
                 try
                 {
-                    strategy = new HoldUntilPriceDropsStrategy
+                    /*strategy = new HoldUntilPriceDropsStrategy
                     {
                         Settings = new TraderSettings
                         {
                             BuyLowerPercentage = 0,
                             TradingBudget = 0.0012M,
-                            MinimumTakeProfit = 1M,
-                            HighStopLossPercentage = -5M,
+                            MinimumTakeProfit = 0M,
+                            HighStopLossPercentage = -0.001M,
                             StopLoss = -15,
-                            BuyTrigger = -2M,
-                            ExpirationTime = TimeSpan.FromHours(24)
+                            BuyTrigger = -43M,
+                            ExpirationTime = TimeSpan.FromHours(2)
                         }
-                    };
+                    };*/
                     var coinTrader = RunHistoryData(strategy).Result;
                     var budget = coinTrader.FinishTest().Result;
-                    //Debug.WriteLine($"Finished {index++}");
+                    Debug.WriteLine($"Finished {index++}");
                     it++;
                     if (budget.Profit > bestProfit)
                     {
@@ -114,7 +145,7 @@ namespace CryBot.Core.Trader.Backtesting
                     if (percentage != oldPercentage)
                     {
                         oldPercentage = percentage;
-                        Console.WriteLine($"{bestProfit}%\t{bestSettings.ToString()}\tCurrent iteration: {it}/{totalIterations}\t{percentage}%");
+                        Console.WriteLine($"{bestProfit}%\t\t{percentage}%\t\t{bestSettings.ToString()}");
                     }
                 }
                 catch (Exception e)
@@ -129,17 +160,18 @@ namespace CryBot.Core.Trader.Backtesting
                 Console.WriteLine($"{keyValuePair.Value.Profit}% - {keyValuePair.Key}\t{keyValuePair.Value.Invested}\t{keyValuePair.Value.Earned}");
             }
             Console.WriteLine($"Best settings {bestSettings.StopLoss}\t{bestProfit} BTC");
-            return topSettings;
-        }
-        
 
+            var trader = await RunHistoryData(new HoldUntilPriceDropsStrategy { Settings = bestSettings });
+            var traderBudget = await trader.FinishTest();
+            traderBudget.Profit.Should().Be(topSettings[0].Value.Profit);
+        }
+
+        [ExcludeFromCodeCoverage]
         private async Task<CryptoBroker> RunHistoryData(ITradingStrategy strategy)
         {
-            FakeBittrexApi fakeBittrexApi = new FakeBittrexApi(null)
-            {
-                IsInTestMode = true,
-                Candles = _candles
-            };
+            FakeBittrexApi fakeBittrexApi = new FakeBittrexApi(null);
+            fakeBittrexApi.IsInTestMode = true;
+            fakeBittrexApi.Candles = _candles;
             var coinTrader = new CryptoBroker(fakeBittrexApi)
             {
                 IsInTestMode = true
@@ -152,7 +184,7 @@ namespace CryBot.Core.Trader.Backtesting
             coinTrader.Strategy = strategy;
 
             await fakeBittrexApi.SendMarketUpdates(_market);
-            //Console.WriteLine($"Profit: {coinTrader.TraderState.Budget.Profit}%");
+            Console.WriteLine($"Profit: {coinTrader.TraderState.Budget.Profit}%");
             return coinTrader;
         }
     }
