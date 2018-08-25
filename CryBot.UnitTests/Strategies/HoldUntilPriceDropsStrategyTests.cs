@@ -1,12 +1,9 @@
-﻿using CryBot.Core.Trader;
-using CryBot.Core.Strategies;
+﻿using CryBot.Core.Exchange.Models;
 using CryBot.Core.Infrastructure;
-using CryBot.Core.Exchange.Models;
-
+using CryBot.Core.Strategies;
+using CryBot.Core.Trader;
 using FluentAssertions;
-
 using System;
-
 using Xunit;
 
 namespace CryBot.UnitTests.Strategies
@@ -104,7 +101,7 @@ namespace CryBot.UnitTests.Strategies
             var tradeAction = _strategy.CalculateTradeAction(new Ticker { Bid = 98, Ask = 100 }, new Trade { Status = TradeStatus.Empty });
             tradeAction.TradeAdvice.Should().Be(TradeAdvice.Buy);
             tradeAction.Reason.Should().Be(TradeReason.FirstTrade);
-            tradeAction.OrderPricePerUnit.Should().Be(98*_strategy.Settings.BuyLowerPercentage.ToPercentageMultiplier());
+            tradeAction.OrderPricePerUnit.Should().Be(98 * _strategy.Settings.BuyLowerPercentage.ToPercentageMultiplier());
         }
 
         [Fact]
@@ -127,7 +124,7 @@ namespace CryBot.UnitTests.Strategies
                 {
                     OrderType = CryptoOrderType.LimitBuy,
                     Opened = DateTime.UtcNow,
-                    IsOpened = true
+                    IsClosed = false
                 }
             };
             var tradeAction = _strategy.CalculateTradeAction(new Ticker { Timestamp = DateTime.UtcNow.AddHours(6) }, trade);

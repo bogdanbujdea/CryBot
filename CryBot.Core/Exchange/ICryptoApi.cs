@@ -16,7 +16,7 @@ namespace CryBot.Core.Exchange
 
         bool IsInTestMode { get; set; }
 
-        void Initialize(string apiKey, string apiSecret, bool isInTestMode);
+        void Initialize(string apiKey, string apiSecret, bool isInTestMode, bool enableStreaming = false);
 
         Task<CryptoResponse<Wallet>> GetWalletAsync();
 
@@ -37,5 +37,7 @@ namespace CryBot.Core.Exchange
         Task SendMarketUpdates(string market);
 
         Task<CryptoResponse<CryptoOrder>> CancelOrder(string orderId);
+
+        Task<CryptoResponse<CryptoOrder>> GetOrderInfoAsync(string uuid);
     }
 }

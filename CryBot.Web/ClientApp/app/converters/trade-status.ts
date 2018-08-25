@@ -8,10 +8,12 @@
         case 2:
             return "Buying";
         case 3:
-            return "Bought";
+            return "Canceled";
         case 4:
-            return "Selling";
+            return "Bought";
         case 5:
+            return "Selling";
+        case 6:
             return "Completed";
         default:
         }

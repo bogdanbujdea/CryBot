@@ -20,7 +20,7 @@ namespace CryBot.UnitTests.Services.CryptoBrokerTests
                 Market = Market,
                 PricePerUnit = 100,
                 Price = 1000,
-                IsOpened = true,
+                IsClosed = false,
                 OrderType = CryptoOrderType.LimitBuy,
                 Quantity = 9.975M,
                 Limit = 100
@@ -33,7 +33,7 @@ namespace CryBot.UnitTests.Services.CryptoBrokerTests
             CryptoApiMock.Verify(c => c.BuyCoinAsync(It.Is<CryptoOrder>(b => b.PricePerUnit == 100
                                                                              && b.Price == 1000
                                                                              && b.Market == Market
-                                                                             && b.IsOpened
+                                                                             && !b.IsClosed
                                                                              && b.OrderType == CryptoOrderType.LimitBuy
                                                                              && b.Quantity == 9.975M
                                                                              && b.Limit == 100)), Times.Once);

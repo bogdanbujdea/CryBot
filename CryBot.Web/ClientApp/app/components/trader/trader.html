@@ -12,7 +12,6 @@
    <table if.bind="traderData.trades" class="table">
         <thead>
             <tr>
-                <th>Id</th>
                 <th>Time</th>
                 <th>Status</th>
                 <th>Buy</th>
@@ -23,7 +22,6 @@
         </thead>
         <tbody>
             <tr repeat.for="trade of traderData.trades">
-                <td>${ trade.buyOrder.uuid }</td>
                 <td>${ trade.buyOrder.opened } </td>
                 <td>${ trade.status | tradeStatus }</td>
                 <td>${ trade.buyOrder.pricePerUnit }</td>

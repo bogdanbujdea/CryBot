@@ -55,7 +55,8 @@ namespace CryBot.Core.Infrastructure
                 Opened = closedOrder.Opened,
                 Closed = closedOrder.Closed.GetValueOrDefault(),
                 Limit = closedOrder.Limit.RoundSatoshi(),
-                QuantityRemaining = closedOrder.QuantityRemaining.RoundSatoshi()
+                QuantityRemaining = closedOrder.QuantityRemaining.RoundSatoshi(),
+                IsClosed = closedOrderData.Type == OrderUpdateType.Fill || closedOrderData.Type == OrderUpdateType.Cancel
             };
         }
 

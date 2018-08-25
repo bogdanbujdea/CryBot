@@ -123,7 +123,7 @@ namespace CryBot.Web
                     options.ServiceId = "OrleansService";
                 })
                 .ConfigureEndpoints(IPAddress.Loopback, 11111, 30000, listenOnAnyHostAddress: true)
-                .ConfigureLogging(logging => logging.AddConsole())
+                .ConfigureLogging(logging => logging.ClearProviders())
                 .ConfigureApplicationParts(manager =>
                 {
                     manager?.AddApplicationPart(typeof(CoinTrader).Assembly);

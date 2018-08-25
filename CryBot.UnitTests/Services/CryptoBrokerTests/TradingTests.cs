@@ -1,15 +1,11 @@
-﻿using CryBot.Core.Trader;
+﻿using CryBot.Core.Exchange.Models;
 using CryBot.Core.Strategies;
-using CryBot.Core.Exchange.Models;
+using CryBot.Core.Trader;
 using CryBot.UnitTests.Infrastructure;
-
 using FluentAssertions;
-
 using Moq;
-
-using System.Threading.Tasks;
 using System.Collections.Generic;
-
+using System.Threading.Tasks;
 using Xunit;
 
 namespace CryBot.UnitTests.Services.CryptoBrokerTests
@@ -39,6 +35,7 @@ namespace CryBot.UnitTests.Services.CryptoBrokerTests
             CryptoApiMock.MockBuyingTrade(new CryptoOrder());
             var trade = new Trade();
             trade.BuyOrder.PricePerUnit = 100;
+            trade.BuyOrder.IsClosed = true;
             CryptoBroker.TraderState.Trades = new List<Trade> { trade };
             trade.Status = TradeStatus.Bought;
             CryptoBroker.Strategy = new HoldUntilPriceDropsStrategy();
@@ -66,6 +63,16 @@ namespace CryBot.UnitTests.Services.CryptoBrokerTests
             await CryptoBroker.UpdatePrice(_newPriceTicker);
 
             CryptoApiMock.Verify(c => c.BuyCoinAsync(It.Is<CryptoOrder>(b => b.PricePerUnit == 98)), Times.Once);
+        }
+
+        [Fact]
+        public async Task ClosedOrder_Should_UpdateTradeStatus()
+        {
+            CryptoApiMock.MockBuyingTrade(new CryptoOrder());
+            InitializeTrader(new TradeAction { TradeAdvice = TradeAdvice.Buy, OrderPricePerUnit = 98 });
+            await CryptoBroker.UpdatePrice(_newPriceTicker);
+            await CryptoBroker.UpdateOrder(new CryptoOrder { IsClosed = false, OrderType = CryptoOrderType.LimitBuy });
+            CryptoBroker.TraderState.Trades[0].Status.Should().NotBe(TradeStatus.Bought);
         }
 
         [Fact]
@@ -115,18 +122,19 @@ namespace CryBot.UnitTests.Services.CryptoBrokerTests
         [Fact]
         public async Task CompletedTrades_ShouldNot_BeUpdated()
         {
-            InitializeTrader(new TradeAction { TradeAdvice = TradeAdvice.Sell });
+            InitializeTrader(new TradeAction { TradeAdvice = TradeAdvice.Hold });
             CryptoBroker.TraderState.Trades[0].Status = TradeStatus.Completed;
+            CryptoBroker.TraderState.Trades.Add(new Trade { Status = TradeStatus.Empty });
 
             await CryptoBroker.UpdatePrice(_newPriceTicker);
 
-            Strategy.Verify(s => s.CalculateTradeAction(It.IsAny<Ticker>(), It.IsAny<Trade>()), Times.Never);
+            Strategy.Verify(s => s.CalculateTradeAction(It.IsAny<Ticker>(), It.IsAny<Trade>()), Times.Once);
         }
 
         [Fact]
         public async Task SoldCoin_Should_UpdateTradeStatus()
         {
-            var sellOrder = new CryptoOrder { OrderType = CryptoOrderType.LimitSell, Price = 1100, Uuid = "S" };
+            var sellOrder = new CryptoOrder { OrderType = CryptoOrderType.LimitSell, IsClosed = true, Price = 1100, Uuid = "S" };
             var trade = new Trade
             {
                 SellOrder = sellOrder
@@ -148,7 +156,7 @@ namespace CryBot.UnitTests.Services.CryptoBrokerTests
 
             CryptoBroker.TraderState.Trades[0].Status.Should().Be(TradeStatus.Selling);
         }
-        
+
         [Fact]
         public async Task CancellingBuyOrder_Should_RemoveTrade()
         {
@@ -172,6 +180,19 @@ namespace CryBot.UnitTests.Services.CryptoBrokerTests
             CryptoBroker.TraderState.Trades.Count.Should().Be(1);
         }
 
+
+        [Fact]
+        public async Task OnlyCompletedTrades_Should_AddNewTrade()
+        {
+            CryptoApiMock.MockBuyingTrade(new CryptoOrder());
+            InitializeTrader(new TradeAction { TradeAdvice = TradeAdvice.Buy, OrderPricePerUnit = 98 });
+            CryptoBroker.TraderState.Trades = new List<Trade> { new Trade { Status = TradeStatus.Completed } };
+
+            await CryptoBroker.UpdatePrice(_newPriceTicker);
+
+            CryptoBroker.TraderState.Trades.Count.Should().Be(2);
+        }
+
         [Fact]
         public async Task BoughtOrder_Should_UpdateTraderStatus()
         {
@@ -181,7 +202,8 @@ namespace CryBot.UnitTests.Services.CryptoBrokerTests
             var buyOrder = new CryptoOrder
             {
                 Uuid = "B",
-                OrderType = CryptoOrderType.LimitBuy
+                OrderType = CryptoOrderType.LimitBuy,
+                IsClosed = true
             };
 
             await CryptoBroker.UpdateOrder(buyOrder);

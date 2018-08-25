@@ -81,14 +81,14 @@ namespace CryBot.Core.Exchange
 
         public override Task<CryptoResponse<CryptoOrder>> BuyCoinAsync(CryptoOrder cryptoOrder)
         {
-            cryptoOrder.IsOpened = true;
+            cryptoOrder.IsClosed = false;
             _pendingBuyOrders.Add(cryptoOrder);
             return Task.FromResult(new CryptoResponse<CryptoOrder>(cryptoOrder));
         }
 
         public override Task<CryptoResponse<CryptoOrder>> SellCoinAsync(CryptoOrder sellOrder)
         {
-            sellOrder.IsOpened = true;
+            sellOrder.IsClosed = false;
             _pendingSellOrders.Add(sellOrder);
             return Task.FromResult(new CryptoResponse<CryptoOrder>(sellOrder));
         }
@@ -98,7 +98,7 @@ namespace CryBot.Core.Exchange
             var existingOrder = _pendingBuyOrders.FirstOrDefault(b => b.Uuid == orderId);
             if (existingOrder != null)
             {
-                existingOrder.IsOpened = false;
+                existingOrder.IsClosed = true;
                 _pendingBuyOrders.Remove(existingOrder);
             }
             return Task.FromResult(new CryptoResponse<CryptoOrder>(existingOrder));
@@ -112,7 +112,7 @@ namespace CryBot.Core.Exchange
                 if (ticker.Bid >= sellOrder.PricePerUnit || sellOrder.OrderType == CryptoOrderType.ImmediateSell)
                 {
                     sellOrder.IsClosed = true;
-                    sellOrder.IsOpened = false;
+                    sellOrder.IsClosed = true;
                     sellOrder.Closed = ticker.Timestamp;
                     sellOrder.OrderType = CryptoOrderType.LimitSell;
                     removedOrders.Add(sellOrder);
@@ -135,7 +135,7 @@ namespace CryBot.Core.Exchange
                 {
                     //Console.WriteLine($"Closed buy order {buyOrder.Uuid}");
                     buyOrder.Closed = ticker.Timestamp;
-                    buyOrder.IsOpened = false;
+                    buyOrder.IsClosed = true;
                     buyOrder.IsClosed = true;
                     OrderUpdated.OnNext(buyOrder);
                     removedOrders.Add(buyOrder);

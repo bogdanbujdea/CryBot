@@ -1,4 +1,5 @@
 ﻿using CryBot.Core.Storage;
+using CryBot.Core.Exchange;
 using CryBot.Core.Strategies;
 using CryBot.Core.Notifications;
 using CryBot.Core.Exchange.Models;
@@ -20,15 +21,17 @@ namespace CryBot.Core.Trader
         private readonly IHubNotifier _hubNotifier;
         private readonly IPushManager _pushManager;
         private readonly ICryptoBroker _cryptoBroker;
+        private readonly ICryptoApi _cryptoApi;
         private ITraderGrain _traderGrain;
         private readonly TaskCompletionSource<Budget> _taskCompletionSource;
 
-        public CoinTrader(IClusterClient orleansClient, IHubNotifier hubNotifier, IPushManager pushManager, ICryptoBroker cryptoBroker)
+        public CoinTrader(IClusterClient orleansClient, IHubNotifier hubNotifier, IPushManager pushManager, ICryptoBroker cryptoBroker, ICryptoApi cryptoApi)
         {
             _orleansClient = orleansClient;
             _hubNotifier = hubNotifier;
             _pushManager = pushManager;
             _cryptoBroker = cryptoBroker;
+            _cryptoApi = cryptoApi;
             _taskCompletionSource = new TaskCompletionSource<Budget>();
         }
 
@@ -49,16 +52,6 @@ namespace CryBot.Core.Trader
                 .Subscribe();
         }
 
-        private async Task<Unit> PriceUpdated(Ticker ticker)
-        { 
-            if (!IsInTestMode)
-            {
-                await _traderGrain.UpdateTrades(TraderState.Trades);
-                await _hubNotifier.UpdateTicker(ticker);
-            }
-            return Unit.Default;
-        }
-
         public TraderState TraderState { get; set; }
 
         public string Market { get; set; }
@@ -67,18 +60,12 @@ namespace CryBot.Core.Trader
 
         public ITradingStrategy Strategy { get; set; }
 
-        public async Task UpdatePrice(Ticker ticker)
-        {
-            await _cryptoBroker.UpdatePrice(ticker);
-        }
-
         public bool IsInTestMode { get; set; }
 
         public async Task StartAsync()
         {
             Strategy = new HoldUntilPriceDropsStrategy();
             _traderGrain = _orleansClient.GetGrain<ITraderGrain>(Market);
-            await _traderGrain.UpdateTrades(new List<Trade>());
             await _traderGrain.SetMarketAsync(Market);
             TraderState = await _traderGrain.GetTraderData();
             TraderState.Trades = TraderState.Trades ?? new List<Trade>();
@@ -89,12 +76,14 @@ namespace CryBot.Core.Trader
                 TraderState.Trades.Add(new Trade { Status = TradeStatus.Empty });
             }
             _cryptoBroker.Initialize(TraderState);
+            await UpdateOrders();
         }
 
         public async Task<Unit> UpdateOrder(CryptoOrder cryptoOrder)
         {
             if (!IsInTestMode)
             {
+                await _traderGrain.UpdateTrades(TraderState.Trades);
                 var traderData = await _traderGrain.GetTraderData();
                 traderData.CurrentTicker = Ticker;
                 await _hubNotifier.UpdateTrader(traderData);
@@ -105,6 +94,47 @@ namespace CryBot.Core.Trader
         public Task<Budget> FinishTest()
         {
             return _taskCompletionSource.Task;
+        }
+
+        private async Task<Unit> PriceUpdated(Ticker ticker)
+        {
+            if (!IsInTestMode)
+            {
+                await _traderGrain.UpdateTrades(TraderState.Trades);
+                await _hubNotifier.UpdateTicker(ticker);
+            }
+            return Unit.Default;
+        }
+
+        private async Task UpdateOrders()
+        {
+            var trades = TraderState.Trades.Where(t => t.Status != TradeStatus.Completed).ToList();
+            for (var index = 0; index < trades.Count; index++)
+            {
+                Trade trade = trades[index];
+                var buyOrderResponse = await _cryptoApi.GetOrderInfoAsync(trade.BuyOrder.Uuid);
+                if (buyOrderResponse.IsSuccessful)
+                {
+                    var orderInfo = buyOrderResponse.Content;
+                    if (orderInfo.IsClosed != trade.BuyOrder.IsClosed)
+                    {
+                        await _cryptoBroker.UpdateOrder(orderInfo);
+                    }
+                }
+
+                if (trade.BuyOrder.IsClosed && trade.SellOrder.Uuid != null)
+                {
+                    var sellOrderResponse = await _cryptoApi.GetOrderInfoAsync(trade.SellOrder.Uuid);
+                    if (sellOrderResponse.IsSuccessful)
+                    {
+                        var orderInfo = sellOrderResponse.Content;
+                        if (orderInfo.IsClosed != trade.BuyOrder.IsClosed)
+                        {
+                            await _cryptoBroker.UpdateOrder(orderInfo);
+                        }
+                    }
+                }
+            }
         }
 
         private async void OnCompleted()

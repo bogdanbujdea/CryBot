@@ -33,7 +33,7 @@ namespace CryBot.Core.Exchange
 
         public bool IsInTestMode { get; set; }
 
-        public void Initialize(string apiKey, string apiSecret, bool isInTestMode)
+        public void Initialize(string apiKey, string apiSecret, bool isInTestMode, bool enableStreaming = false)
         {
             var apiCredentials = new ApiCredentials(apiKey, apiSecret);
             _bittrexClient = new BittrexClient(new BittrexClientOptions
@@ -45,7 +45,7 @@ namespace CryBot.Core.Exchange
                 ApiCredentials = apiCredentials
             });
 
-            if (!isInTestMode)
+            if (!isInTestMode && enableStreaming)
             {
                 _bittrexSocketClient.SubscribeToMarketSummariesUpdate(OnMarketsUpdate);
                 _bittrexSocketClient.SubscribeToOrderUpdates(OnOrderUpdate);
@@ -167,6 +167,30 @@ namespace CryBot.Core.Exchange
         {
             await _bittrexClient.CancelOrderAsync(Guid.Parse(orderId));
             return new CryptoResponse<CryptoOrder>(new CryptoOrder());
+        }
+
+        public async Task<CryptoResponse<CryptoOrder>> GetOrderInfoAsync(string uuid)
+        {
+            var callResult = await _bittrexClient.GetOrderAsync(Guid.Parse(uuid));
+            if (callResult.Success)
+            {
+                return new CryptoResponse<CryptoOrder>(new CryptoOrder
+                {
+                    PricePerUnit = callResult.Data.PricePerUnit.GetValueOrDefault(),
+                    Limit = callResult.Data.Limit,
+                    Price = callResult.Data.Price,
+                    Closed = callResult.Data.Closed.GetValueOrDefault(),
+                    Quantity = callResult.Data.Quantity,
+                    QuantityRemaining = callResult.Data.QuantityRemaining,
+                    CommissionPaid = callResult.Data.CommissionPaid,
+                    Canceled = callResult.Data.CancelInitiated,
+                    Market = callResult.Data.Exchange,
+                    IsClosed = !callResult.Data.IsOpen,
+                    Uuid = callResult.Data.OrderUuid.ToString(),
+                    OrderType = callResult.Data.Type == OrderSideExtended.LimitBuy ? CryptoOrderType.LimitBuy : CryptoOrderType.LimitSell
+                });
+            }
+            return new CryptoResponse<CryptoOrder>(callResult.Error.Message);
         }
 
         protected void OnMarketsUpdate(List<BittrexStreamMarketSummary> markets)

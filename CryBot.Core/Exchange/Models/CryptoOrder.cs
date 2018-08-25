@@ -17,6 +17,5 @@ namespace CryBot.Core.Exchange.Models
         public decimal QuantityRemaining { get; set; }
         public DateTime Closed { get; set; }
         public bool IsClosed { get; set; }
-        public bool IsOpened { get; set; }
     }
 }

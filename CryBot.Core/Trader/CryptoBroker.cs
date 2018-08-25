@@ -7,7 +7,6 @@ using CryBot.Core.Exchange.Models;
 using System;
 using System.Linq;
 using System.Reactive;
-using System.Diagnostics;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Reactive.Subjects;
@@ -18,7 +17,6 @@ namespace CryBot.Core.Trader
     public class CryptoBroker : ICryptoBroker
     {
         private readonly ICryptoApi _cryptoApi;
-        private int _tickerIndex;
         private readonly TaskCompletionSource<Budget> _taskCompletionSource;
 
         public CryptoBroker(ICryptoApi cryptoApi)
@@ -32,7 +30,6 @@ namespace CryBot.Core.Trader
 
         public void Initialize(TraderState traderState)
         {
-            _tickerIndex = 0;
             Market = traderState.Market;
             Strategy = new HoldUntilPriceDropsStrategy();
 
@@ -47,10 +44,10 @@ namespace CryBot.Core.Trader
                 .Select(order => Observable.FromAsync(token => UpdateOrder(order)))
                 .Concat()
                 .Subscribe();
-            
+
             TraderState = traderState;
 
-            Strategy.Settings = traderState.Settings;
+            Strategy.Settings = traderState.Settings ?? TraderSettings.Default;
             if (TraderState.Trades.Count == 0)
             {
                 TraderState.Trades.Add(new Trade { Status = TradeStatus.Empty });
@@ -70,11 +67,9 @@ namespace CryBot.Core.Trader
                 (_cryptoApi as FakeBittrexApi)?.UpdateBuyOrders(Ticker);
             }
 
-            Ticker = ticker;           
-            _tickerIndex++;
+            Ticker = ticker;
             if (ticker.Timestamp == default)
                 ticker.Timestamp = DateTime.UtcNow;
-            Debug.WriteLine($"Update {_tickerIndex}\t{ticker.Bid}");
 
             await UpdateTrades();
 
@@ -82,17 +77,21 @@ namespace CryBot.Core.Trader
             {
                 (_cryptoApi as FakeBittrexApi)?.UpdateSellOrders(Ticker);
             }
+            PriceUpdated.OnNext(ticker);
             return Unit.Default;
         }
 
         public bool IsInTestMode { get; set; }
+
         public TraderState TraderState { get; set; }
-        
+
         public async Task<Unit> UpdateOrder(CryptoOrder cryptoOrder)
         {
             try
             {
                 Log($"Closed order {cryptoOrder.Uuid} as {cryptoOrder.OrderType} at {cryptoOrder.Limit}");
+                if (cryptoOrder.IsClosed == false)
+                    return await Task.FromResult(Unit.Default);
                 switch (cryptoOrder.OrderType)
                 {
                     case CryptoOrderType.LimitSell:
@@ -103,7 +102,7 @@ namespace CryBot.Core.Trader
                             if (cryptoOrder.Canceled)
                             {
                                 tradeForSellOrder.Status = TradeStatus.Bought;
-                                tradeForSellOrder.SellOrder.IsOpened = false;
+                                tradeForSellOrder.SellOrder.IsClosed = true;
                                 return await Task.FromResult(Unit.Default);
                             }
                             var tradeProfit = tradeForSellOrder.BuyOrder.Price.GetReadablePercentageChange(tradeForSellOrder.SellOrder.Price);
@@ -167,13 +166,12 @@ namespace CryBot.Core.Trader
         private async Task UpdateTrades()
         {
             List<Trade> newTrades = new List<Trade>();
-            
-            if (TraderState.Trades.Count == 0)
+
+            AddNewTradeIfNecessary();
+            var openedTrades = TraderState.Trades.Where(t => t.Status != TradeStatus.Completed).ToList();
+            for (var index = 0; index < openedTrades.Count; index++)
             {
-                TraderState.Trades.Add(new Trade { Status = TradeStatus.Empty });
-            }
-            foreach (var trade in TraderState.Trades.Where(t => t.Status != TradeStatus.Completed))
-            {
+                var trade = openedTrades[index];
                 var newTrade = await UpdateTrade(trade);
                 if (newTrade != Trade.Empty)
                 {
@@ -191,6 +189,15 @@ namespace CryBot.Core.Trader
             foreach (var canceledTrade in canceledTrades)
             {
                 TraderState.Trades.Remove(canceledTrade);
+            }
+        }
+
+        private void AddNewTradeIfNecessary()
+        {
+            if (TraderState.Trades.Count == 0 || TraderState.Trades.Count(t => t.Status != TradeStatus.Completed) == 0)
+            {
+                Log($"Adding new trade for {Market}");
+                TraderState.Trades.Add(new Trade {Status = TradeStatus.Empty});
             }
         }
 
@@ -222,7 +229,7 @@ namespace CryBot.Core.Trader
                     }
                     break;
             }
-
+            TradeUpdated.OnNext(trade);
             return Trade.Empty;
         }
 
@@ -261,7 +268,7 @@ namespace CryBot.Core.Trader
                 PricePerUnit = pricePerUnit,
                 Price = Strategy.Settings.TradingBudget,
                 Quantity = quantity,
-                IsOpened = true,
+                IsClosed = false,
                 Market = Market,
                 Limit = pricePerUnit,
                 Opened = Ticker.Timestamp,

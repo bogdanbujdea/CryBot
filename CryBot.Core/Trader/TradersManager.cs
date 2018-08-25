@@ -28,7 +28,7 @@ namespace CryBot.Core.Trader
         {
             var marketsResponse = await _cryptoApi.GetMarketsAsync();
             var traderStates = new List<TraderState>();
-            foreach (var market in new List<string> { "BTC-ETC" })
+            foreach (var market in new List<string> { "BTC-ETC", "BTC-TRX", "BTC-XLM" })
             {
                 var traderGrain = _clusterClient.GetGrain<ITraderGrain>(market);
                 await traderGrain.SetMarketAsync(market);
@@ -41,7 +41,7 @@ namespace CryBot.Core.Trader
 
         public async Task CreateTraderAsync(string market)
         {
-            var coinTrader = new CoinTrader(_clusterClient, _hubNotifier, _pushManager, new CryptoBroker(_cryptoApi));
+            var coinTrader = new CoinTrader(_clusterClient, _hubNotifier, _pushManager, new CryptoBroker(_cryptoApi), _cryptoApi);
             coinTrader.Initialize(market);
             await coinTrader.StartAsync();
         }

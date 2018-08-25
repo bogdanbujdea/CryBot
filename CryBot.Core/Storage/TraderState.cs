@@ -14,7 +14,7 @@ namespace CryBot.Core.Storage
         
         public Ticker CurrentTicker { get; set; }
         
-        public TraderSettings Settings { get; set; }
+        public TraderSettings Settings { get; set; } = TraderSettings.Default;
 
         public Budget Budget { get; set; } = new Budget();
     }

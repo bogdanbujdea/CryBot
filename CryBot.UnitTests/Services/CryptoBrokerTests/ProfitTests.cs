@@ -14,14 +14,14 @@ namespace CryBot.UnitTests.Services.CryptoBrokerTests
         [Fact]
         public async Task SoldCoin_Should_InvokeOrderUpdated()
         {
-            await CryptoBroker.UpdateOrder(new CryptoOrder { OrderType = CryptoOrderType.LimitSell, Price = 1100 });
+            await CryptoBroker.UpdateOrder(new CryptoOrder { IsClosed = true, OrderType = CryptoOrderType.LimitSell, Price = 1100 });
             CryptoBroker.TraderState.Budget.Available.Should().Be(1100);
         }
 
         [Fact]
         public async Task SoldCoin_Should_CalculateCorrectProfit()
         {
-            var sellOrder = new CryptoOrder { OrderType = CryptoOrderType.LimitSell, Price = 1100, Uuid = "S" };
+            var sellOrder = new CryptoOrder { IsClosed = true, OrderType = CryptoOrderType.LimitSell, Price = 1100, Uuid = "S" };
             var trade = new Trade
             {
                 BuyOrder = new CryptoOrder

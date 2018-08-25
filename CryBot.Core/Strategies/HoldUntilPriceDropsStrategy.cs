@@ -2,6 +2,8 @@
 using CryBot.Core.Infrastructure;
 using CryBot.Core.Exchange.Models;
 
+using System;
+
 namespace CryBot.Core.Strategies
 {
     public class HoldUntilPriceDropsStrategy : ITradingStrategy
@@ -34,7 +36,7 @@ namespace CryBot.Core.Strategies
                 }
 
                 //cancel order if a buy expired
-                if (currentTrade.BuyOrder.IsOpened && currentTrade.BuyOrder.Opened.Expired(Settings.ExpirationTime, ticker.Timestamp))
+                if (!currentTrade.BuyOrder.IsClosed && currentTrade.BuyOrder.Opened.Expired(Settings.ExpirationTime, ticker.Timestamp))
                 {
                     return TradeAction.Create(TradeAdvice.Cancel, TradeReason.ExpiredBuyOrder, ticker.Bid);
                 }
@@ -79,6 +81,7 @@ namespace CryBot.Core.Strategies
             if (currentTrade.MaxPricePerUnit < ticker.Bid)
                 currentTrade.MaxPricePerUnit = ticker.Bid;
             var profit = currentTrade.BuyOrder.PricePerUnit.GetReadablePercentageChange(ticker.Bid, true);
+            Console.WriteLine($"{ticker.Market}\tProfit: {profit}%\tStatus: {currentTrade.Status}");
             if (currentTrade.Status == TradeStatus.Bought || currentTrade.Status == TradeStatus.Selling)
                 currentTrade.Profit = profit;
         }
