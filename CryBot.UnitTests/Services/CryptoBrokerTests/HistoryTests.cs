@@ -167,12 +167,12 @@ namespace CryBot.UnitTests.Services.CryptoBrokerTests
         }
 
         [ExcludeFromCodeCoverage]
-        private async Task<CryptoBroker> RunHistoryData(ITradingStrategy strategy)
+        private async Task<CoinTrader> RunHistoryData(ITradingStrategy strategy)
         {
             FakeBittrexApi fakeBittrexApi = new FakeBittrexApi(null);
             fakeBittrexApi.IsInTestMode = true;
             fakeBittrexApi.Candles = _candles;
-            var coinTrader = new CryptoBroker(fakeBittrexApi)
+            var coinTrader = new CoinTrader(fakeBittrexApi)
             {
                 IsInTestMode = true
             };

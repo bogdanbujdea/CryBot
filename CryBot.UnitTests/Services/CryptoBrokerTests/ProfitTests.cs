@@ -14,8 +14,8 @@ namespace CryBot.UnitTests.Services.CryptoBrokerTests
         [Fact]
         public async Task SoldCoin_Should_InvokeOrderUpdated()
         {
-            await CryptoBroker.UpdateOrder(new CryptoOrder { IsClosed = true, OrderType = CryptoOrderType.LimitSell, Price = 1100 });
-            CryptoBroker.TraderState.Budget.Available.Should().Be(1100);
+            await CoinTrader.UpdateOrder(new CryptoOrder { IsClosed = true, OrderType = CryptoOrderType.LimitSell, Price = 1100 });
+            CoinTrader.TraderState.Budget.Available.Should().Be(1100);
         }
 
         [Fact]
@@ -30,14 +30,14 @@ namespace CryBot.UnitTests.Services.CryptoBrokerTests
                 },
                 SellOrder = sellOrder
             };
-            CryptoBroker.TraderState.Trades.Add(trade);
-            CryptoBroker.TraderState.Budget.Profit = 5;
-            CryptoBroker.TraderState.Budget.Earned = 1;
+            CoinTrader.TraderState.Trades.Add(trade);
+            CoinTrader.TraderState.Budget.Profit = 5;
+            CoinTrader.TraderState.Budget.Earned = 1;
 
-            await CryptoBroker.UpdateOrder(sellOrder);
+            await CoinTrader.UpdateOrder(sellOrder);
 
-            CryptoBroker.TraderState.Budget.Profit.Should().Be(15);
-            CryptoBroker.TraderState.Budget.Earned.Should().Be(101);
+            CoinTrader.TraderState.Budget.Profit.Should().Be(15);
+            CoinTrader.TraderState.Budget.Earned.Should().Be(101);
             trade.Profit.Should().Be(10);
         }
     }

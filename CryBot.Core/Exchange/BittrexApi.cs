@@ -136,10 +136,17 @@ namespace CryBot.Core.Exchange
 
         public async Task<CryptoResponse<List<Market>>> GetMarketsAsync()
         {
+            return new CryptoResponse<List<Market>>(new List<Market>
+            {
+                new Market{Name = "BTC-ETC"},
+                new Market{Name = "BTC-TRX"},
+                new Market{Name = "BTC-XLM"},
+            });
+
             var marketsCallResult = await _bittrexClient.GetMarketsAsync();
             return new CryptoResponse<List<Market>>(marketsCallResult.Data.Select(m => new Market
             {
-                Name = m.MarketName
+                Name = m.MarketName                
             }).ToList());
         }
 

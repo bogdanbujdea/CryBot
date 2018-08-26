@@ -4,6 +4,7 @@ using CryBot.Core.Notifications;
 
 using Orleans;
 
+using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
@@ -28,12 +29,12 @@ namespace CryBot.Core.Trader
         {
             var marketsResponse = await _cryptoApi.GetMarketsAsync();
             var traderStates = new List<TraderState>();
-            foreach (var market in new List<string> { "BTC-ETC", "BTC-TRX", "BTC-XLM" })
+            foreach (var market in marketsResponse.Content.Select(m => m.Name))
             {
                 var traderGrain = _clusterClient.GetGrain<ITraderGrain>(market);
                 await traderGrain.SetMarketAsync(market);
-                //if (await traderGrain.IsInitialized())
-                traderStates.Add(await traderGrain.GetTraderData());
+                if (await traderGrain.IsInitialized())
+                    traderStates.Add(await traderGrain.GetTraderData());
             }
 
             return traderStates;
@@ -41,7 +42,7 @@ namespace CryBot.Core.Trader
 
         public async Task CreateTraderAsync(string market)
         {
-            var coinTrader = new CoinTrader(_clusterClient, _hubNotifier, _pushManager, new CryptoBroker(_cryptoApi), _cryptoApi);
+            var coinTrader = new LiveTrader(_clusterClient, _hubNotifier, _pushManager, new CoinTrader(_cryptoApi), _cryptoApi);
             coinTrader.Initialize(market);
             await coinTrader.StartAsync();
         }

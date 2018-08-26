@@ -126,7 +126,7 @@ namespace CryBot.Web
                 .ConfigureLogging(logging => logging.ClearProviders())
                 .ConfigureApplicationParts(manager =>
                 {
-                    manager?.AddApplicationPart(typeof(CoinTrader).Assembly);
+                    manager?.AddApplicationPart(typeof(LiveTrader).Assembly);
                 });
             var invariant = "System.Data.SqlClient"; // for Microsoft SQL Server
             var connectionString = Configuration["connectionString"].ToString();

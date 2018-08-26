@@ -20,23 +20,23 @@ namespace CryBot.UnitTests.Services.CryptoBrokerTests
         [Fact]
         public void CoinTrader_ShouldBe_InitializedWithAMarket()
         {
-            CryptoBroker.Initialize(new TraderState{Market = Market});
-            CryptoBroker.Market.Should().Be(Market);
+            CoinTrader.Initialize(new TraderState{Market = Market});
+            CoinTrader.Market.Should().Be(Market);
         }
 
         [Fact]
         public void Initialize_ShouldSet_TraderData()
         {
-            CryptoBroker.Initialize(new TraderState{Market = Market});
-            CryptoBroker.Strategy.Should().NotBeNull();
-            CryptoBroker.TraderState.Trades.Should().NotBeNull();
+            CoinTrader.Initialize(new TraderState{Market = Market});
+            CoinTrader.Strategy.Should().NotBeNull();
+            CoinTrader.TraderState.Trades.Should().NotBeNull();
         }
 
         [Fact]
         public void TraderWithNoTrades_Should_CreateFirstTrade()
         {
-            CryptoBroker.Initialize(new TraderState{Market = Market});
-            CryptoBroker.TraderState.Trades.Count.Should().Be(1);
+            CoinTrader.Initialize(new TraderState{Market = Market});
+            CoinTrader.TraderState.Trades.Count.Should().Be(1);
         }
 
         [Fact]

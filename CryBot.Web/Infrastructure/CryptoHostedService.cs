@@ -57,7 +57,7 @@ namespace CryBot.Web.Infrastructure
                 {
                     Console.WriteLine(e);
                 }
-                var coinTrader = new CoinTrader(_clusterClient, _hubNotifier, _pushManager, new CryptoBroker(_cryptoApi), _cryptoApi);
+                var coinTrader = new LiveTrader(_clusterClient, _hubNotifier, _pushManager, new CoinTrader(_cryptoApi), _cryptoApi);
                 coinTrader.Initialize(market);
                 coinTrader.IsInTestMode = true;
                 await coinTrader.StartAsync();
@@ -74,7 +74,7 @@ namespace CryBot.Web.Infrastructure
             var traderStates = await _tradersManager.GetAllTraders();
             foreach (var market in traderStates.Select(t => t.Market))
             {
-                var coinTrader = new CoinTrader(_clusterClient, _hubNotifier, _pushManager, new CryptoBroker(_cryptoApi), _cryptoApi);
+                var coinTrader = new LiveTrader(_clusterClient, _hubNotifier, _pushManager, new CoinTrader(_cryptoApi), _cryptoApi);
                 coinTrader.Initialize(market);
                 await coinTrader.StartAsync();
             }

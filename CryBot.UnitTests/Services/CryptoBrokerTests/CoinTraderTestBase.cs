@@ -15,7 +15,7 @@ namespace CryBot.UnitTests.Services.CryptoBrokerTests
 {
     public abstract class CoinTraderTestBase : TestBase
     {
-        protected CryptoBroker CryptoBroker;
+        protected CoinTrader CoinTrader;
 
         protected string Market { get; set; }
 
@@ -29,7 +29,7 @@ namespace CryBot.UnitTests.Services.CryptoBrokerTests
             Market = "BTC-ETC";
             var pushManagerMock = new Mock<IPushManager>();
             Strategy.SetupGet(strategy => strategy.Settings).Returns(new TraderSettings {TradingBudget = 1000});
-            CryptoBroker = new CryptoBroker(CryptoApiMock.Object)
+            CoinTrader = new CoinTrader(CryptoApiMock.Object)
             {
                 Strategy = Strategy.Object,
                 IsInTestMode = true
@@ -49,7 +49,7 @@ namespace CryBot.UnitTests.Services.CryptoBrokerTests
                 Budget = new Budget(),
                 Settings = new TraderSettings {TradingBudget = 1000}
             };
-            CryptoBroker.TraderState = traderState;
+            CoinTrader.TraderState = traderState;
             TraderGrainMock.Setup(c => c.GetTraderData()).ReturnsAsync(traderState);
             OrleansClientMock.Setup(c => c.GetGrain<ITraderGrain>(It.IsAny<string>(), It.IsAny<string>()))
                 .Returns(TraderGrainMock.Object);
@@ -60,13 +60,13 @@ namespace CryBot.UnitTests.Services.CryptoBrokerTests
             CryptoApiMock.MockSellingTrade(new CryptoOrder());
             Strategy.SetupGet(strategy => strategy.Settings).Returns(new TraderSettings { TradingBudget = 1000 });
             Strategy.SetTradeAction(tradeAction);
-            CryptoBroker.Initialize(new TraderState
+            CoinTrader.Initialize(new TraderState
             {
                 Trades = new List<Trade>(),
                 Market = Market,
                 Settings = new TraderSettings { TradingBudget = 1000 }
             });
-            CryptoBroker.Strategy = Strategy.Object;
+            CoinTrader.Strategy = Strategy.Object;
         }
     }
 }

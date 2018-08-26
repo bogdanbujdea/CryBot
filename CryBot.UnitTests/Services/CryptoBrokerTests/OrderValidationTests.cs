@@ -28,7 +28,7 @@ namespace CryBot.UnitTests.Services.CryptoBrokerTests
             Strategy.SetupGet(strategy => strategy.Settings).Returns(new TraderSettings { TradingBudget = 1000 });
             InitializeTrader(new TradeAction { TradeAdvice = TradeAdvice.Buy, OrderPricePerUnit = 100 });
 
-            await CryptoBroker.UpdatePrice(new Ticker());
+            await CoinTrader.UpdatePrice(new Ticker());
 
             CryptoApiMock.Verify(c => c.BuyCoinAsync(It.Is<CryptoOrder>(b => b.PricePerUnit == 100
                                                                              && b.Price == 1000
@@ -54,8 +54,8 @@ namespace CryBot.UnitTests.Services.CryptoBrokerTests
             
             Strategy.SetupGet(strategy => strategy.Settings).Returns(new TraderSettings { TradingBudget = 1000 });
             InitializeTrader(new TradeAction { TradeAdvice = TradeAdvice.Sell, OrderPricePerUnit = 110 });
-            CryptoBroker.TraderState.Trades[0].BuyOrder.Quantity = 10;
-            await CryptoBroker.UpdatePrice(new Ticker());
+            CoinTrader.TraderState.Trades[0].BuyOrder.Quantity = 10;
+            await CoinTrader.UpdatePrice(new Ticker());
 
             CryptoApiMock.Verify(c => c.SellCoinAsync(It.Is<CryptoOrder>(s => s.PricePerUnit == 110
                                                                              && s.Price == 1100
