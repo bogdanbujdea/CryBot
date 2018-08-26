@@ -101,6 +101,7 @@ namespace CryBot.Core.Trader
             if (!IsInTestMode)
             {
                 await _traderGrain.UpdateTrades(TraderState.Trades);
+                await _traderGrain.UpdatePriceAsync(ticker);
                 await _hubNotifier.UpdateTicker(ticker);
             }
             return Unit.Default;
@@ -128,7 +129,7 @@ namespace CryBot.Core.Trader
                     if (sellOrderResponse.IsSuccessful)
                     {
                         var orderInfo = sellOrderResponse.Content;
-                        if (orderInfo.IsClosed != trade.BuyOrder.IsClosed)
+                        if (orderInfo.IsClosed != trade.SellOrder.IsClosed)
                         {
                             await _coinTrader.UpdateOrder(orderInfo);
                         }

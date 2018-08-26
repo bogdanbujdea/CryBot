@@ -9,5 +9,6 @@ namespace CryBot.Web.Infrastructure
     {
         Task AddSubscription(WebSubscription webSubscription);
         Task<List<WebSubscription>> GetSubscriptionsAsync();
+        Task RemoveSubscription(WebSubscription sub);
     }
 }

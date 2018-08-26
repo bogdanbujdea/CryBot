@@ -1,4 +1,4 @@
-﻿using CryBot.Core.Trader;
+using CryBot.Core.Trader;
 using CryBot.Core.Infrastructure;
 using CryBot.Core.Exchange.Models;
 
@@ -57,7 +57,7 @@ namespace CryBot.Core.Strategies
                 }
 
                 //buy if the price went down a little bit
-                if (currentTrade.TriggeredBuy == false && ticker.Bid.ReachedBuyPrice(currentTrade.BuyOrder.PricePerUnit, Settings.BuyTrigger))
+                if (currentTrade.ReachedBuyPrice(Settings.BuyTrigger))
                 {
                     tradeAction.Reason = TradeReason.BuyTrigger;
                     tradeAction.TradeAdvice = TradeAdvice.Buy;

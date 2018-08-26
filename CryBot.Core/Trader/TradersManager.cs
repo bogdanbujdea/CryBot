@@ -1,4 +1,5 @@
-﻿using CryBot.Core.Storage;
+﻿using System;
+using CryBot.Core.Storage;
 using CryBot.Core.Exchange;
 using CryBot.Core.Notifications;
 
@@ -27,17 +28,25 @@ namespace CryBot.Core.Trader
 
         public async Task<List<TraderState>> GetAllTraders()
         {
-            var marketsResponse = await _cryptoApi.GetMarketsAsync();
-            var traderStates = new List<TraderState>();
-            foreach (var market in marketsResponse.Content.Select(m => m.Name))
+            try
             {
-                var traderGrain = _clusterClient.GetGrain<ITraderGrain>(market);
-                await traderGrain.SetMarketAsync(market);
-                if (await traderGrain.IsInitialized())
-                    traderStates.Add(await traderGrain.GetTraderData());
-            }
+                var marketsResponse = await _cryptoApi.GetMarketsAsync();
+                var traderStates = new List<TraderState>();
+                foreach (var market in marketsResponse.Content.Select(m => m.Name))
+                {
+                    var traderGrain = _clusterClient.GetGrain<ITraderGrain>(market);
+                    await traderGrain.SetMarketAsync(market);
+                    if (await traderGrain.IsInitialized())
+                        traderStates.Add(await traderGrain.GetTraderData());
+                }
 
-            return traderStates;
+                return traderStates;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return new List<TraderState>();
+            }
         }
 
         public async Task CreateTraderAsync(string market)

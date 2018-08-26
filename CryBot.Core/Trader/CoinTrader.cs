@@ -1,4 +1,4 @@
-﻿using CryBot.Core.Storage;
+using CryBot.Core.Storage;
 using CryBot.Core.Exchange;
 using CryBot.Core.Strategies;
 using CryBot.Core.Infrastructure;
@@ -105,13 +105,13 @@ namespace CryBot.Core.Trader
                                 tradeForSellOrder.SellOrder.IsClosed = true;
                                 return await Task.FromResult(Unit.Default);
                             }
+                            tradeForSellOrder.SellOrder = cryptoOrder;
                             var tradeProfit = tradeForSellOrder.BuyOrder.Price.GetReadablePercentageChange(tradeForSellOrder.SellOrder.Price);
                             TraderState.Budget.Profit += tradeProfit;
                             TraderState.Budget.Earned += tradeForSellOrder.SellOrder.Price - tradeForSellOrder.BuyOrder.Price;
                             Log($"{cryptoOrder.Uuid}: SELL - {tradeProfit}");
                             tradeForSellOrder.Profit = tradeProfit;
                             tradeForSellOrder.Status = TradeStatus.Completed;
-                            tradeForSellOrder.SellOrder = cryptoOrder;
                         }
                         break;
                     case CryptoOrderType.LimitBuy:

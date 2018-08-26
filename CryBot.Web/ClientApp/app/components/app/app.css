@@ -2,5 +2,21 @@
     /* On small screens, the nav menu spans the full width of the screen. Leave a space for it. */
     .body-content {
         padding-top: 50px;
+        padding-right: 10px;
+        background-color: #2b3441;
     }
+}
+
+body {
+    background-color: #2b3441;
+    color: white;
+}
+
+p, h1, h2, h3, h4, h5, h6 {
+    color: white;
+}
+
+td {
+    color: white;
+    font-size: 15px;
 }

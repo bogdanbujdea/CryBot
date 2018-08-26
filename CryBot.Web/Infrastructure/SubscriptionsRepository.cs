@@ -30,5 +30,11 @@ namespace CryBot.Web.Infrastructure
             var subscriptionGrain = _clusterClient.GetGrain<ISubscriptionGrain>("subs");
             return await subscriptionGrain.GetAllAsync();
         }
+
+        public async Task RemoveSubscription(WebSubscription sub)
+        {
+            var subscriptionGrain = _clusterClient.GetGrain<ISubscriptionGrain>("subs");
+            await subscriptionGrain.RemoveSubscription(sub);
+        }
     }
 }

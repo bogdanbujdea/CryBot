@@ -82,23 +82,10 @@ namespace CryBot.Core.Trader.Backtesting
             }
             var dict = new Dictionary<string, Budget>();
             int oldPercentage = -1;
-            Parallel.ForEach(strategies.Take(1), (strategy) =>
+            Parallel.ForEach(strategies, (strategy) =>
             {
                 try
                 {
-                    strategy = new HoldUntilPriceDropsStrategy
-                    {
-                        Settings = new TraderSettings
-                        {
-                            BuyLowerPercentage = 0,
-                            TradingBudget = 0.0012M,
-                            MinimumTakeProfit = 1M,
-                            HighStopLossPercentage = -5M,
-                            StopLoss = -15,
-                            BuyTrigger = -2M,
-                            ExpirationTime = TimeSpan.FromHours(24)
-                        }
-                    };
                     var coinTrader = RunHistoryData(strategy).Result;
                     var budget = coinTrader.FinishTest().Result;
                     //Debug.WriteLine($"Finished {index++}");

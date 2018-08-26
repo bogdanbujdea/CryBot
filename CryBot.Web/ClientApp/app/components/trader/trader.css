@@ -1,0 +1,24 @@
+﻿.trader-name {
+    font-size: 18px;
+    color: #F7921A;
+    display: inline;
+}
+
+.trader-info{
+    padding-left: 2em;
+    display: inline;
+    font-size: 16px;
+    color: #CE2022;
+}
+
+.profit{
+    padding-left: 2em;
+}
+
+.positive{
+    color: #1ABC9C;
+}
+
+.negative{
+    color: #CE2022;
+}

@@ -11,5 +11,6 @@ namespace CryBot.Core.Storage
     {
         Task AddSubscription(WebSubscription subscription);
         Task<List<WebSubscription>> GetAllAsync();
+        Task RemoveSubscription(WebSubscription sub);
     }
 }

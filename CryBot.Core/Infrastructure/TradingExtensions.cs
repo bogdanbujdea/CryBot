@@ -3,6 +3,7 @@
 using CryBot.Core.Exchange.Models;
 
 using System;
+using CryBot.Core.Trader;
 
 namespace CryBot.Core.Infrastructure
 {
@@ -140,9 +141,9 @@ namespace CryBot.Core.Infrastructure
             return buyPrice * stopLoss.ToPercentageMultiplier() >= currentPrice;
         }
 
-        public static bool ReachedBuyPrice(this decimal currentPrice, decimal buyPrice, decimal buyTrigger)
+        public static bool ReachedBuyPrice(this Trade currentTrade, decimal buyTrigger)
         {
-            return buyPrice * buyTrigger.ToPercentageMultiplier() >= currentPrice;
+            return currentTrade.TriggeredBuy == false && currentTrade.Profit < buyTrigger;
         }
 
         public static decimal ToPercentageMultiplier(this decimal percentage)

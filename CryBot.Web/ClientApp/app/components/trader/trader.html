@@ -1,36 +1,43 @@
 ﻿<template>
     <require from="../../converters/date-format"></require>
+    <require from="../../converters/time-ago-format"></require>
     <require from="../../converters/currency-format"></require>
     <require from="../../converters/order-format"></require>
     <require from="../../converters/trade-status"></require>
+    <require from="../../converters/value-format"></require>
+    <require from="./trader.css"></require>
 
-    <h3 style="display: inline;">${ traderData.market }</h3> - <h4 style="display: inline;">${ traderData.currentTicker.bid } BTC | ${ traderData.currentTicker.timestamp }</h4>
-     
+    <p class="trader-name" click.trigger="toggleVisibility()">${ traderData.market } </p>
+    <p class="trader-info ${profit | valueFormat}"> ${ traderData.currentTicker.bid | currencyFormat } 
+        <span class="profit"> ${ profit } % </span>
+    </p>
     <p if.bind="!traderData"><em>Loading trader...</em></p>
-    <p>Profit: ${ profit } %</p>
     
-   <table if.bind="traderData.trades" class="table">
-        <thead>
+    <div show.bind="visible">
+        <table if.bind="traderData.trades" class="table" >
+            <thead>
             <tr>
                 <th>Time</th>
                 <th>Status</th>
-                <th>Buy</th>
-                <th>Max Price</th>
-                <th>Sell</th>
+                <th>Buy &#8383;</th>
+                <th>Max Price &#8383;</th>
+                <th>Sell &#8383;</th>
                 <th>Profit%</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             <tr repeat.for="trade of traderData.trades">
-                <td>${ trade.buyOrder.opened } </td>
+                <td>${ trade.buyOrder.opened | dateFormat } </td>
                 <td>${ trade.status | tradeStatus }</td>
                 <td>${ trade.buyOrder.pricePerUnit }</td>
-                <td>${ trade.maxPricePerUnit }</td>
-                <td>${ trade.sellOrder.pricePerUnit }</td>
-                <td>${ trade.profit }</td>
+                <td>${ trade.maxPricePerUnit } </td>
+                <td>${ trade.sellOrder.pricePerUnit } </td>
+                <td class="${ trade.profit | valueFormat}">${ trade.profit }</td>
             </tr>
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+
+    </div>
     <!--<p>
         <ul>
             <li repeat.for="ticker of tickerLog"><strong>${ticker.market}:</strong> ${ticker.bid} - ${ ticker.timestamp | dateFormat }</li>

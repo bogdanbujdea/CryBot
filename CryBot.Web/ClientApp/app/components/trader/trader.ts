@@ -10,6 +10,7 @@ export class Trader {
     traderData: ITrader;
     profit: number = 0;
     market: string = "BTC-ETC";
+    visible: boolean = true;
     private connectionPromise?: Promise<void>;
     private chatHubConnection: signalR.HubConnection;
 
@@ -20,6 +21,10 @@ export class Trader {
         this.httpClient = http;
     }
 
+    toggleVisibility() {
+        this.visible = !this.visible;
+    }
+
     activate(traderData: ITrader) {
         this.traderData = traderData;
         this.market = this.traderData.market;
@@ -27,20 +32,23 @@ export class Trader {
 
         this.chatHubConnection.on('traderUpdate:' + this.market, (trader: ITrader) => {
             if (trader) {
-                this.traderData = trader;
+                this.traderData = trader;                
                 this.calculateProfit();
             }
         });
+
         this.chatHubConnection.on('priceUpdate:' + this.market, (newTicker: Ticker) => {
             this.traderData.currentTicker = newTicker;
             this.tickerLog.unshift(newTicker);
             this.calculateProfit();
         });
+
         this.httpClient.fetch('api/traders?market=' + this.market)
             .then(result => result.json() as Promise<ITraderResponse>)
             .then(data => {
                 if (data.isSuccessful) {
                     this.traderData = data.trader;
+                    this.traderData.currentTicker = data.trader.currentTicker;
                     this.calculateProfit();
                 }
 

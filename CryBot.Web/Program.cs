@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 
+using System;
+
 namespace CryBot.Web
 {
     public class Program
@@ -13,6 +15,7 @@ namespace CryBot.Web
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
+                .UseShutdownTimeout(TimeSpan.FromSeconds(10))
                 .UseUrls("http://*:80")
                 .Build();
     }
