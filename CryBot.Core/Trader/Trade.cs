@@ -1,4 +1,4 @@
-﻿using CryBot.Core.Strategies;
+using CryBot.Core.Strategies;
 using CryBot.Core.Exchange.Models;
 
 namespace CryBot.Core.Trader

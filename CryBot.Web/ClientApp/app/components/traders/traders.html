@@ -2,14 +2,15 @@
     <require from="../../converters/date-format"></require>
     <require from="../../converters/currency-format"></require>
     <require from="../../converters/order-format"></require>
+    <require from="../../converters/value-format"></require>
     <require from="../trader/trader"></require>
 
-    <h3>Traders</h3>
+    <h3>Traders <span class="${totalProfit | valueFormat}">${totalProfit}%</span></h3>
 
     <p if.bind="!traders"><em>Loading traders...</em></p>
 
     <div repeat.for="trader of traders">
-        <compose model.bind="trader" view-model="../trader/trader"></compose>
+        <compose model.bind="trader" view-model="../trader/trader" style="margin: 20px"></compose>
     </div>
 
 </template>

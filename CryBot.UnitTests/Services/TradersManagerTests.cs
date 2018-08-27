@@ -11,7 +11,7 @@ using Orleans;
 
 using System.Threading.Tasks;
 using System.Collections.Generic;
-
+using CryBot.Core.Trader.Backtesting;
 using Xunit;
 
 namespace CryBot.UnitTests.Services
@@ -36,7 +36,8 @@ namespace CryBot.UnitTests.Services
             _clusterClientMock.Setup(c => c.GetGrain<ITraderGrain>(It.Is<string>(t => t == "BTC-ETC"), It.IsAny<string>())).Returns(_initializedTraderGrainMock.Object);
             _clusterClientMock.Setup(c => c.GetGrain<ITraderGrain>(It.Is<string>(t => t == "BTC-ETH"), It.IsAny<string>())).Returns(_notInitializedTraderGrainMock.Object);
             _initializedTraderGrainMock.Setup(c => c.GetTraderData()).ReturnsAsync(new TraderState());
-            _tradersManager = new TradersManager(_cryptoApiMock.Object, _clusterClientMock.Object, null, null);
+            var backtesterMock = new Mock<IBackTester>();
+            _tradersManager = new TradersManager(_cryptoApiMock.Object, null, backtesterMock.Object,  _clusterClientMock.Object, null, null);
         }
 
         [Fact]

@@ -6,11 +6,12 @@
     <require from="../../converters/trade-status"></require>
     <require from="../../converters/value-format"></require>
     <require from="./trader.css"></require>
-
-    <p class="trader-name" click.trigger="toggleVisibility()">${ traderData.market } </p>
-    <p class="trader-info ${profit | valueFormat}"> ${ traderData.currentTicker.bid | currencyFormat } 
-        <span class="profit"> ${ profit } % </span>
-    </p>
+    <div click.trigger="toggleVisibility()">
+        <p class="trader-name" >${ traderData.market } </p>
+        <p class="trader-info ${profit | valueFormat}"> ${ traderData.currentTicker.bid | currencyFormat } 
+            <span class="profit"> ${ profit } % </span>
+        </p>
+    </div>
     <p if.bind="!traderData"><em>Loading trader...</em></p>
     
     <div show.bind="visible">
@@ -32,7 +33,7 @@
                 <td>${ trade.buyOrder.pricePerUnit }</td>
                 <td>${ trade.maxPricePerUnit } </td>
                 <td>${ trade.sellOrder.pricePerUnit } </td>
-                <td class="${ trade.profit | valueFormat}">${ trade.profit }</td>
+                <td class="${ trade.profit | valueFormat}">${ trade.profit }%</td>
             </tr>
             </tbody>
         </table>

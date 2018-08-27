@@ -2,8 +2,6 @@ using CryBot.Core.Trader;
 using CryBot.Core.Infrastructure;
 using CryBot.Core.Exchange.Models;
 
-using System;
-
 namespace CryBot.Core.Strategies
 {
     public class HoldUntilPriceDropsStrategy : ITradingStrategy
@@ -29,7 +27,8 @@ namespace CryBot.Core.Strategies
                 //return a buy trade if the trader is new
                 if (currentTrade.Status == TradeStatus.Empty)
                 {
-                    tradeAction.OrderPricePerUnit = ticker.Bid * Settings.BuyLowerPercentage.ToPercentageMultiplier();
+                    Log($"NEW: \t{ticker.Bid}");
+                    tradeAction.OrderPricePerUnit = ticker.Bid * Settings.FirstBuyLowerPercentage.ToPercentageMultiplier();
                     tradeAction.Reason = TradeReason.FirstTrade;
                     tradeAction.TradeAdvice = TradeAdvice.Buy;
                     return tradeAction;
@@ -38,6 +37,7 @@ namespace CryBot.Core.Strategies
                 //cancel order if a buy expired
                 if (!currentTrade.BuyOrder.IsClosed && currentTrade.BuyOrder.Opened.Expired(Settings.ExpirationTime, ticker.Timestamp))
                 {
+                    Log($"{currentTrade.BuyOrder.Uuid}\tEXPIRED");
                     return TradeAction.Create(TradeAdvice.Cancel, TradeReason.ExpiredBuyOrder, ticker.Bid);
                 }
 
@@ -53,12 +53,14 @@ namespace CryBot.Core.Strategies
                         currentTrade.BuyOrder.PricePerUnit * Settings.MinimumTakeProfit.ToPercentageMultiplier() * Consts.BittrexCommission,
                         Settings.HighStopLossPercentage.ToPercentageMultiplier(), currentTrade.BuyOrder.PricePerUnit))
                 {
+                    Log($"{currentTrade.BuyOrder.Uuid}\tTAKE PROFIT: \t{currentTrade.Profit}");
                     return TradeAction.Create(TradeAdvice.Sell, TradeReason.TakeProfit, ticker.Bid);
                 }
 
                 //buy if the price went down a little bit
                 if (currentTrade.ReachedBuyPrice(Settings.BuyTrigger))
                 {
+                    Log($"BUY TRIGGER: \t{ticker.Bid}");
                     tradeAction.Reason = TradeReason.BuyTrigger;
                     tradeAction.TradeAdvice = TradeAdvice.Buy;
                     tradeAction.OrderPricePerUnit = ticker.Bid;
@@ -69,10 +71,17 @@ namespace CryBot.Core.Strategies
                 //sell if the stop loss price is reached
                 if (ticker.Bid.ReachedStopLoss(currentTrade.BuyOrder.PricePerUnit, Settings.StopLoss))
                 {
+                    Log($"{currentTrade.BuyOrder.Uuid}\tSTOP LOSS: \t{currentTrade.Profit}");
+
                     return TradeAction.Create(TradeAdvice.Sell, TradeReason.StopLoss, ticker.Bid);
                 }
                 return tradeAction;
             }
+        }
+
+        private void Log(string text)
+        {
+            //Console.WriteLine(text);
         }
 
         private static void UpdateTrade(Ticker ticker, Trade currentTrade)
@@ -81,7 +90,7 @@ namespace CryBot.Core.Strategies
             if (currentTrade.MaxPricePerUnit < ticker.Bid)
                 currentTrade.MaxPricePerUnit = ticker.Bid;
             var profit = currentTrade.BuyOrder.PricePerUnit.GetReadablePercentageChange(ticker.Bid, true);
-            Console.WriteLine($"{ticker.Market}\tProfit: {profit}%\tStatus: {currentTrade.Status}");
+            //Console.WriteLine($"{ticker.Market}\tProfit: {profit}%\tStatus: {currentTrade.Status}\t{ticker.Bid}");
             if (currentTrade.Status == TradeStatus.Bought || currentTrade.Status == TradeStatus.Selling)
                 currentTrade.Profit = profit;
         }

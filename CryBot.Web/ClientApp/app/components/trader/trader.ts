@@ -10,7 +10,7 @@ export class Trader {
     traderData: ITrader;
     profit: number = 0;
     market: string = "BTC-ETC";
-    visible: boolean = true;
+    visible: boolean = false;
     private connectionPromise?: Promise<void>;
     private chatHubConnection: signalR.HubConnection;
 

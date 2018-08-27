@@ -22,6 +22,11 @@ namespace CryBot.Core.Exchange
         {
         }
 
+        public FakeBittrexApi(string apiKey, string apiSecret): base(null)
+        {
+            Initialize(apiKey, apiSecret, true);
+        }
+
         public List<Candle> Candles { get; set; }
 
         public override Task<CryptoResponse<Ticker>> GetTickerAsync(string market)
@@ -34,18 +39,28 @@ namespace CryBot.Core.Exchange
             }));
         }
 
-        public override Task<CryptoResponse<List<Candle>>> GetCandlesAsync(string market, TickInterval interval)
+        public override async Task<CryptoResponse<List<Candle>>> GetCandlesAsync(string market, TickInterval interval)
         {
             try
             {
-                var candlesJson = File.ReadAllText("candles.json");
-                Candles = JsonConvert.DeserializeObject<List<Candle>>(candlesJson);
+                var fileName = $"{market}.json";
+                if (File.Exists(fileName) == false)
+                {
+                    var candleResponse = await base.GetCandlesAsync(market, interval);
+                    File.WriteAllText(fileName, JsonConvert.SerializeObject(candleResponse.Content));
+                    Candles = candleResponse.Content;                
+                }
+                else
+                {
+                    var candlesJson = File.ReadAllText(fileName);
+                    Candles = JsonConvert.DeserializeObject<List<Candle>>(candlesJson);
+                }
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
             }
-            return Task.FromResult(new CryptoResponse<List<Candle>>(Candles));
+            return new CryptoResponse<List<Candle>>(Candles);
         }
 
         public override Task SendMarketUpdates(string market)

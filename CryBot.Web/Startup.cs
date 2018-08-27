@@ -27,6 +27,7 @@ using System;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using CryBot.Core.Trader.Backtesting;
 
 namespace CryBot.Web
 {
@@ -55,6 +56,8 @@ namespace CryBot.Web
             services.AddSingleton(typeof(IHubNotifier), typeof(HubNotifier));
             services.AddSingleton(typeof(IPushManager), typeof(PushManager));
             services.AddSingleton(typeof(ISubscriptionsRepository), typeof(SubscriptionsRepository));
+            services.AddSingleton(typeof(ITradersRepository), typeof(TradersRepository));
+            services.AddSingleton(typeof(IBackTester), typeof(BackTester));
 
             var orleansClient = CreateOrleansClient();
             services.AddSingleton(orleansClient);
@@ -146,7 +149,7 @@ namespace CryBot.Web
             {
                 options.Invariant = invariant;
                 options.ConnectionString = connectionString;
-                options.UseJsonFormat = false;
+                options.UseJsonFormat = true;
             });
 
             _siloHost = siloBuilder.Build();

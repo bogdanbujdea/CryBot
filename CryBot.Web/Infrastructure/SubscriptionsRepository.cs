@@ -1,4 +1,5 @@
-﻿using CryBot.Core.Storage;
+﻿using System;
+using CryBot.Core.Storage;
 using CryBot.Core.Notifications;
 
 using Orleans;
@@ -27,8 +28,17 @@ namespace CryBot.Web.Infrastructure
 
         public async Task<List<WebSubscription>> GetSubscriptionsAsync()
         {
-            var subscriptionGrain = _clusterClient.GetGrain<ISubscriptionGrain>("subs");
-            return await subscriptionGrain.GetAllAsync();
+            try
+            {
+                
+                var subscriptionGrain = _clusterClient.GetGrain<ISubscriptionGrain>("subs");
+                return await subscriptionGrain.GetAllAsync();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            return new List<WebSubscription>();
         }
 
         public async Task RemoveSubscription(WebSubscription sub)

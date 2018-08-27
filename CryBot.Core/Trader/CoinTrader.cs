@@ -89,7 +89,6 @@ namespace CryBot.Core.Trader
         {
             try
             {
-                Log($"Closed order {cryptoOrder.Uuid} as {cryptoOrder.OrderType} at {cryptoOrder.Limit}");
                 if (cryptoOrder.IsClosed == false)
                     return await Task.FromResult(Unit.Default);
                 switch (cryptoOrder.OrderType)
@@ -109,9 +108,17 @@ namespace CryBot.Core.Trader
                             var tradeProfit = tradeForSellOrder.BuyOrder.Price.GetReadablePercentageChange(tradeForSellOrder.SellOrder.Price);
                             TraderState.Budget.Profit += tradeProfit;
                             TraderState.Budget.Earned += tradeForSellOrder.SellOrder.Price - tradeForSellOrder.BuyOrder.Price;
-                            Log($"{cryptoOrder.Uuid}: SELL - {tradeProfit}");
                             tradeForSellOrder.Profit = tradeProfit;
                             tradeForSellOrder.Status = TradeStatus.Completed;
+                            var tradeWithTriggeredBuy =
+                                TraderState.Trades.FirstOrDefault(t =>
+                                    t.TriggeredBuy && t.Status != TradeStatus.Completed);
+                            if (tradeWithTriggeredBuy != null 
+                                && TraderState.Trades.Count(t => t.TriggeredBuy && t.Status != TradeStatus.Completed) == 0)
+                            {
+                                //Console.WriteLine($"Set triggered buy to false for {tradeWithTriggeredBuy.BuyOrder.Uuid}");
+                                tradeWithTriggeredBuy.TriggeredBuy = false;
+                            }
                         }
                         break;
                     case CryptoOrderType.LimitBuy:
@@ -153,7 +160,7 @@ namespace CryBot.Core.Trader
             TraderState.Budget.Profit = TraderState.Trades.Sum(t => t.Profit);
             foreach (var trade in TraderState.Trades)
             {
-                Log($"{TraderState.Trades.IndexOf(trade)}\t{trade.Status}\t{trade.Profit}");
+                Log($"{TraderState.Trades.IndexOf(trade)}\t{trade.Status}\t{trade.Profit}\t{trade.BuyOrder.PricePerUnit}\t{trade.SellOrder.PricePerUnit}");
             }
             Log($"Profit: {TraderState.Budget.Profit}");
             Log($"Available: {TraderState.Budget.Available}");
@@ -196,7 +203,6 @@ namespace CryBot.Core.Trader
         {
             if (TraderState.Trades.Count == 0 || TraderState.Trades.Count(t => t.Status != TradeStatus.Completed) == 0)
             {
-                Log($"Adding new trade for {Market}");
                 TraderState.Trades.Add(new Trade {Status = TradeStatus.Empty});
             }
         }
@@ -210,8 +216,12 @@ namespace CryBot.Core.Trader
                     var buyOrder = await CreateBuyOrder(tradeAction.OrderPricePerUnit);
                     if (tradeAction.Reason == TradeReason.BuyTrigger)
                     {
-                        Log($"Buy trigger at {tradeAction.OrderPricePerUnit}");
-                        return new Trade { BuyOrder = buyOrder, Status = TradeStatus.Buying };
+                        if (tradeAction.OrderPricePerUnit == 0.0020237M)
+                        {
+
+                        }
+                        var newTrade = new Trade { BuyOrder = buyOrder, Status = TradeStatus.Buying };
+                        return newTrade;
                     }
                     trade.BuyOrder = buyOrder;
                     trade.Status = TradeStatus.Buying;
@@ -220,7 +230,6 @@ namespace CryBot.Core.Trader
                     await CreateSellOrder(trade, tradeAction.OrderPricePerUnit);
                     return Trade.Empty;
                 case TradeAdvice.Cancel:
-                    Log($"{trade.BuyOrder.Uuid}: Canceling order {trade.BuyOrder.Uuid}");
                     var cancelResponse = await _cryptoApi.CancelOrder(trade.BuyOrder.Uuid);
                     if (cancelResponse.IsSuccessful)
                     {
@@ -290,7 +299,7 @@ namespace CryBot.Core.Trader
 
         private void Log(string text)
         {
-            Console.WriteLine(text);
+            //Console.WriteLine(text);
         }
     }
 }

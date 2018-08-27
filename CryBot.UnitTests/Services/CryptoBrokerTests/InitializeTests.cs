@@ -9,8 +9,6 @@ using FluentAssertions;
 using Moq;
 
 using System.Reactive.Subjects;
-using System.Collections.Generic;
-
 using Xunit;
 
 namespace CryBot.UnitTests.Services.CryptoBrokerTests

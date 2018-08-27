@@ -1,7 +1,6 @@
 using Bittrex.Net.Objects;
 
 using CryBot.Core.Exchange;
-using CryBot.Web.Infrastructure;
 using CryBot.Core.Notifications;
 using CryBot.Core.Infrastructure;
 

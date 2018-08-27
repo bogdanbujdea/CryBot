@@ -1,107 +1,125 @@
 ﻿using Bittrex.Net.Objects;
 
+using CryBot.Core.Storage;
 using CryBot.Core.Exchange;
 using CryBot.Core.Strategies;
+using CryBot.Core.Infrastructure;
 using CryBot.Core.Exchange.Models;
+
+using Microsoft.Extensions.Options;
 
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Diagnostics;
-using CryBot.Core.Storage;
 
 namespace CryBot.Core.Trader.Backtesting
 {
-    public class BackTester
+    public class BackTester : IBackTester
     {
+        private readonly string _apiKey;
+        private readonly string _apiSecret;
         private readonly FakeBittrexApi _fakeBittrexApi;
         private string _market;
         private List<Candle> _candles;
-        private readonly ICryptoApi _cryptoApi;
-        private static volatile object _syncObject = new object();
 
-        public BackTester()
+        public BackTester(IOptions<EnvironmentConfig> config): this(config.Value.BittrexApiKey, config.Value.BittrexApiSecret)
         {
-            _fakeBittrexApi = new FakeBittrexApi(null);
+        }
+
+        public BackTester(string apiKey, string apiSecret)
+        {
+            _apiKey = apiKey;
+            _apiSecret = apiSecret;
+            _fakeBittrexApi = new FakeBittrexApi(apiKey, apiSecret);
             _fakeBittrexApi.IsInTestMode = true;
         }
 
-        public async Task<List<KeyValuePair<string, Budget>>> FindBestSettings(string market)
+        public async Task<List<BackTestResult>> FindBestSettings(string market, List<Candle> candlesContent = null)
         {
             _market = market;
-            _candles = (await _fakeBittrexApi.GetCandlesAsync((_market), TickInterval.OneHour)).Content;
-            var buyLowerRange = new List<decimal> { -3, -2, -1, 0 };
-            var minimumTakeProfitRange = new List<decimal> { 0, 1 };
-            var highStopLossRange = new List<decimal> { -5, -1, -0.1M, -0.001M };
-            var stopLossRange = new List<decimal> { -15, -6, -4, };
-            var buyTriggerRange = new List<decimal> { -4, -2 };
+            if (candlesContent == null)
+                _candles = (await _fakeBittrexApi.GetCandlesAsync((_market), TickInterval.OneMinute)).Content;
+            else _candles = candlesContent;
+            var firstOrderBuyLowerRange = new List<decimal> { -1, 0 };
+            var buyLowerRange = new List<decimal> { -3, -2, -1, -0.5M, 0 };
+            var minimumTakeProfitRange = new List<decimal> { 0, 0.5M, 1 };
+            var highStopLossRange = new List<decimal> { -10, -5, -1 };
+            var stopLossRange = new List<decimal> { -6, -4, -2, -1 };
+            var buyTriggerRange = new List<decimal> { -4, -2, -1, -0.5M };
             var expirationRange = new List<TimeSpan>
             {
-                TimeSpan.FromMinutes(15),
+                TimeSpan.FromMinutes(1),
                 TimeSpan.FromHours(1),
-                TimeSpan.FromHours(2),
                 TimeSpan.FromHours(24)
             };
             var bestSettings = TraderSettings.Default;
-            var bestProfit = -1000M;
-            var totalIterations = buyLowerRange.Count * highStopLossRange.Count * stopLossRange.Count *
-                                  buyTriggerRange.Count * minimumTakeProfitRange.Count * expirationRange.Count;
 
             var it = 0;
+            var total = 0;
+            var bestProfit = -1000M;
             var strategies = new List<HoldUntilPriceDropsStrategy>();
-            foreach (var buy in buyLowerRange)
+            foreach (var firstBuy in firstOrderBuyLowerRange)
             {
-                foreach (var highStopLoss in highStopLossRange)
+                foreach (var buy in buyLowerRange)
                 {
-                    foreach (var stopLoss in stopLossRange)
+                    foreach (var highStopLoss in highStopLossRange)
                     {
-                        foreach (var trigger in buyTriggerRange)
+                        foreach (var stopLoss in stopLossRange)
                         {
-                            foreach (var expiration in expirationRange)
+                            foreach (var trigger in buyTriggerRange)
                             {
-                                foreach (var minProfit in minimumTakeProfitRange)
+                                foreach (var expiration in expirationRange)
                                 {
-                                    var strategy = new HoldUntilPriceDropsStrategy();
-                                    strategy.Settings = new TraderSettings
+                                    foreach (var minProfit in minimumTakeProfitRange)
                                     {
-                                        BuyLowerPercentage = buy,
-                                        HighStopLossPercentage = highStopLoss,
-                                        StopLoss = stopLoss,
-                                        BuyTrigger = trigger,
-                                        MinimumTakeProfit = minProfit,
-                                        TradingBudget = TraderSettings.Default.TradingBudget,
-                                        ExpirationTime = expiration
-                                    };
-                                    strategies.Add(strategy);
+                                        if (stopLoss <= trigger)
+                                            continue;
+                                        total++;
+                                        var strategy = new HoldUntilPriceDropsStrategy();
+                                        strategy.Settings = new TraderSettings
+                                        {
+                                            FirstBuyLowerPercentage = firstBuy,
+                                            BuyLowerPercentage = buy,
+                                            HighStopLossPercentage = highStopLoss,
+                                            StopLoss = stopLoss,
+                                            BuyTrigger = trigger,
+                                            MinimumTakeProfit = minProfit,
+                                            TradingBudget = TraderSettings.Default.TradingBudget,
+                                            ExpirationTime = expiration
+                                        };
+                                        strategies.Add(strategy);
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-            var dict = new Dictionary<string, Budget>();
             int oldPercentage = -1;
+            var results = new List<BackTestResult>();
             Parallel.ForEach(strategies, (strategy) =>
             {
                 try
                 {
+                    it++;
                     var coinTrader = RunHistoryData(strategy).Result;
                     var budget = coinTrader.FinishTest().Result;
-                    //Debug.WriteLine($"Finished {index++}");
-                    it++;
-                    if (budget.Profit > bestProfit)
+                    var backTestResult = new BackTestResult
                     {
-                        bestSettings = strategy.Settings;
-                        bestProfit = budget.Profit;
-                    }
-
-                    dict[strategy.Settings.ToString()] = budget;
-                    var percentage = (it * 100) / totalIterations;
+                        Budget = budget,
+                        Settings = strategy.Settings
+                    };
+                    results.Add(backTestResult);
+                    var percentage = (it * 100) / total;
                     if (percentage != oldPercentage)
                     {
                         oldPercentage = percentage;
-                        Console.WriteLine($"{bestProfit}%\t{bestSettings.ToString()}\tCurrent iteration: {it}/{totalIterations}\t{percentage}%");
+                        if (bestProfit < budget.Profit)
+                        {
+                            bestProfit = budget.Profit;
+                        }
+                        Console.WriteLine($"Current iteration: {it}/{total}\t{percentage}%\t\t{bestProfit}%");
                     }
                 }
                 catch (Exception e)
@@ -109,20 +127,37 @@ namespace CryBot.Core.Trader.Backtesting
                     Console.WriteLine(e);
                 }
             });
-
-            var topSettings = dict.OrderByDescending(d => d.Value.Profit).Take(50).ToList();
-            foreach (var keyValuePair in topSettings)
+            results = results.OrderByDescending(r => r.Budget.Profit).ToList();
+            var uniqueProfits = results.GroupBy(r => r.Budget.Profit).OrderByDescending(r => r.Key).Select(s => s.FirstOrDefault()).ToList();
+            Console.WriteLine($"{uniqueProfits.Count}/{results.Count}");
+            foreach (var result in uniqueProfits.Take(50))
             {
-                Console.WriteLine($"{keyValuePair.Value.Profit}% - {keyValuePair.Key}\t{keyValuePair.Value.Invested}\t{keyValuePair.Value.Earned}");
+                Console.WriteLine($"{result.Budget.Profit}% - {result.Settings}\t{result.Budget.Invested}\t{result.Budget.Earned}");
             }
-            Console.WriteLine($"Best settings {bestSettings.StopLoss}\t{bestProfit} BTC");
-            return topSettings;
+            return uniqueProfits;
         }
-        
+
+        public async Task<BackTestResult> TrySettings(string market, List<Candle> candlesContent, TraderSettings settings)
+        {
+            _market = market;
+            if (candlesContent == null)
+                _candles = (await _fakeBittrexApi.GetCandlesAsync((_market), TickInterval.OneMinute)).Content;
+            else _candles = candlesContent;
+            var strategy = new HoldUntilPriceDropsStrategy{Settings = settings};
+            var coinTrader = await RunHistoryData(strategy);
+            var budget = await coinTrader.FinishTest();
+            var backTestResult = new BackTestResult
+            {
+                Budget = budget,
+                Settings = strategy.Settings
+            };
+            return backTestResult;
+        }
+
 
         private async Task<CoinTrader> RunHistoryData(ITradingStrategy strategy)
         {
-            FakeBittrexApi fakeBittrexApi = new FakeBittrexApi(null)
+            FakeBittrexApi fakeBittrexApi = new FakeBittrexApi(_apiKey, _apiSecret)
             {
                 IsInTestMode = true,
                 Candles = _candles
@@ -139,7 +174,6 @@ namespace CryBot.Core.Trader.Backtesting
             coinTrader.Strategy = strategy;
 
             await fakeBittrexApi.SendMarketUpdates(_market);
-            //Console.WriteLine($"Profit: {coinTrader.TraderState.Budget.Profit}%");
             return coinTrader;
         }
     }

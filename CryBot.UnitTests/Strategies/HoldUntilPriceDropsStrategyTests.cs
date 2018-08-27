@@ -66,6 +66,7 @@ namespace CryBot.UnitTests.Strategies
         [Fact]
         public void BuyTrigger_Should_ReturnBuyAdvice()
         {
+            _currentTrade.Status = TradeStatus.Bought;
             _strategy.Settings.BuyTrigger = -1;
             var tradeAction = _strategy.CalculateTradeAction(new Ticker { Bid = 98 }, _currentTrade);
             tradeAction.TradeAdvice.Should().Be(TradeAdvice.Buy);
@@ -74,6 +75,7 @@ namespace CryBot.UnitTests.Strategies
         [Fact]
         public void BuyTrigger_Should_BuyOnBidPrice()
         {
+            _currentTrade.Status = TradeStatus.Bought;
             _strategy.Settings.BuyTrigger = -1;
             var tradeAction = _strategy.CalculateTradeAction(new Ticker { Bid = 98 }, _currentTrade);
             tradeAction.TradeAdvice.Should().Be(TradeAdvice.Buy);
@@ -86,6 +88,7 @@ namespace CryBot.UnitTests.Strategies
             _strategy.Settings.BuyTrigger = -1;
             _strategy.Settings.StopLoss = -10;
             _currentTrade.TriggeredBuy = false;
+            _currentTrade.Status = TradeStatus.Bought;
             var tradeAction = _strategy.CalculateTradeAction(new Ticker { Bid = 98 }, _currentTrade);
 
             _currentTrade.TriggeredBuy.Should().Be(true);
@@ -101,7 +104,7 @@ namespace CryBot.UnitTests.Strategies
             var tradeAction = _strategy.CalculateTradeAction(new Ticker { Bid = 98, Ask = 100 }, new Trade { Status = TradeStatus.Empty });
             tradeAction.TradeAdvice.Should().Be(TradeAdvice.Buy);
             tradeAction.Reason.Should().Be(TradeReason.FirstTrade);
-            tradeAction.OrderPricePerUnit.Should().Be(98 * _strategy.Settings.BuyLowerPercentage.ToPercentageMultiplier());
+            tradeAction.OrderPricePerUnit.Should().Be(98 * _strategy.Settings.FirstBuyLowerPercentage.ToPercentageMultiplier());
         }
 
         [Fact]

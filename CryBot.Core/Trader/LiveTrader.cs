@@ -3,6 +3,7 @@ using CryBot.Core.Exchange;
 using CryBot.Core.Strategies;
 using CryBot.Core.Notifications;
 using CryBot.Core.Exchange.Models;
+using CryBot.Core.Trader.Backtesting;
 
 using Orleans;
 
@@ -21,17 +22,18 @@ namespace CryBot.Core.Trader
         private readonly IHubNotifier _hubNotifier;
         private readonly IPushManager _pushManager;
         private readonly ICoinTrader _coinTrader;
+        private readonly IBackTester _backTester;
         private readonly ICryptoApi _cryptoApi;
         private ITraderGrain _traderGrain;
         private readonly TaskCompletionSource<Budget> _taskCompletionSource;
 
-        public LiveTrader(IClusterClient orleansClient, IHubNotifier hubNotifier, IPushManager pushManager, ICoinTrader coinTrader, ICryptoApi cryptoApi)
+        public LiveTrader(IClusterClient orleansClient, IHubNotifier hubNotifier, IPushManager pushManager, ICoinTrader coinTrader, IBackTester backTester)
         {
             _orleansClient = orleansClient;
             _hubNotifier = hubNotifier;
             _pushManager = pushManager;
             _coinTrader = coinTrader;
-            _cryptoApi = cryptoApi;
+            _backTester = backTester;
             _taskCompletionSource = new TaskCompletionSource<Budget>();
         }
 
@@ -64,6 +66,7 @@ namespace CryBot.Core.Trader
 
         public async Task StartAsync()
         {
+            Console.WriteLine($"Starting {Market}");
             Strategy = new HoldUntilPriceDropsStrategy();
             _traderGrain = _orleansClient.GetGrain<ITraderGrain>(Market);
             await _traderGrain.SetMarketAsync(Market);
@@ -71,6 +74,11 @@ namespace CryBot.Core.Trader
             TraderState.Trades = TraderState.Trades ?? new List<Trade>();
 
             Strategy.Settings = TraderSettings.Default;
+            Console.WriteLine($"Downloaded candles for {Market}");
+            var results = await _backTester.FindBestSettings(Market);
+            Console.WriteLine($"Best settings for {Market} are {results[0].Settings} with a profit of {results[0].Budget.Profit}%");
+            return;
+            Strategy.Settings = results[0].Settings;
             if (TraderState.Trades.Count == 0)
             {
                 TraderState.Trades.Add(new Trade { Status = TradeStatus.Empty });
@@ -113,6 +121,8 @@ namespace CryBot.Core.Trader
             for (var index = 0; index < trades.Count; index++)
             {
                 Trade trade = trades[index];
+                if (trade.BuyOrder.Uuid == null)
+                    continue;
                 var buyOrderResponse = await _cryptoApi.GetOrderInfoAsync(trade.BuyOrder.Uuid);
                 if (buyOrderResponse.IsSuccessful)
                 {

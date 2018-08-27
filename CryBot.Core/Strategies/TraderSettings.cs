@@ -16,12 +16,15 @@ namespace CryBot.Core.Strategies
         
         public decimal TradingBudget { get; set; }
 
+        public decimal FirstBuyLowerPercentage { get; set; }
+
         public TimeSpan ExpirationTime { get; set; }
 
         public static TraderSettings Default { get; } = new TraderSettings
         {
             //{BLP: 0| MTP: 0| HSL: -5| SL: -4| BT: -2| ET: 1.00:00:00}
-            BuyLowerPercentage = 0,
+            FirstBuyLowerPercentage = 0M,
+            BuyLowerPercentage = -1M,
             TradingBudget = 0.0012M,
             MinimumTakeProfit = 0M,
             HighStopLossPercentage = -5M,
@@ -31,9 +34,10 @@ namespace CryBot.Core.Strategies
         };
 
 
+
         public override string ToString()
         {
-            return $"BLP: {BuyLowerPercentage}| MTP: {MinimumTakeProfit}| HSL: {HighStopLossPercentage}| SL: {StopLoss}| BT: {BuyTrigger}| ET: {ExpirationTime.ToString()}";
+            return $"FBLP: {FirstBuyLowerPercentage}| BLP: {BuyLowerPercentage}| MTP: {MinimumTakeProfit}| HSL: {HighStopLossPercentage}| SL: {StopLoss}| BT: {BuyTrigger}| ET: {ExpirationTime.ToString()}";
         }
     }
 }
