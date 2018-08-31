@@ -23,17 +23,15 @@ namespace CryBot.Core.Strategies
         public static TraderSettings Default { get; } = new TraderSettings
         {
             //{BLP: 0| MTP: 0| HSL: -5| SL: -4| BT: -2| ET: 1.00:00:00}
-            FirstBuyLowerPercentage = 0M,
-            BuyLowerPercentage = -1M,
+            FirstBuyLowerPercentage = -0M,
+            BuyLowerPercentage = -0M,
             TradingBudget = 0.0012M,
-            MinimumTakeProfit = 0M,
-            HighStopLossPercentage = -5M,
-            StopLoss = -4,
-            BuyTrigger = -2M,
-            ExpirationTime = TimeSpan.FromHours(1)
+            MinimumTakeProfit = 3M,
+            HighStopLossPercentage = -0.1M,
+            StopLoss = -15,
+            BuyTrigger = -1M,
+            ExpirationTime = TimeSpan.FromHours(24)
         };
-
-
 
         public override string ToString()
         {

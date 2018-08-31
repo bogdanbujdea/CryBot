@@ -12,6 +12,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Reactive.Subjects;
 using System.Collections.Generic;
+using CryptoExchange.Net;
 
 namespace CryBot.Core.Exchange
 {

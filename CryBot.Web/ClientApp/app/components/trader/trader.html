@@ -8,8 +8,10 @@
     <require from="./trader.css"></require>
     <div click.trigger="toggleVisibility()">
         <p class="trader-name" >${ traderData.market } </p>
-        <p class="trader-info ${profit | valueFormat}"> ${ traderData.currentTicker.bid | currencyFormat } 
+        <p class="trader-info ${profit | valueFormat}">
+            ${ traderData.currentTicker.bid | currencyFormat }
             <span class="profit"> ${ profit } % </span>
+            <span class="profit"> ${ traderData.trades.length } trades </span>
         </p>
     </div>
     <p if.bind="!traderData"><em>Loading trader...</em></p>

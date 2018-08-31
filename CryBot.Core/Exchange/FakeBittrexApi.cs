@@ -63,13 +63,15 @@ namespace CryBot.Core.Exchange
             return new CryptoResponse<List<Candle>>(Candles);
         }
 
-        public override Task SendMarketUpdates(string market)
+        public override async Task SendMarketUpdates(string market)
         {
             if (IsInTestMode)
             {
-                if(Candles == null)
-                    Candles = new List<Candle>();
-                Candles = Candles.Take(5000).ToList();
+                if (Candles == null)
+                {
+                    await GetCandlesAsync(market, TickInterval.OneMinute);
+                }
+                //Candles = Candles.Take(5000).ToList();
                 foreach (var candle in Candles)
                 {
                     try
@@ -91,7 +93,6 @@ namespace CryBot.Core.Exchange
                 }
                 TickerUpdated.OnCompleted();
             }
-            return Task.CompletedTask;
         }
 
         public override Task<CryptoResponse<CryptoOrder>> BuyCoinAsync(CryptoOrder cryptoOrder)

@@ -60,6 +60,12 @@ namespace CryBot.Core.Storage
             return WriteStateAsync();
         }
 
+        public Task SetBudgetAsync(Budget budget)
+        {
+            State.Budget = budget;
+            return WriteStateAsync();
+        }
+
         public Task<bool> IsInitialized()
         {
             return Task.FromResult(State.Trades != null && State.Trades.Count > 0);

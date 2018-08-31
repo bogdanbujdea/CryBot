@@ -40,7 +40,7 @@ namespace CryBot.Core.Trader
                 {
                     var traderGrain = _clusterClient.GetGrain<ITraderGrain>(market);
                     await traderGrain.SetMarketAsync(market);
-                    if (await traderGrain.IsInitialized())
+                    //if (await traderGrain.IsInitialized())
                         traderStates.Add(await traderGrain.GetTraderData());
                 }
 

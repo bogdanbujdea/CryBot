@@ -42,19 +42,16 @@ namespace CryBot.Core.Trader.Backtesting
                 _candles = (await _fakeBittrexApi.GetCandlesAsync((_market), TickInterval.OneMinute)).Content;
             else _candles = candlesContent;
             var firstOrderBuyLowerRange = new List<decimal> { -1, 0 };
-            var buyLowerRange = new List<decimal> { -3, -2, -1, -0.5M, 0 };
+            var buyLowerRange = new List<decimal> { -3, -2, -1, -0.5M };
             var minimumTakeProfitRange = new List<decimal> { 0, 0.5M, 1 };
             var highStopLossRange = new List<decimal> { -10, -5, -1 };
-            var stopLossRange = new List<decimal> { -6, -4, -2, -1 };
-            var buyTriggerRange = new List<decimal> { -4, -2, -1, -0.5M };
+            var stopLossRange = new List<decimal> { -25, -6, -4, -2 };
+            var buyTriggerRange = new List<decimal> { -4, -2, -1 };
             var expirationRange = new List<TimeSpan>
             {
-                TimeSpan.FromMinutes(1),
                 TimeSpan.FromHours(1),
                 TimeSpan.FromHours(24)
             };
-            var bestSettings = TraderSettings.Default;
-
             var it = 0;
             var total = 0;
             var bestProfit = -1000M;

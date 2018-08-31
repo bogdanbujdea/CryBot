@@ -43,7 +43,7 @@ namespace CryBot.Core.Trader
             _coinTrader.PriceUpdated
                 .Select(ticker => Observable.FromAsync(token => PriceUpdated(ticker)))
                 .Concat()
-                .Subscribe();
+                .Subscribe(unit => { }, OnCompleted);
             _coinTrader.TradeUpdated
                 .Select(ticker => Observable.FromAsync(token => UpdateTrade(ticker)))
                 .Concat()
@@ -77,14 +77,16 @@ namespace CryBot.Core.Trader
             Console.WriteLine($"Downloaded candles for {Market}");
             var results = await _backTester.FindBestSettings(Market);
             Console.WriteLine($"Best settings for {Market} are {results[0].Settings} with a profit of {results[0].Budget.Profit}%");
-            return;
             Strategy.Settings = results[0].Settings;
             if (TraderState.Trades.Count == 0)
             {
                 TraderState.Trades.Add(new Trade { Status = TradeStatus.Empty });
             }
+
+            _coinTrader.IsInTestMode = IsInTestMode;
             _coinTrader.Initialize(TraderState);
-            await UpdateOrders();
+            CanUpdate = true;
+            //await UpdateOrders();
         }
 
         public async Task<Unit> UpdateOrder(CryptoOrder cryptoOrder)
@@ -106,6 +108,7 @@ namespace CryBot.Core.Trader
 
         private async Task<Unit> PriceUpdated(Ticker ticker)
         {
+            Ticker = ticker;
             if (!IsInTestMode)
             {
                 await _traderGrain.UpdateTrades(TraderState.Trades);
@@ -151,19 +154,26 @@ namespace CryBot.Core.Trader
         private async void OnCompleted()
         {
             TraderState.Budget.Profit = TraderState.Trades.Sum(t => t.Profit);
-            foreach (var trade in TraderState.Trades)
+            if (CanUpdate)
             {
-                Console.WriteLine($"{TraderState.Trades.IndexOf(trade)}\t{trade.Status}\t{trade.Profit}");
+                foreach (var trade in TraderState.Trades)
+                {
+                    Console.WriteLine($"{TraderState.Trades.IndexOf(trade)}\t{trade.Status}\t{trade.Profit}");
+                }
+                Console.WriteLine($"Profit: {TraderState.Budget.Profit}");
+                Console.WriteLine($"Available: {TraderState.Budget.Available}");
+                Console.WriteLine($"Invested: {TraderState.Budget.Invested}");
+                Console.WriteLine($"Earned: {TraderState.Budget.Earned}");
+                await _traderGrain.UpdateTrades(TraderState.Trades);
+                await _hubNotifier.UpdateTicker(Ticker);
+                await _traderGrain.UpdatePriceAsync(Ticker);
+                await _traderGrain.SetBudgetAsync(TraderState.Budget);
+                await _hubNotifier.UpdateTrader(await _traderGrain.GetTraderData());
             }
-            Console.WriteLine($"Profit: {TraderState.Budget.Profit}");
-            Console.WriteLine($"Available: {TraderState.Budget.Available}");
-            Console.WriteLine($"Invested: {TraderState.Budget.Invested}");
-            Console.WriteLine($"Earned: {TraderState.Budget.Earned}");
-            await _traderGrain.UpdateTrades(TraderState.Trades);
-            await _hubNotifier.UpdateTicker(Ticker);
-            await _hubNotifier.UpdateTrader(await _traderGrain.GetTraderData());
             _taskCompletionSource.SetResult(TraderState.Budget);
         }
+
+        public bool CanUpdate { get; set; }
 
         private async Task<Unit> UpdateTrade(Trade trade)
         {

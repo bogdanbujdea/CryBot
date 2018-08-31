@@ -22,7 +22,11 @@ namespace CryBot.Core.Storage
         Task<TraderState> GetTraderData();
 
         Task UpdateTrades(List<Trade> trades);
+
         Task SetMarketAsync(string market);
+
+        Task SetBudgetAsync(Budget budget);
+
         Task<bool> IsInitialized();
     }
 }

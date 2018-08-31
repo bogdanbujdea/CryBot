@@ -216,10 +216,6 @@ namespace CryBot.Core.Trader
                     var buyOrder = await CreateBuyOrder(tradeAction.OrderPricePerUnit);
                     if (tradeAction.Reason == TradeReason.BuyTrigger)
                     {
-                        if (tradeAction.OrderPricePerUnit == 0.0020237M)
-                        {
-
-                        }
                         var newTrade = new Trade { BuyOrder = buyOrder, Status = TradeStatus.Buying };
                         return newTrade;
                     }

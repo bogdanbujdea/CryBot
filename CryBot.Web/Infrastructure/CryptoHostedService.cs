@@ -24,7 +24,7 @@ namespace CryBot.Web.Infrastructure
         private readonly IOptions<EnvironmentConfig> _options;
         private readonly IPushManager _pushManager;
         private readonly IBackTester _backTester;
-        private readonly ICryptoApi _cryptoApi;
+        private ICryptoApi _cryptoApi;
         private readonly IClusterClient _clusterClient;
         private readonly ITradersManager _tradersManager;
 
@@ -40,7 +40,6 @@ namespace CryBot.Web.Infrastructure
             _clusterClient = clusterClient;
             _tradersManager = tradersManager;
             _hubNotifier = new HubNotifier(hubContext);
-            Console.WriteLine($"Bittrex api key {options.Value.BittrexApiKey}");
             _cryptoApi.Initialize(options.Value.BittrexApiKey, options.Value.BittrexApiSecret, options.Value.TestMode, true);
         }
 
@@ -49,7 +48,7 @@ namespace CryBot.Web.Infrastructure
             _cancellationTokenSource = new CancellationTokenSource();
 
             _cryptoApi.IsInTestMode = _options.Value.TestMode;
-            if (_options.Value.TestMode)
+            /*if (_options.Value.TestMode)
             {
                 var market = "BTC-ETC";
                 try
@@ -66,7 +65,7 @@ namespace CryBot.Web.Infrastructure
                 await coinTrader.StartAsync();
                 await Task.Run(() => _cryptoApi.SendMarketUpdates(market), cancellationToken);
                 return;
-            }
+            }*/
 
             await StartTrading();
         }
@@ -77,9 +76,13 @@ namespace CryBot.Web.Infrastructure
             var traderStates = await _tradersManager.GetAllTraders();
             foreach (var market in traderStates.Select(t => t.Market))
             {
-                var coinTrader = new LiveTrader(_clusterClient, _hubNotifier, _pushManager, new CoinTrader(_cryptoApi), _backTester);
-                coinTrader.Initialize(market);
-                await coinTrader.StartAsync();
+                var cryptoApi = new FakeBittrexApi(_options.Value.BittrexApiKey, _options.Value.BittrexApiSecret);
+                cryptoApi.IsInTestMode = true;
+                var liveTrader = new LiveTrader(_clusterClient, _hubNotifier, _pushManager, new CoinTrader(cryptoApi), _backTester);
+                liveTrader.IsInTestMode = true;
+                liveTrader.Initialize(market);
+                await liveTrader.StartAsync();
+                Task.Run(() => cryptoApi.SendMarketUpdates(market));
             }
 
             Console.WriteLine("Finished loading");
