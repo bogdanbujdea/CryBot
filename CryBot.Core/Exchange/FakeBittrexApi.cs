@@ -1,15 +1,12 @@
-﻿using Bittrex.Net.Objects;
-using Bittrex.Net.Interfaces;
-
+﻿using Bittrex.Net.Interfaces;
+using Bittrex.Net.Objects;
 using CryBot.Core.Exchange.Models;
-
 using Newtonsoft.Json;
-
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 
 namespace CryBot.Core.Exchange
 {
@@ -22,7 +19,7 @@ namespace CryBot.Core.Exchange
         {
         }
 
-        public FakeBittrexApi(string apiKey, string apiSecret): base(null)
+        public FakeBittrexApi(string apiKey, string apiSecret) : base(null)
         {
             Initialize(apiKey, apiSecret, true);
         }
@@ -43,12 +40,14 @@ namespace CryBot.Core.Exchange
         {
             try
             {
+                var candlesDirectory = Directory.CreateDirectory("candles");
                 var fileName = $"{market}.json";
-                if (File.Exists(fileName) == false)
+                var filePath = Path.Combine(candlesDirectory.FullName, fileName);
+                if (File.Exists(filePath) == false)
                 {
                     var candleResponse = await base.GetCandlesAsync(market, interval);
-                    File.WriteAllText(fileName, JsonConvert.SerializeObject(candleResponse.Content));
-                    Candles = candleResponse.Content;                
+                    File.WriteAllText(filePath, JsonConvert.SerializeObject(candleResponse.Content));
+                    Candles = candleResponse.Content;
                 }
                 else
                 {

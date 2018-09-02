@@ -268,3 +268,5 @@ CryBot\.Backtester/Properties/Resources\.resx
 CryBot\.Backtesting/Resource\.resx
 
 CryBot\.Backtesting/Resource\.Designer\.cs
+
+CryBot\.Web/candles/
