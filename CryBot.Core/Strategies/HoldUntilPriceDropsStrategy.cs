@@ -1,4 +1,3 @@
-using System;
 using CryBot.Core.Trader;
 using CryBot.Core.Infrastructure;
 using CryBot.Core.Exchange.Models;

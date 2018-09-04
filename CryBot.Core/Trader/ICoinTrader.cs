@@ -1,4 +1,5 @@
-﻿using CryBot.Core.Storage;
+﻿using System.Collections.Generic;
+using CryBot.Core.Storage;
 using CryBot.Core.Strategies;
 using CryBot.Core.Exchange.Models;
 
@@ -17,6 +18,7 @@ namespace CryBot.Core.Trader
         Ticker Ticker { get; set; }
         ITradingStrategy Strategy { get; set; }
         bool IsInTestMode { get; set; }
+        List<Candle> Candles { get; set; }
         Task<Unit> UpdatePrice(Ticker ticker);
         Task<Unit> UpdateOrder(CryptoOrder cryptoOrder);
         Task<Budget> FinishTest();

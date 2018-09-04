@@ -78,7 +78,7 @@ namespace CryBot.Web.Infrastructure
             {
                 var cryptoApi = new FakeBittrexApi(_options.Value.BittrexApiKey, _options.Value.BittrexApiSecret);
                 cryptoApi.IsInTestMode = true;
-                var liveTrader = new LiveTrader(_clusterClient, _hubNotifier, _pushManager, new CoinTrader(cryptoApi), _backTester);
+                var liveTrader = new LiveTrader(_clusterClient, _hubNotifier, _pushManager, new CoinTrader(cryptoApi), cryptoApi);
                 liveTrader.IsInTestMode = true;
                 liveTrader.Initialize(market);
                 await liveTrader.StartAsync();

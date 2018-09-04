@@ -69,7 +69,7 @@ namespace CryBot.Core.Exchange
         {
             if (IsInTestMode)
             {
-                if (Candles == null)
+                if (Candles == null || Candles[0].Interval != TickInterval.OneMinute)
                 {
                     await GetCandlesAsync(market, TickInterval.OneMinute);
                 }

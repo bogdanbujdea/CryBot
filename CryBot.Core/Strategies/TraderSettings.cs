@@ -25,12 +25,12 @@ namespace CryBot.Core.Strategies
             //FBLP: -1| BLP: -2| MTP: 0| HSL: -10| SL: -2| BT: -4| ET: 1.00:00:00
             //{BLP: 0| MTP: 0| HSL: -5| SL: -4| BT: -2| ET: 1.00:00:00}
             FirstBuyLowerPercentage = -1M,
-            BuyLowerPercentage = -1M,
+            BuyLowerPercentage = 0M,
             TradingBudget = 0.0012M,
             MinimumTakeProfit = 0.5M,
-            HighStopLossPercentage = -1M,
-            StopLoss = -6,
-            BuyTrigger = -4M,
+            HighStopLossPercentage = -5M,
+            StopLoss = -4,
+            BuyTrigger = -2M,
             ExpirationTime = TimeSpan.FromHours(24)
         };
 

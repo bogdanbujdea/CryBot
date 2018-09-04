@@ -107,10 +107,10 @@ namespace CryBot.Core.Trader
                             tradeForSellOrder.SellOrder = cryptoOrder;
                             var tradeProfit = tradeForSellOrder.BuyOrder.Price.GetReadablePercentageChange(tradeForSellOrder.SellOrder.Price);
 
-                            /*Console.WriteLine($"Sold {tradeForSellOrder.BuyOrder.Uuid} with profit {tradeProfit} \t\t" +
+                            Console.WriteLine($"Sold {tradeForSellOrder.BuyOrder.Uuid} with profit {tradeProfit} \t\t" +
                                               $" {tradeForSellOrder.BuyReason}: {tradeForSellOrder.BuyOrder.PricePerUnit} " +
                                               $"\t\t {tradeForSellOrder.SellReason}: {tradeForSellOrder.SellOrder.PricePerUnit}");
-*/
+
 
                             TraderState.Budget.Profit += tradeProfit;
                             TraderState.Budget.Earned += tradeForSellOrder.SellOrder.Price - tradeForSellOrder.BuyOrder.Price;
@@ -222,9 +222,10 @@ namespace CryBot.Core.Trader
 
         private async Task<Trade> UpdateTrade(Trade trade)
         {
+            if (TraderState.Trades.Count > 1)
+                Strategy.Settings.FirstBuyLowerPercentage = Strategy.Settings.BuyLowerPercentage;
             var tradeAction = Strategy.CalculateTradeAction(Ticker, trade);
-            var hourlyCandlesUntilNow = Candles.TakeWhile(t => t.Timestamp <= Ticker.Timestamp).ToList();
-            var emaAdvice = new EmaCross().Forecast(hourlyCandlesUntilNow);
+            var emaAdvice = GetEmaAdvice();
             if (emaAdvice == TradeAdvice.Buy)
             {
                 tradeAction.TradeAdvice = TradeAdvice.Buy;
@@ -236,19 +237,19 @@ namespace CryBot.Core.Trader
                 case TradeAdvice.Buy:
                     if (emaAdvice == TradeAdvice.Sell)
                         break;
-                    trade.BuyReason = tradeAction.Reason;
                     var buyOrder = await CreateBuyOrder(tradeAction.OrderPricePerUnit);
                     if (tradeAction.Reason == TradeReason.BuyTrigger)
                     {
-                        var newTrade = new Trade { BuyOrder = buyOrder, Status = TradeStatus.Buying };
+                        var newTrade = new Trade { BuyOrder = buyOrder, Status = TradeStatus.Buying, BuyReason = tradeAction.Reason};
                         return newTrade;
                     }
+                    trade.BuyReason = tradeAction.Reason;
                     trade.BuyOrder = buyOrder;
                     trade.Status = TradeStatus.Buying;
                     break;
                 case TradeAdvice.Sell:
-                    /*if (emaAdvice != TradeAdvice.Sell && tradeAction.Reason == TradeReason.StopLoss)
-                        break;*/
+                    if (emaAdvice != TradeAdvice.Sell && tradeAction.Reason == TradeReason.StopLoss)
+                        break;
                     if (tradeAction.Reason == TradeReason.TakeProfit && emaAdvice == TradeAdvice.Buy)
                     {
                         return Trade.Empty;
@@ -260,6 +261,7 @@ namespace CryBot.Core.Trader
                     var cancelResponse = await _cryptoApi.CancelOrder(trade.BuyOrder.Uuid);
                     if (cancelResponse.IsSuccessful)
                     {
+                        Strategy.Settings.BuyLowerPercentage = 0;
                         TraderState.Budget.Available += trade.BuyOrder.Price;
                         trade.Status = TradeStatus.Canceled;
                     }
@@ -267,6 +269,15 @@ namespace CryBot.Core.Trader
             }
             TradeUpdated.OnNext(trade);
             return Trade.Empty;
+        }
+
+        private TradeAdvice GetEmaAdvice()
+        {
+            var hourlyCandlesUntilNow = Candles.TakeWhile(t => t.Timestamp <= Ticker.Timestamp).ToList();
+            if (hourlyCandlesUntilNow.Count < 36)
+                return TradeAdvice.Hold;
+            var emaAdvice = new EmaCross().Forecast(hourlyCandlesUntilNow);
+            return emaAdvice;
         }
 
         private async Task CreateSellOrder(Trade trade, decimal pricePerUnit)
@@ -326,7 +337,7 @@ namespace CryBot.Core.Trader
 
         private void Log(string text)
         {
-            //Console.WriteLine(text);
+            Console.WriteLine(text);
         }
     }
 }

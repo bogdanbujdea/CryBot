@@ -155,7 +155,8 @@ namespace CryBot.Core.Exchange
                 High = c.High,
                 Open = c.Open,
                 Close = c.Close,
-                Volume = c.BaseVolume
+                Volume = c.Volume,
+                Interval = interval
             }).ToList();
             return new CryptoResponse<List<Candle>>(candles);
         }
@@ -197,19 +198,6 @@ namespace CryBot.Core.Exchange
 
         protected void OnMarketsUpdate(List<BittrexStreamMarketSummary> markets)
         {
-            var tickers = markets.Select(m => new Ticker
-            {
-                Last = m.Last.GetValueOrDefault(),
-                Ask = m.Ask,
-                Bid = m.Bid,
-                Market = m.MarketName,
-                BaseVolume = m.BaseVolume.GetValueOrDefault()
-            });
-
-            foreach (var ticker in tickers)
-            {
-                TickerUpdated.OnNext(ticker);
-            }
         }
 
         protected void OnOrderUpdate(BittrexStreamOrderData bittrexOrder)

@@ -1,9 +1,10 @@
-﻿using CryBot.Core.Storage;
+﻿using Bittrex.Net.Objects;
+
+using CryBot.Core.Storage;
 using CryBot.Core.Exchange;
 using CryBot.Core.Strategies;
 using CryBot.Core.Notifications;
 using CryBot.Core.Exchange.Models;
-using CryBot.Core.Trader.Backtesting;
 
 using Orleans;
 
@@ -22,18 +23,17 @@ namespace CryBot.Core.Trader
         private readonly IHubNotifier _hubNotifier;
         private readonly IPushManager _pushManager;
         private readonly ICoinTrader _coinTrader;
-        private readonly IBackTester _backTester;
         private readonly ICryptoApi _cryptoApi;
         private ITraderGrain _traderGrain;
         private readonly TaskCompletionSource<Budget> _taskCompletionSource;
 
-        public LiveTrader(IClusterClient orleansClient, IHubNotifier hubNotifier, IPushManager pushManager, ICoinTrader coinTrader, IBackTester backTester)
+        public LiveTrader(IClusterClient orleansClient, IHubNotifier hubNotifier, IPushManager pushManager, ICoinTrader coinTrader, ICryptoApi cryptoApi)
         {
             _orleansClient = orleansClient;
             _hubNotifier = hubNotifier;
             _pushManager = pushManager;
             _coinTrader = coinTrader;
-            _backTester = backTester;
+            _cryptoApi = cryptoApi;
             _taskCompletionSource = new TaskCompletionSource<Budget>();
         }
 
@@ -74,10 +74,12 @@ namespace CryBot.Core.Trader
             TraderState.Trades = TraderState.Trades ?? new List<Trade>();
 
             Strategy.Settings = TraderSettings.Default;
+            var candlesResponse = await _cryptoApi.GetCandlesAsync(Market, TickInterval.OneHour);
+            _coinTrader.Candles = candlesResponse.Content;
             Console.WriteLine($"Downloaded candles for {Market}");
-            var results = await _backTester.FindBestSettings(Market);
-            Console.WriteLine($"Best settings for {Market} are {results[0].Settings} with a profit of {results[0].Budget.Profit}%");
-            Strategy.Settings = results[0].Settings;
+            //var results = await _backTester.FindBestSettings(Market);
+            //Console.WriteLine($"Best settings for {Market} are {results[0].Settings} with a profit of {results[0].Budget.Profit}%");
+            //Strategy.Settings = results[0].Settings;
             if (TraderState.Trades.Count == 0)
             {
                 TraderState.Trades.Add(new Trade { Status = TradeStatus.Empty });
@@ -105,6 +107,8 @@ namespace CryBot.Core.Trader
         {
             return _taskCompletionSource.Task;
         }
+
+        public bool CanUpdate { get; set; }
 
         private async Task<Unit> PriceUpdated(Ticker ticker)
         {
@@ -172,8 +176,6 @@ namespace CryBot.Core.Trader
             }
             _taskCompletionSource.SetResult(TraderState.Budget);
         }
-
-        public bool CanUpdate { get; set; }
 
         private async Task<Unit> UpdateTrade(Trade trade)
         {

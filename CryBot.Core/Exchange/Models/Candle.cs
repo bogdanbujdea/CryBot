@@ -1,4 +1,5 @@
 ﻿using System;
+using Bittrex.Net.Objects;
 
 namespace CryBot.Core.Exchange.Models
 {
@@ -17,5 +18,7 @@ namespace CryBot.Core.Exchange.Models
         public decimal Close { get; set; }
 
         public decimal Volume { get; set; }
+        
+        public TickInterval Interval { get; set; }
     }
 }
