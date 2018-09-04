@@ -14,6 +14,7 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using CryBot.Core.Infrastructure;
 
 namespace CryBot.Core.Trader
 {
@@ -26,6 +27,7 @@ namespace CryBot.Core.Trader
         private readonly ICryptoApi _cryptoApi;
         private ITraderGrain _traderGrain;
         private readonly TaskCompletionSource<Budget> _taskCompletionSource;
+        private DateTime _lastCandleUpdateTime;
 
         public LiveTrader(IClusterClient orleansClient, IHubNotifier hubNotifier, IPushManager pushManager, ICoinTrader coinTrader, ICryptoApi cryptoApi)
         {
@@ -74,12 +76,10 @@ namespace CryBot.Core.Trader
             TraderState.Trades = TraderState.Trades ?? new List<Trade>();
 
             Strategy.Settings = TraderSettings.Default;
+            _lastCandleUpdateTime = DateTime.UtcNow;
             var candlesResponse = await _cryptoApi.GetCandlesAsync(Market, TickInterval.OneHour);
             _coinTrader.Candles = candlesResponse.Content;
             Console.WriteLine($"Downloaded candles for {Market}");
-            //var results = await _backTester.FindBestSettings(Market);
-            //Console.WriteLine($"Best settings for {Market} are {results[0].Settings} with a profit of {results[0].Budget.Profit}%");
-            //Strategy.Settings = results[0].Settings;
             if (TraderState.Trades.Count == 0)
             {
                 TraderState.Trades.Add(new Trade { Status = TradeStatus.Empty });
@@ -113,6 +113,12 @@ namespace CryBot.Core.Trader
         private async Task<Unit> PriceUpdated(Ticker ticker)
         {
             Ticker = ticker;
+            if (_lastCandleUpdateTime.Expired(TimeSpan.FromMinutes(30), DateTime.UtcNow))
+            {
+                _lastCandleUpdateTime = DateTime.UtcNow;
+                var candlesResponse = await _cryptoApi.GetCandlesAsync(Market, TickInterval.OneHour);
+                _coinTrader.Candles = candlesResponse.Content;
+            }
             if (!IsInTestMode)
             {
                 await _traderGrain.UpdateTrades(TraderState.Trades);

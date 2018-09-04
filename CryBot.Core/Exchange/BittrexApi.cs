@@ -12,7 +12,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Reactive.Subjects;
 using System.Collections.Generic;
-using CryptoExchange.Net;
 
 namespace CryBot.Core.Exchange
 {
@@ -140,7 +139,7 @@ namespace CryBot.Core.Exchange
             var marketsCallResult = await _bittrexClient.GetMarketsAsync();
             return new CryptoResponse<List<Market>>(marketsCallResult.Data.Select(m => new Market
             {
-                Name = m.MarketName                
+                Name = m.MarketName
             }).ToList());
         }
 
@@ -155,7 +154,7 @@ namespace CryBot.Core.Exchange
                 High = c.High,
                 Open = c.Open,
                 Close = c.Close,
-                Volume = c.Volume,
+                Volume = c.BaseVolume,
                 Interval = interval
             }).ToList();
             return new CryptoResponse<List<Candle>>(candles);
@@ -198,6 +197,19 @@ namespace CryBot.Core.Exchange
 
         protected void OnMarketsUpdate(List<BittrexStreamMarketSummary> markets)
         {
+            var tickers = markets.Select(m => new Ticker
+            {
+                Last = m.Last.GetValueOrDefault(),
+                Ask = m.Ask,
+                Bid = m.Bid,
+                Market = m.MarketName,
+                BaseVolume = m.BaseVolume.GetValueOrDefault()
+            });
+
+            foreach (var ticker in tickers)
+            {
+                TickerUpdated.OnNext(ticker);
+            }
         }
 
         protected void OnOrderUpdate(BittrexStreamOrderData bittrexOrder)

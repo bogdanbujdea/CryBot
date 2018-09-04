@@ -23,7 +23,6 @@ namespace CryBot.Web.Infrastructure
     {
         private readonly IOptions<EnvironmentConfig> _options;
         private readonly IPushManager _pushManager;
-        private readonly IBackTester _backTester;
         private ICryptoApi _cryptoApi;
         private readonly IClusterClient _clusterClient;
         private readonly ITradersManager _tradersManager;
@@ -31,11 +30,10 @@ namespace CryBot.Web.Infrastructure
         private CancellationTokenSource _cancellationTokenSource;
         private readonly HubNotifier _hubNotifier;
 
-        public CryptoHostedService(IOptions<EnvironmentConfig> options, IPushManager pushManager, IBackTester backTester, ICryptoApi cryptoApi, IClusterClient clusterClient, IHubContext<ApplicationHub> hubContext, ITradersManager tradersManager)
+        public CryptoHostedService(IOptions<EnvironmentConfig> options, IPushManager pushManager, ICryptoApi cryptoApi, IClusterClient clusterClient, IHubContext<ApplicationHub> hubContext, ITradersManager tradersManager)
         {
             _options = options;
             _pushManager = pushManager;
-            _backTester = backTester;
             _cryptoApi = cryptoApi;
             _clusterClient = clusterClient;
             _tradersManager = tradersManager;
@@ -66,11 +64,28 @@ namespace CryBot.Web.Infrastructure
                 await Task.Run(() => _cryptoApi.SendMarketUpdates(market), cancellationToken);
                 return;
             }*/
-
-            await StartTrading();
+            if (_options.Value.TestMode)
+                await StartTradingInTestMode();
+            else
+                await StartTradingInProductionMode();
         }
 
-        public async Task StartTrading()
+        private async Task StartTradingInProductionMode()
+        {
+            await _pushManager.TriggerPush(PushMessage.FromMessage("Started trading"));
+            var traderStates = await _tradersManager.GetAllTraders();
+            foreach (var market in traderStates.Select(t => t.Market))
+            {
+                var liveTrader = new LiveTrader(_clusterClient, _hubNotifier, _pushManager, new CoinTrader(_cryptoApi), _cryptoApi);
+                liveTrader.IsInTestMode = false;
+                liveTrader.Initialize(market);
+                await liveTrader.StartAsync();
+            }
+
+            Console.WriteLine("Finished loading");
+        }
+
+        public async Task StartTradingInTestMode()
         {
             await _pushManager.TriggerPush(PushMessage.FromMessage("Started trading"));
             var traderStates = await _tradersManager.GetAllTraders();

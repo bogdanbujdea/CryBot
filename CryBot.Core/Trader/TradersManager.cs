@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CryBot.Core.Trader.Backtesting;
 
 namespace CryBot.Core.Trader
 {
@@ -15,16 +14,14 @@ namespace CryBot.Core.Trader
     {
         private readonly ICryptoApi _cryptoApi;
         private readonly ITradersRepository _tradersRepository;
-        private readonly IBackTester _backTester;
         private readonly IClusterClient _clusterClient;
         private readonly IHubNotifier _hubNotifier;
         private readonly IPushManager _pushManager;
 
-        public TradersManager(ICryptoApi cryptoApi, ITradersRepository tradersRepository, IBackTester backTester, IClusterClient clusterClient, IHubNotifier hubNotifier, IPushManager pushManager)
+        public TradersManager(ICryptoApi cryptoApi, ITradersRepository tradersRepository, IClusterClient clusterClient, IHubNotifier hubNotifier, IPushManager pushManager)
         {
             _cryptoApi = cryptoApi;
             _tradersRepository = tradersRepository;
-            _backTester = backTester;
             _clusterClient = clusterClient;
             _hubNotifier = hubNotifier;
             _pushManager = pushManager;
@@ -40,8 +37,7 @@ namespace CryBot.Core.Trader
                 {
                     var traderGrain = _clusterClient.GetGrain<ITraderGrain>(market);
                     await traderGrain.SetMarketAsync(market);
-                    //if (await traderGrain.IsInitialized())
-                        traderStates.Add(await traderGrain.GetTraderData());
+                    traderStates.Add(await traderGrain.GetTraderData());
                 }
 
                 return traderStates;
