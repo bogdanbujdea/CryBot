@@ -22,6 +22,7 @@ namespace CryBot.Core.Trader.Backtesting
         private readonly FakeBittrexApi _fakeBittrexApi;
         private string _market;
         private List<Candle> _candles;
+        private List<Candle> _hourlyCandles;
 
         public BackTester(IOptions<EnvironmentConfig> config): this(config.Value.BittrexApiKey, config.Value.BittrexApiSecret)
         {
@@ -38,9 +39,12 @@ namespace CryBot.Core.Trader.Backtesting
         public async Task<List<BackTestResult>> FindBestSettings(string market, List<Candle> candlesContent = null)
         {
             _market = market;
+            var candlesResponse = await _fakeBittrexApi.GetCandlesAsync(_market, TickInterval.OneHour);
+            _hourlyCandles = candlesResponse.Content;
             if (candlesContent == null)
                 _candles = (await _fakeBittrexApi.GetCandlesAsync((_market), TickInterval.OneMinute)).Content;
             else _candles = candlesContent;
+            
             var firstOrderBuyLowerRange = new List<decimal> { -1, 0 };
             var buyLowerRange = new List<decimal> { -3, -2, -1, -0.5M };
             var minimumTakeProfitRange = new List<decimal> { 0, 0.5M, 1 };
@@ -95,11 +99,12 @@ namespace CryBot.Core.Trader.Backtesting
             }
             int oldPercentage = -1;
             var results = new List<BackTestResult>();
-            Parallel.ForEach(strategies, (strategy) =>
+            Parallel.ForEach(strategies.Take(1), (strategy) =>
             {
                 try
                 {
                     it++;
+                    strategy.Settings = TraderSettings.Default;
                     var coinTrader = RunHistoryData(strategy).Result;
                     var budget = coinTrader.FinishTest().Result;
                     var backTestResult = new BackTestResult
@@ -164,6 +169,7 @@ namespace CryBot.Core.Trader.Backtesting
                 IsInTestMode = true
             };
             _fakeBittrexApi.IsInTestMode = true;
+            coinTrader.Candles = _hourlyCandles;
             coinTrader.Initialize(new TraderState
             {
                 Market = _market

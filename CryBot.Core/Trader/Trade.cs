@@ -24,5 +24,9 @@ namespace CryBot.Core.Trader
         public TradeStatus Status { get; set; }
 
         public static Trade Empty { get; set; } = new Trade();
+
+        public TradeReason BuyReason { get; set; }
+
+        public TradeReason SellReason { get; set; }
     }
 }

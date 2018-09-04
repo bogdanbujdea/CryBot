@@ -106,6 +106,12 @@ namespace CryBot.Core.Trader
                             }
                             tradeForSellOrder.SellOrder = cryptoOrder;
                             var tradeProfit = tradeForSellOrder.BuyOrder.Price.GetReadablePercentageChange(tradeForSellOrder.SellOrder.Price);
+
+                            /*Console.WriteLine($"Sold {tradeForSellOrder.BuyOrder.Uuid} with profit {tradeProfit} \t\t" +
+                                              $" {tradeForSellOrder.BuyReason}: {tradeForSellOrder.BuyOrder.PricePerUnit} " +
+                                              $"\t\t {tradeForSellOrder.SellReason}: {tradeForSellOrder.SellOrder.PricePerUnit}");
+*/
+
                             TraderState.Budget.Profit += tradeProfit;
                             TraderState.Budget.Earned += tradeForSellOrder.SellOrder.Price - tradeForSellOrder.BuyOrder.Price;
                             tradeForSellOrder.Profit = tradeProfit;
@@ -155,12 +161,20 @@ namespace CryBot.Core.Trader
 
         public ISubject<Trade> TradeUpdated { get; }
 
+        public List<Candle> Candles { get; set; }
+
         private void OnCompleted()
         {
             TraderState.Budget.Profit = TraderState.Trades.Sum(t => t.Profit);
-            foreach (var trade in TraderState.Trades)
+            foreach (var trade in TraderState.Trades.OrderByDescending(t => t.Profit))
             {
-                Log($"{TraderState.Trades.IndexOf(trade)}\t{trade.Status}\t{trade.Profit}\t{trade.BuyOrder.PricePerUnit}\t{trade.SellOrder.PricePerUnit}");
+                Log($"{TraderState.Trades.IndexOf(trade)}" +
+                    $"\t{trade.Status}" +
+                    $"\t{trade.Profit}" +
+                    $"\t{trade.BuyReason}" +
+                    $"\t{trade.BuyOrder.PricePerUnit}" +
+                    $"\t{trade.SellReason}" +
+                    $"\t{trade.SellOrder.PricePerUnit}");
             }
             Log($"Profit: {TraderState.Budget.Profit}");
             Log($"Available: {TraderState.Budget.Available}");
@@ -173,7 +187,6 @@ namespace CryBot.Core.Trader
         private async Task UpdateTrades()
         {
             List<Trade> newTrades = new List<Trade>();
-
             AddNewTradeIfNecessary();
             var openedTrades = TraderState.Trades.Where(t => t.Status != TradeStatus.Completed).ToList();
             for (var index = 0; index < openedTrades.Count; index++)
@@ -210,9 +223,20 @@ namespace CryBot.Core.Trader
         private async Task<Trade> UpdateTrade(Trade trade)
         {
             var tradeAction = Strategy.CalculateTradeAction(Ticker, trade);
+            var hourlyCandlesUntilNow = Candles.TakeWhile(t => t.Timestamp <= Ticker.Timestamp).ToList();
+            var emaAdvice = new EmaCross().Forecast(hourlyCandlesUntilNow);
+            if (emaAdvice == TradeAdvice.Buy)
+            {
+                tradeAction.TradeAdvice = TradeAdvice.Buy;
+                tradeAction.Reason = TradeReason.EmaBuy;
+                tradeAction.OrderPricePerUnit = Ticker.Bid;
+            }
             switch (tradeAction.TradeAdvice)
             {
                 case TradeAdvice.Buy:
+                    if (emaAdvice == TradeAdvice.Sell)
+                        break;
+                    trade.BuyReason = tradeAction.Reason;
                     var buyOrder = await CreateBuyOrder(tradeAction.OrderPricePerUnit);
                     if (tradeAction.Reason == TradeReason.BuyTrigger)
                     {
@@ -223,6 +247,13 @@ namespace CryBot.Core.Trader
                     trade.Status = TradeStatus.Buying;
                     break;
                 case TradeAdvice.Sell:
+                    /*if (emaAdvice != TradeAdvice.Sell && tradeAction.Reason == TradeReason.StopLoss)
+                        break;*/
+                    if (tradeAction.Reason == TradeReason.TakeProfit && emaAdvice == TradeAdvice.Buy)
+                    {
+                        return Trade.Empty;
+                    }
+                    trade.SellReason = tradeAction.Reason;
                     await CreateSellOrder(trade, tradeAction.OrderPricePerUnit);
                     return Trade.Empty;
                 case TradeAdvice.Cancel:

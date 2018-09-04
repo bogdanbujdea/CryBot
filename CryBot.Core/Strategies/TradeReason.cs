@@ -7,6 +7,7 @@
         TakeProfit,
         BuyTrigger,
         ExpiredBuyOrder,
-        FirstTrade
+        FirstTrade,
+        EmaBuy
     }
 }

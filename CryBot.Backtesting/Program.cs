@@ -12,10 +12,11 @@ namespace CryBot.Backtesting
         static async Task Main(string[] args)
         {
             var backtester = new BackTester(Resource.BittrexApiKey, Resource.BittrexApiSecret);
-            var market = "BTC-ETC";
+            var market = "BTC-ADA";
             var marketResults = await backtester.FindBestSettings(market);
             var bestResult = marketResults[0];
             Console.WriteLine($"{market}\t{bestResult.Budget.Profit}%\t{bestResult.Settings}");
+
         }
 
         private static async Task FindBestCommonSettings(BackTester backtester)

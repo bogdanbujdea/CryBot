@@ -1,12 +1,15 @@
-﻿using Bittrex.Net.Interfaces;
-using Bittrex.Net.Objects;
+﻿using Bittrex.Net.Objects;
+using Bittrex.Net.Interfaces;
+
 using CryBot.Core.Exchange.Models;
+
 using Newtonsoft.Json;
+
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace CryBot.Core.Exchange
 {
@@ -41,7 +44,7 @@ namespace CryBot.Core.Exchange
             try
             {
                 var candlesDirectory = Directory.CreateDirectory("candles");
-                var fileName = $"{market}.json";
+                var fileName = $"{market}-{interval}.json";
                 var filePath = Path.Combine(candlesDirectory.FullName, fileName);
                 if (File.Exists(filePath) == false)
                 {
@@ -51,7 +54,7 @@ namespace CryBot.Core.Exchange
                 }
                 else
                 {
-                    var candlesJson = File.ReadAllText(fileName);
+                    var candlesJson = File.ReadAllText(filePath);
                     Candles = JsonConvert.DeserializeObject<List<Candle>>(candlesJson);
                 }
             }
