@@ -1,14 +1,25 @@
-﻿using CryBot.Core.Exchange.Models;
+﻿using CryBot.Core.Infrastructure;
+using CryBot.Core.Exchange.Models;
+
+using Microsoft.Extensions.Options;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
+
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace CryBot.Core.Storage
 {
     public class TradersRepository : ITradersRepository
     {
+        private readonly EnvironmentConfig _config;
+
+        public TradersRepository(IOptions<EnvironmentConfig> options)
+        {
+            _config = options.Value;
+        }
+
         public async Task<CryptoResponse<List<Market>>> GetTradedMarketsAsync()
         {
             try
@@ -41,13 +52,13 @@ namespace CryBot.Core.Storage
             }
         }
 
-        private static async Task<CloudTable> GetTradersTable()
+        private async Task<CloudTable> GetTradersTable()
         {
             CloudStorageAccount storageAccount = CloudStorageAccount.Parse(
                 "DefaultEndpointsProtocol=https;AccountName=crybot;AccountKey=tw+TB3korYKRw5QeHiD16wgy1H1DAKHEswWFuPcjWxnbMqn1OWjolaS0nScbOIfhC/OkCBYHCxBji1Bdq+arsg==;EndpointSuffix=core.windows.net");
             CloudTableClient tableClient = storageAccount.CreateCloudTableClient();
             // Retrieve a reference to the table.
-            CloudTable table = tableClient.GetTableReference("traders");
+            CloudTable table = tableClient.GetTableReference(_config.TradersTable);
 
             // Create the table if it doesn't exist.
             await table.CreateIfNotExistsAsync();

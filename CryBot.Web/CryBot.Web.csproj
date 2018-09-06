@@ -29,10 +29,12 @@
     <None Remove="ClientApp\app\converters\date-format.ts" />
     <None Remove="ClientApp\app\converters\order-format.ts" />
     <None Remove="ClientApp\app\converters\time-ago-format.ts" />
+    <None Remove="ClientApp\app\converters\trade-advice.ts" />
     <None Remove="ClientApp\app\converters\trade-status.ts" />
     <None Remove="ClientApp\app\converters\value-format.ts" />
     <None Remove="ClientApp\app\models\api\Budget.ts" />
     <None Remove="ClientApp\app\models\api\ITradersResponse.ts" />
+    <None Remove="ClientApp\app\models\TradeAdvice.ts" />
     <None Remove="ClientApp\app\models\TradeStatus.ts" />
     <None Remove="ClientApp\pwabuilder-sw.js" />
   </ItemGroup>
@@ -57,11 +59,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <TypeScriptCompile Include="ClientApp\app\converters\trade-advice.ts" />
     <TypeScriptCompile Include="ClientApp\app\converters\value-format.ts" />
     <TypeScriptCompile Include="ClientApp\app\converters\time-ago-format.ts" />
     <TypeScriptCompile Include="ClientApp\app\converters\trade-status.ts" />
     <TypeScriptCompile Include="ClientApp\app\models\api\ITradersResponse.ts" />
     <TypeScriptCompile Include="ClientApp\app\models\api\Budget.ts" />
+    <TypeScriptCompile Include="ClientApp\app\models\TradeAdvice.ts" />
     <TypeScriptCompile Include="ClientApp\app\models\TradeStatus.ts" />
     <TypeScriptCompile Include="ClientApp\app\models\CryptoOrderType.ts" />
     <TypeScriptCompile Include="ClientApp\app\models\api\ITrader.ts" />

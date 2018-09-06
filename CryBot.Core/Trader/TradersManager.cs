@@ -1,12 +1,14 @@
-﻿using CryBot.Core.Exchange;
-using CryBot.Core.Exchange.Models;
+﻿using CryBot.Core.Storage;
+using CryBot.Core.Exchange;
 using CryBot.Core.Notifications;
-using CryBot.Core.Storage;
+using CryBot.Core.Exchange.Models;
+
 using Orleans;
+
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace CryBot.Core.Trader
 {

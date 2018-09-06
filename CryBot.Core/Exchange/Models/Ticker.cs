@@ -1,4 +1,6 @@
-﻿using System;
+﻿using CryBot.Core.Strategies;
+
+using System;
 
 namespace CryBot.Core.Exchange.Models
 {
@@ -17,6 +19,8 @@ namespace CryBot.Core.Exchange.Models
         public string Market { get; set; }
 
         public DateTime Timestamp { get; set; }
+
+        public TradeAdvice LatestEmaAdvice { get; set; }
 
         public static Ticker FromPrice(decimal bid, decimal ask, decimal last, string market)
         {

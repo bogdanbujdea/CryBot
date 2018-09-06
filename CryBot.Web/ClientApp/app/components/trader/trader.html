@@ -4,6 +4,7 @@
     <require from="../../converters/currency-format"></require>
     <require from="../../converters/order-format"></require>
     <require from="../../converters/trade-status"></require>
+    <require from="../../converters/trade-advice"></require>
     <require from="../../converters/value-format"></require>
     <require from="./trader.css"></require>
     <div click.trigger="toggleVisibility()">
@@ -12,6 +13,7 @@
             ${ traderData.currentTicker.bid | currencyFormat }
             <span class="profit"> ${ profit } % </span>
             <span class="profit"> ${ traderData.trades.length } trades </span>
+            <span class="profit"> ${ traderData.currentTicker.latestEmaAdvice | tradeAdvice} </span>
         </p>
     </div>
     <p if.bind="!traderData"><em>Loading trader...</em></p>

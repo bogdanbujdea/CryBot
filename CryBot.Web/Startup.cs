@@ -28,6 +28,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using CryBot.Core.Trader.Backtesting;
+using NLog;
 
 namespace CryBot.Web
 {
@@ -76,6 +77,7 @@ namespace CryBot.Web
         {
             try
             {
+                //Logger logger = LogManager.GetCurrentClassLogger();
                 var fileName = $"../../Logs/bot-trader-{DateTime.UtcNow:yy-MMM-dd ddd h-mm-ss}.txt";
                 loggerFactory.AddFile(fileName);
             }

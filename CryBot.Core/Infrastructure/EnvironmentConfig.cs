@@ -9,6 +9,8 @@
         public string PushPublicKey { get; set; }
 
         public string PushPrivateKey { get; set; }
+        
+        public string TradersTable { get; set; }
 
         public bool TestMode { get; set; }
     }

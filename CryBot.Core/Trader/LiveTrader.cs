@@ -88,7 +88,7 @@ namespace CryBot.Core.Trader
             _coinTrader.IsInTestMode = IsInTestMode;
             _coinTrader.Initialize(TraderState);
             CanUpdate = true;
-            //await UpdateOrders();
+            await UpdateOrders();
         }
 
         public async Task<Unit> UpdateOrder(CryptoOrder cryptoOrder)
@@ -188,13 +188,13 @@ namespace CryBot.Core.Trader
             switch (trade.Status)
             {
                 case TradeStatus.Buying:
-                    await _pushManager.TriggerPush(PushMessage.FromMessage($"Got buy signal for {Market}"));
+                    //await _pushManager.TriggerPush(PushMessage.FromMessage($"Got buy signal for {Market}"));
                     break;
                 case TradeStatus.Selling:
-                    await _pushManager.TriggerPush(PushMessage.FromMessage($"Got sell signal for {Market}"));
+                    //await _pushManager.TriggerPush(PushMessage.FromMessage($"Got sell signal for {Market}"));
                     break;
                 case TradeStatus.Canceled:
-                    await _pushManager.TriggerPush(PushMessage.FromMessage($"Got cancel signal for {Market}"));
+                    //await _pushManager.TriggerPush(PushMessage.FromMessage($"Got cancel signal for {Market}"));
                     break;
             }
 

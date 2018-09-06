@@ -193,6 +193,7 @@ namespace CryBot.Core.Trader
             {
                 var trade = openedTrades[index];
                 var newTrade = await UpdateTrade(trade);
+
                 if (newTrade != Trade.Empty)
                 {
                     newTrades.Add(newTrade);
@@ -232,6 +233,8 @@ namespace CryBot.Core.Trader
                 tradeAction.Reason = TradeReason.EmaBuy;
                 tradeAction.OrderPricePerUnit = Ticker.Bid;
             }
+            Ticker.LatestEmaAdvice = emaAdvice;
+
             switch (tradeAction.TradeAdvice)
             {
                 case TradeAdvice.Buy:

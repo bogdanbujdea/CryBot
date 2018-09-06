@@ -2,6 +2,7 @@
 {
     public enum TradeAdvice
     {
+        None,
         Hold,
         Buy,
         Sell,
