@@ -7,6 +7,7 @@ using CryBot.Core.Exchange;
 using CryBot.Web.Infrastructure;
 using CryBot.Core.Notifications;
 using CryBot.Core.Infrastructure;
+using CryBot.Core.Trader.Backtesting;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,8 +28,6 @@ using System;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using CryBot.Core.Trader.Backtesting;
-using NLog;
 
 namespace CryBot.Web
 {

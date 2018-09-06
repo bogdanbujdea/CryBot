@@ -4,6 +4,7 @@ import { inject } from 'aurelia-framework';
 import { ITrader } from "../../models/api/ITrader";
 import { ITraderResponse } from "../../models/api/ITraderResponse";
 import { Ticker } from '../../models/api/Ticker';
+import { Chart } from "chart.js"
 
 @inject(HttpClient)
 export class Trader {
@@ -11,6 +12,8 @@ export class Trader {
     profit: number = 0;
     market: string = "BTC-ETC";
     visible: boolean = false;
+    chart: Chart;
+    myCanvas: HTMLCanvasElement;
     private connectionPromise?: Promise<void>;
     private chatHubConnection: signalR.HubConnection;
 
@@ -19,6 +22,49 @@ export class Trader {
 
     constructor(http: HttpClient) {
         this.httpClient = http;
+    }
+
+    attached() {
+        
+        let context = <CanvasRenderingContext2D>(this.myCanvas.getContext('2d'));
+        var data = {
+            labels: ["January", "February", "March", "April", "May", "June", "July"],
+            datasets: [
+                {
+                    label: "My First dataset",
+                    fillColor: "rgba(220,220,220,0.2)",
+                    strokeColor: "rgba(220,220,220,1)",
+                    pointColor: "rgba(220,220,220,1)",
+                    pointStrokeColor: "#fff",
+                    pointHighlightFill: "#fff",
+                    pointHighlightStroke: "rgba(220,220,220,1)",
+                    data: [65, 59, 80, 81, 56, 55, 40]
+                },
+                {
+                    label: "My Second dataset",
+                    fillColor: "rgba(151,187,205,0.2)",
+                    strokeColor: "rgba(151,187,205,1)",
+                    pointColor: "rgba(151,187,205,1)",
+                    pointStrokeColor: "#fff",
+                    pointHighlightFill: "#fff",
+                    pointHighlightStroke: "rgba(151,187,205,1)",
+                    data: [28, 48, 40, 19, 86, 27, 90]
+                }
+            ]
+        };
+        let myChart = new Chart(context, {
+            type: 'line',
+            data: data,
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
+                }
+            }
+        });
     }
 
     toggleVisibility() {
@@ -32,7 +78,7 @@ export class Trader {
 
         this.chatHubConnection.on('traderUpdate:' + this.market, (trader: ITrader) => {
             if (trader) {
-                this.traderData = trader;                
+                this.traderData = trader;
                 this.calculateProfit();
             }
         });
@@ -78,4 +124,5 @@ export class Trader {
         });
         this.profit = Math.round(this.profit * 100) / 100;
     }
+
 }

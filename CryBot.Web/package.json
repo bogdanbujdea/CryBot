@@ -33,7 +33,9 @@
   },
   "dependencies": {
     "@aspnet/signalr": "1.0.0",
+    "@types/chart.js": "^2.7.32",
     "@types/es6-promise": "^3.3.0",
+    "chart.js": "^2.7.2",
     "tslib": "^1.9.3"
   }
 }

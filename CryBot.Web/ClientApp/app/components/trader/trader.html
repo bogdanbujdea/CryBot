@@ -7,8 +7,11 @@
     <require from="../../converters/trade-advice"></require>
     <require from="../../converters/value-format"></require>
     <require from="./trader.css"></require>
+    <div style="width: 300px; height: 300px; display: block;">
+        <canvas id="myCanvas" ref="myCanvas" style="width: 300px; height: 300px; display: block;"></canvas>
+    </div>
     <div click.trigger="toggleVisibility()">
-        <p class="trader-name" >${ traderData.market } </p>
+        <p class="trader-name">${ traderData.market } </p>
         <p class="trader-info ${profit | valueFormat}">
             ${ traderData.currentTicker.bid | currencyFormat }
             <span class="profit"> ${ profit } % </span>
@@ -17,28 +20,27 @@
         </p>
     </div>
     <p if.bind="!traderData"><em>Loading trader...</em></p>
-    
     <div show.bind="visible">
-        <table if.bind="traderData.trades" class="table" >
+        <table if.bind="traderData.trades" class="table">
             <thead>
-            <tr>
-                <th>Time</th>
-                <th>Status</th>
-                <th>Buy &#8383;</th>
-                <th>Max Price &#8383;</th>
-                <th>Sell &#8383;</th>
-                <th>Profit%</th>
-            </tr>
+                <tr>
+                    <th>Time</th>
+                    <th>Status</th>
+                    <th>Buy &#8383;</th>
+                    <th>Max Price &#8383;</th>
+                    <th>Sell &#8383;</th>
+                    <th>Profit%</th>
+                </tr>
             </thead>
             <tbody>
-            <tr repeat.for="trade of traderData.trades">
-                <td>${ trade.buyOrder.opened | dateFormat } </td>
-                <td>${ trade.status | tradeStatus }</td>
-                <td>${ trade.buyOrder.pricePerUnit }</td>
-                <td>${ trade.maxPricePerUnit } </td>
-                <td>${ trade.sellOrder.pricePerUnit } </td>
-                <td class="${ trade.profit | valueFormat}">${ trade.profit }%</td>
-            </tr>
+                <tr repeat.for="trade of traderData.trades">
+                    <td>${ trade.buyOrder.opened | dateFormat } </td>
+                    <td>${ trade.status | tradeStatus }</td>
+                    <td>${ trade.buyOrder.pricePerUnit }</td>
+                    <td>${ trade.maxPricePerUnit } </td>
+                    <td>${ trade.sellOrder.pricePerUnit } </td>
+                    <td class="${ trade.profit | valueFormat}">${ trade.profit }%</td>
+                </tr>
             </tbody>
         </table>
 
