@@ -20,8 +20,8 @@
     <p if.bind="!traderData"><em>Loading trader...</em></p>
     <div show.bind="visible">
         <div id="buttons">
-            <div id="previous" click.trigger="previous()" class="btn">previous</div>
-            <div id="next" click.trigger="next()" class="btn">next</div>
+            <div id="lastMonth" click.trigger="lastMonth()" class="btn">last week</div>
+            <div id="lastDay" click.trigger="lastDay()" class="btn">last day</div>
         </div>
         <div style="width: 80%" id="bardiv">
             <div style="height: 400px; width: 1200px; display: block; background-color: white;">

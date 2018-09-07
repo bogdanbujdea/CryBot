@@ -38,73 +38,7 @@ export class Trader {
                 if (chartData) {
 
                     this.chartData = chartData;
-                    let context = <CanvasRenderingContext2D>(this.myCanvas.getContext('2d'));
-                    this.startIndex = 0;
-                    let tempCandles =
-                        chartData.candles.filter((u, i) => i > this.startIndex);
-                    var tradeCandles = tempCandles.map(obj => ({...obj}));
-                    tradeCandles.forEach(c => {
-                        c.high = 0
-                    }); 
-                    let candles : {x: number, y: number, timestamp: Date }[] = [];
-                    let i = 0;
-                    tempCandles.forEach(c => {
-                        i++;
-                        candles.push({
-                            x: i,
-                            y: c.high,
-                            timestamp: c.timestamp
-                        });
-                    });
-                    this.myChart = new Chart(context, {
-                        type: 'line',
-                        data: {
-                            labels: candles.map(c => moment(c.timestamp).format('lll')),
-                            datasets: [ {
-                                type: 'line',
-                                label: 'Candles',
-                                borderColor: 'green',
-                                backgroundColor: 'green',
-                                borderWidth: 1,
-                                fill: true,
-                                pointRadius: 0,
-                                data: candles
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            title: {
-                                display: true,
-                                text: 'Chart ' + this.market
-                            },
-                            tooltips: {
-                                mode: 'nearest',
-                                intersect: true,
-                            },
-                            scales: {
-                                xAxes: [{
-                                    gridLines: {
-                                        offsetGridLines: false,
-                                    }
-                                }, {
-                                    id: 'x-axis-2',
-                                    type: 'linear',
-                                    position: 'bottom',
-                                    display: false,
-                                    ticks: {
-                                        min: tempCandles.reduce((ya, u) => Math.min(ya, u.low), 1),
-                                        max: tempCandles.reduce((ya, u) => Math.max(ya, u.high), 0),
-                                    }
-                                }],
-                                yAxes: [{
-                                    ticks: {
-                                        min: tempCandles.reduce((ya, u) => Math.min(ya, u.low), 1),
-                                        max: tempCandles.reduce((ya, u) => Math.max(ya, u.high), 0),
-                                    }
-                                }]
-                            }
-                        }
-                    });
+                    this.loadChart("all");
                 }
 
             });
@@ -114,75 +48,12 @@ export class Trader {
         this.visible = !this.visible;
     }
 
-    previous() {
-
+    lastMonth() {
+        this.loadChart("month");
     }
 
-    next() {
-        let context = <CanvasRenderingContext2D>(this.myCanvas.getContext('2d'));
-        this.startIndex += 15;
-        this.endIndex += 15;
-        let tempCandles = this.chartData.candles.filter((u, i) => i > this.startIndex).filter((u, i) => i < this.endIndex);
-        let config = {
-            type: 'line',
-            data: {
-                labels: tempCandles.map(c => moment(c.timestamp).format('lll')),
-                datasets: [{
-                    label: 'Open',
-                    backgroundColor: 'blue',
-                    borderColor: 'blue',
-                    pointRadius: 1,
-                    lineTension: 0,
-                    borderWidth: 1,
-                    data: tempCandles.map(c => c.open),
-                    fill: false,
-                }, {
-                    label: 'Close',
-                    backgroundColor: 'black',
-                    borderColor: 'black',
-                    pointRadius: 1,
-                    lineTension: 0,
-                    borderWidth: 1,
-                    data: tempCandles.map(c => c.close),
-                    fill: false,
-                }, {
-                    label: 'Low',
-                    fill: false,
-                    backgroundColor: 'red',
-                    borderColor: 'red',
-                    type: 'line',
-                    pointRadius: 1,
-                    lineTension: 0,
-                    borderWidth: 1,
-                    data: tempCandles.map(c => c.low)
-                }, {
-                    label: 'High',
-                    backgroundColor: 'green',
-                    borderColor: 'green',
-                    pointRadius: 1,
-                    lineTension: 0,
-                    borderWidth: 1,
-                    data: tempCandles.map(c => c.high),
-                    fill: false,
-                }]
-            },
-            options: {
-                responsive: true,
-                title: {
-                    display: true,
-                    text: 'Candles'
-                },
-                scales: {
-                    yAxes: [{
-                        ticks: {
-                            min: tempCandles.reduce((ya, u) => Math.min(ya, u.low), 1),
-                            max: tempCandles.reduce((ya, u) => Math.max(ya, u.high), 0),
-                        }
-                    }]
-                }
-            }
-        };
-        this.myChart = new Chart(context, config);
+    lastDay() {
+        this.loadChart("24");
     }
 
     activate(traderData: ITrader) {
@@ -239,4 +110,80 @@ export class Trader {
         this.profit = Math.round(this.profit * 100) / 100;
     }
 
+    loadChart(period: string): any {
+        let context = <CanvasRenderingContext2D>(this.myCanvas.getContext('2d'));
+        this.startIndex = 0;
+        if (period == "all")
+            this.startIndex = 0;
+        else if(period == "24")
+            this.startIndex = this.chartData.candles.length - 24;
+        else
+            this.startIndex = this.chartData.candles.length - 168;
+        let tempCandles =
+            this.chartData.candles.filter((u, i) => i > this.startIndex);
+        var tradeCandles = tempCandles.map(obj => ({ ...obj }));
+        tradeCandles.forEach(c => {
+            c.high = 0
+        });
+        let candles: { x: number, y: number, timestamp: Date }[] = [];
+        let i = 0;
+        tempCandles.forEach(c => {
+            i++;
+            candles.push({
+                x: i,
+                y: c.high,
+                timestamp: c.timestamp
+            });
+        });
+        this.myChart = new Chart(context, {
+            type: 'line',
+            data: {
+                labels: candles.map(c => moment(c.timestamp).format('lll')),
+                datasets: [{
+                    type: 'line',
+                    label: 'Candles',
+                    backgroundColor: 'green',
+                    pointStyle: 'circle',
+                    borderColor: 'red',
+                    borderWidth: 1,
+                    fill: false,
+                    pointRadius: 1,
+                    data: candles
+                }]
+            },
+            options: {
+                responsive: true,
+                title: {
+                    display: true,
+                    text: 'Chart ' + this.market
+                },
+                tooltips: {
+                    mode: 'nearest',
+                    intersect: true,
+                },
+                scales: {
+                    xAxes: [{
+                        gridLines: {
+                            offsetGridLines: false,
+                        }
+                    }, {
+                        id: 'x-axis-2',
+                        type: 'linear',
+                        position: 'bottom',
+                        display: false,
+                        ticks: {
+                            min: tempCandles.reduce((ya, u) => Math.min(ya, u.low), 1),
+                            max: tempCandles.reduce((ya, u) => Math.max(ya, u.high), 0),
+                        }
+                    }],
+                    yAxes: [{
+                        ticks: {
+                            min: tempCandles.reduce((ya, u) => Math.min(ya, u.low), 1),
+                            max: tempCandles.reduce((ya, u) => Math.max(ya, u.high), 0),
+                        }
+                    }]
+                }
+            }
+        });
+    }
 }
