@@ -3,8 +3,11 @@ import { HttpClient } from 'aurelia-fetch-client';
 import { inject } from 'aurelia-framework';
 import { ITrader } from "../../models/api/ITrader";
 import { ITraderResponse } from "../../models/api/ITraderResponse";
+import { TraderChartModel } from "../../models/api/TraderChartModel";
 import { Ticker } from '../../models/api/Ticker';
 import { Chart } from "chart.js"
+import * as moment from 'moment';
+import { Candle } from "../../models/Candle";
 
 @inject(HttpClient)
 export class Trader {
@@ -12,8 +15,11 @@ export class Trader {
     profit: number = 0;
     market: string = "BTC-ETC";
     visible: boolean = false;
-    chart: Chart;
+    myChart: Chart;
+    chartData: TraderChartModel;
     myCanvas: HTMLCanvasElement;
+    startIndex: number = 0;
+    endIndex: number = 100;
     private connectionPromise?: Promise<void>;
     private chatHubConnection: signalR.HubConnection;
 
@@ -25,50 +31,158 @@ export class Trader {
     }
 
     attached() {
-        
-        let context = <CanvasRenderingContext2D>(this.myCanvas.getContext('2d'));
-        var data = {
-            labels: ["January", "February", "March", "April", "May", "June", "July"],
-            datasets: [
-                {
-                    label: "My First dataset",
-                    fillColor: "rgba(220,220,220,0.2)",
-                    strokeColor: "rgba(220,220,220,1)",
-                    pointColor: "rgba(220,220,220,1)",
-                    pointStrokeColor: "#fff",
-                    pointHighlightFill: "#fff",
-                    pointHighlightStroke: "rgba(220,220,220,1)",
-                    data: [65, 59, 80, 81, 56, 55, 40]
-                },
-                {
-                    label: "My Second dataset",
-                    fillColor: "rgba(151,187,205,0.2)",
-                    strokeColor: "rgba(151,187,205,1)",
-                    pointColor: "rgba(151,187,205,1)",
-                    pointStrokeColor: "#fff",
-                    pointHighlightFill: "#fff",
-                    pointHighlightStroke: "rgba(151,187,205,1)",
-                    data: [28, 48, 40, 19, 86, 27, 90]
-                }
-            ]
-        };
-        let myChart = new Chart(context, {
-            type: 'line',
-            data: data,
-            options: {
-                scales: {
-                    yAxes: [{
-                        ticks: {
-                            beginAtZero: true
+
+        this.httpClient.fetch('api/traders/chart?market=' + this.market)
+            .then(result => result.json() as Promise<TraderChartModel>)
+            .then(chartData => {
+                if (chartData) {
+
+                    this.chartData = chartData;
+                    let context = <CanvasRenderingContext2D>(this.myCanvas.getContext('2d'));
+                    this.startIndex = 0;
+                    let tempCandles =
+                        chartData.candles.filter((u, i) => i > this.startIndex);
+                    var tradeCandles = tempCandles.map(obj => ({...obj}));
+                    tradeCandles.forEach(c => {
+                        c.high = 0
+                    }); 
+                    let candles : {x: number, y: number, timestamp: Date }[] = [];
+                    let i = 0;
+                    tempCandles.forEach(c => {
+                        i++;
+                        candles.push({
+                            x: i,
+                            y: c.high,
+                            timestamp: c.timestamp
+                        });
+                    });
+                    this.myChart = new Chart(context, {
+                        type: 'line',
+                        data: {
+                            labels: candles.map(c => moment(c.timestamp).format('lll')),
+                            datasets: [ {
+                                type: 'line',
+                                label: 'Candles',
+                                borderColor: 'green',
+                                backgroundColor: 'green',
+                                borderWidth: 1,
+                                fill: true,
+                                pointRadius: 0,
+                                data: candles
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            title: {
+                                display: true,
+                                text: 'Chart ' + this.market
+                            },
+                            tooltips: {
+                                mode: 'nearest',
+                                intersect: true,
+                            },
+                            scales: {
+                                xAxes: [{
+                                    gridLines: {
+                                        offsetGridLines: false,
+                                    }
+                                }, {
+                                    id: 'x-axis-2',
+                                    type: 'linear',
+                                    position: 'bottom',
+                                    display: false,
+                                    ticks: {
+                                        min: tempCandles.reduce((ya, u) => Math.min(ya, u.low), 1),
+                                        max: tempCandles.reduce((ya, u) => Math.max(ya, u.high), 0),
+                                    }
+                                }],
+                                yAxes: [{
+                                    ticks: {
+                                        min: tempCandles.reduce((ya, u) => Math.min(ya, u.low), 1),
+                                        max: tempCandles.reduce((ya, u) => Math.max(ya, u.high), 0),
+                                    }
+                                }]
+                            }
                         }
-                    }]
+                    });
                 }
-            }
-        });
+
+            });
     }
 
     toggleVisibility() {
         this.visible = !this.visible;
+    }
+
+    previous() {
+
+    }
+
+    next() {
+        let context = <CanvasRenderingContext2D>(this.myCanvas.getContext('2d'));
+        this.startIndex += 15;
+        this.endIndex += 15;
+        let tempCandles = this.chartData.candles.filter((u, i) => i > this.startIndex).filter((u, i) => i < this.endIndex);
+        let config = {
+            type: 'line',
+            data: {
+                labels: tempCandles.map(c => moment(c.timestamp).format('lll')),
+                datasets: [{
+                    label: 'Open',
+                    backgroundColor: 'blue',
+                    borderColor: 'blue',
+                    pointRadius: 1,
+                    lineTension: 0,
+                    borderWidth: 1,
+                    data: tempCandles.map(c => c.open),
+                    fill: false,
+                }, {
+                    label: 'Close',
+                    backgroundColor: 'black',
+                    borderColor: 'black',
+                    pointRadius: 1,
+                    lineTension: 0,
+                    borderWidth: 1,
+                    data: tempCandles.map(c => c.close),
+                    fill: false,
+                }, {
+                    label: 'Low',
+                    fill: false,
+                    backgroundColor: 'red',
+                    borderColor: 'red',
+                    type: 'line',
+                    pointRadius: 1,
+                    lineTension: 0,
+                    borderWidth: 1,
+                    data: tempCandles.map(c => c.low)
+                }, {
+                    label: 'High',
+                    backgroundColor: 'green',
+                    borderColor: 'green',
+                    pointRadius: 1,
+                    lineTension: 0,
+                    borderWidth: 1,
+                    data: tempCandles.map(c => c.high),
+                    fill: false,
+                }]
+            },
+            options: {
+                responsive: true,
+                title: {
+                    display: true,
+                    text: 'Candles'
+                },
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            min: tempCandles.reduce((ya, u) => Math.min(ya, u.low), 1),
+                            max: tempCandles.reduce((ya, u) => Math.max(ya, u.high), 0),
+                        }
+                    }]
+                }
+            }
+        };
+        this.myChart = new Chart(context, config);
     }
 
     activate(traderData: ITrader) {

@@ -9,6 +9,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using Bittrex.Net.Objects;
 
 namespace CryBot.Core.Trader
 {
@@ -57,6 +58,17 @@ namespace CryBot.Core.Trader
             coinTrader.Initialize(market);
             await _tradersRepository.CreateTraderAsync(new Market { Name = market });
             await coinTrader.StartAsync();
+        }
+
+        public async Task<Chart> GetChartAsync(string market)
+        {
+            var traderGrain = _clusterClient.GetGrain<ITraderGrain>(market);
+            var traderState = await traderGrain.GetTraderData();
+            var chart = new Chart();
+            var candlesResponse = await _cryptoApi.GetCandlesAsync(market, TickInterval.OneHour);
+            chart.Candles = candlesResponse.Content;
+            chart.Trades = traderState.Trades;
+            return chart;
         }
     }
 }

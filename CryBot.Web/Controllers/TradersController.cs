@@ -39,6 +39,13 @@ namespace CryBot.Web.Controllers
             return Ok();
         }
 
+        [HttpGet("chart")]
+        public async Task<IActionResult> GetChartForTrader([FromQuery] string market)
+        {
+            var chart = await _tradersManager.GetChartAsync(market);
+            return Ok(chart);
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetTraders([FromQuery] string market)
         {

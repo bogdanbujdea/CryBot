@@ -34,6 +34,8 @@
     <None Remove="ClientApp\app\converters\value-format.ts" />
     <None Remove="ClientApp\app\models\api\Budget.ts" />
     <None Remove="ClientApp\app\models\api\ITradersResponse.ts" />
+    <None Remove="ClientApp\app\models\api\TraderChartModel.ts" />
+    <None Remove="ClientApp\app\models\Candle.ts" />
     <None Remove="ClientApp\app\models\TradeAdvice.ts" />
     <None Remove="ClientApp\app\models\TradeStatus.ts" />
     <None Remove="ClientApp\pwabuilder-sw.js" />
@@ -63,8 +65,10 @@
     <TypeScriptCompile Include="ClientApp\app\converters\value-format.ts" />
     <TypeScriptCompile Include="ClientApp\app\converters\time-ago-format.ts" />
     <TypeScriptCompile Include="ClientApp\app\converters\trade-status.ts" />
+    <TypeScriptCompile Include="ClientApp\app\models\api\TraderChartModel.ts" />
     <TypeScriptCompile Include="ClientApp\app\models\api\ITradersResponse.ts" />
     <TypeScriptCompile Include="ClientApp\app\models\api\Budget.ts" />
+    <TypeScriptCompile Include="ClientApp\app\models\Candle.ts" />
     <TypeScriptCompile Include="ClientApp\app\models\TradeAdvice.ts" />
     <TypeScriptCompile Include="ClientApp\app\models\TradeStatus.ts" />
     <TypeScriptCompile Include="ClientApp\app\models\CryptoOrderType.ts" />

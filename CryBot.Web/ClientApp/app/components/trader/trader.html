@@ -7,9 +7,7 @@
     <require from="../../converters/trade-advice"></require>
     <require from="../../converters/value-format"></require>
     <require from="./trader.css"></require>
-    <div style="width: 300px; height: 300px; display: block;">
-        <canvas id="myCanvas" ref="myCanvas" style="width: 300px; height: 300px; display: block;"></canvas>
-    </div>
+
     <div click.trigger="toggleVisibility()">
         <p class="trader-name">${ traderData.market } </p>
         <p class="trader-info ${profit | valueFormat}">
@@ -21,6 +19,15 @@
     </div>
     <p if.bind="!traderData"><em>Loading trader...</em></p>
     <div show.bind="visible">
+        <div id="buttons">
+            <div id="previous" click.trigger="previous()" class="btn">previous</div>
+            <div id="next" click.trigger="next()" class="btn">next</div>
+        </div>
+        <div style="width: 80%" id="bardiv">
+            <div style="height: 400px; width: 1200px; display: block; background-color: white;">
+                <canvas id="myCanvas" ref="myCanvas" style="width: 1200px; height: 400px; display: block;"></canvas>
+            </div>
+        </div>
         <table if.bind="traderData.trades" class="table">
             <thead>
                 <tr>

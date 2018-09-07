@@ -26,7 +26,7 @@ namespace CryBot.Core.Storage
             {
                 var table = await GetTradersTable();
                 var retrieve = TableOperation.Retrieve<Market>("bittrex", "");
-                var result = await table.ExecuteAsync(retrieve);
+                await table.ExecuteAsync(retrieve);
                 TableQuery<Market> query = new TableQuery<Market>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, "bittrex"));
                 var results = await table.ExecuteQuerySegmentedAsync(query, new TableContinuationToken());
                 return new CryptoResponse<List<Market>>(results.Results);

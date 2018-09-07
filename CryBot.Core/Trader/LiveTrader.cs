@@ -1,20 +1,17 @@
 ﻿using Bittrex.Net.Objects;
-
-using CryBot.Core.Storage;
 using CryBot.Core.Exchange;
-using CryBot.Core.Strategies;
-using CryBot.Core.Notifications;
 using CryBot.Core.Exchange.Models;
-
+using CryBot.Core.Infrastructure;
+using CryBot.Core.Notifications;
+using CryBot.Core.Storage;
+using CryBot.Core.Strategies;
 using Orleans;
-
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using CryBot.Core.Infrastructure;
 
 namespace CryBot.Core.Trader
 {
@@ -79,7 +76,7 @@ namespace CryBot.Core.Trader
             _lastCandleUpdateTime = DateTime.UtcNow;
             var candlesResponse = await _cryptoApi.GetCandlesAsync(Market, TickInterval.OneHour);
             _coinTrader.Candles = candlesResponse.Content;
-            Console.WriteLine($"Downloaded candles for {Market}");
+            Console.WriteLine($"Downloaded {candlesResponse.Content.Count} candles for {Market}");
             if (TraderState.Trades.Count == 0)
             {
                 TraderState.Trades.Add(new Trade { Status = TradeStatus.Empty });
@@ -88,7 +85,8 @@ namespace CryBot.Core.Trader
             _coinTrader.IsInTestMode = IsInTestMode;
             _coinTrader.Initialize(TraderState);
             CanUpdate = true;
-            await UpdateOrders();
+            if (!IsInTestMode)
+                await UpdateOrders();
         }
 
         public async Task<Unit> UpdateOrder(CryptoOrder cryptoOrder)

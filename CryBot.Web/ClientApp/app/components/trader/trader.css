@@ -22,3 +22,15 @@
 .negative{
     color: #CE2022;
 }
+
+.btn{
+    background-color: white;
+    margin: 5px;
+}
+
+#bardiv {
+}
+
+th{
+    color: white;
+}
