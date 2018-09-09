@@ -1,16 +1,15 @@
-using CryBot.Core.Storage;
 using CryBot.Core.Exchange;
-using CryBot.Core.Strategies;
-using CryBot.Core.Infrastructure;
 using CryBot.Core.Exchange.Models;
-
+using CryBot.Core.Infrastructure;
+using CryBot.Core.Storage;
+using CryBot.Core.Strategies;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
 using System.Reactive.Subjects;
-using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace CryBot.Core.Trader
 {
@@ -119,7 +118,7 @@ namespace CryBot.Core.Trader
                             var tradeWithTriggeredBuy =
                                 TraderState.Trades.FirstOrDefault(t =>
                                     t.TriggeredBuy && t.Status != TradeStatus.Completed);
-                            if (tradeWithTriggeredBuy != null 
+                            if (tradeWithTriggeredBuy != null
                                 && TraderState.Trades.Count(t => t.TriggeredBuy && t.Status != TradeStatus.Completed) == 0)
                             {
                                 //Console.WriteLine($"Set triggered buy to false for {tradeWithTriggeredBuy.BuyOrder.Uuid}");
@@ -217,7 +216,7 @@ namespace CryBot.Core.Trader
         {
             if (TraderState.Trades.Count == 0 || TraderState.Trades.Count(t => t.Status != TradeStatus.Completed) == 0)
             {
-                TraderState.Trades.Add(new Trade {Status = TradeStatus.Empty});
+                TraderState.Trades.Add(new Trade { Status = TradeStatus.Empty });
             }
         }
 
@@ -227,7 +226,7 @@ namespace CryBot.Core.Trader
                 Strategy.Settings.FirstBuyLowerPercentage = Strategy.Settings.BuyLowerPercentage;
             var tradeAction = Strategy.CalculateTradeAction(Ticker, trade);
             var emaAdvice = GetEmaAdvice();
-            if (emaAdvice == TradeAdvice.Buy)
+            if (emaAdvice == TradeAdvice.Buy && TraderState.Trades.Count(t => t.Status == TradeStatus.Buying) < 2)
             {
                 tradeAction.TradeAdvice = TradeAdvice.Buy;
                 tradeAction.Reason = TradeReason.EmaBuy;
@@ -240,10 +239,12 @@ namespace CryBot.Core.Trader
                 case TradeAdvice.Buy:
                     if (emaAdvice == TradeAdvice.Sell)
                         break;
+                    if (trade.Status != TradeStatus.Empty)
+                        break;
                     var buyOrder = await CreateBuyOrder(tradeAction.OrderPricePerUnit);
                     if (tradeAction.Reason == TradeReason.BuyTrigger)
                     {
-                        var newTrade = new Trade { BuyOrder = buyOrder, Status = TradeStatus.Buying, BuyReason = tradeAction.Reason};
+                        var newTrade = new Trade { BuyOrder = buyOrder, Status = TradeStatus.Buying, BuyReason = tradeAction.Reason };
                         return newTrade;
                     }
                     trade.BuyReason = tradeAction.Reason;
@@ -308,6 +309,10 @@ namespace CryBot.Core.Trader
             if (TraderState.Budget.Available < Strategy.Settings.TradingBudget)
             {
                 TraderState.Budget.Available += Strategy.Settings.TradingBudget;
+                if (Ticker.Market == "BTC-BCH")
+                {
+                    Console.WriteLine(TraderState.Budget.Invested);
+                }
                 TraderState.Budget.Invested += Strategy.Settings.TradingBudget;
             }
             var priceWithoutCommission = Strategy.Settings.TradingBudget * Consts.BittrexCommission;

@@ -8,6 +8,8 @@ import { Ticker } from '../../models/api/Ticker';
 import { Chart } from "chart.js"
 import * as moment from 'moment';
 import { Candle } from "../../models/Candle";
+import { TradeAdvice } from "../../models/TradeAdvice";
+import * as TradeStatus from "../../models/TradeStatus";
 
 @inject(HttpClient)
 export class Trader {
@@ -115,25 +117,96 @@ export class Trader {
         this.startIndex = 0;
         if (period == "all")
             this.startIndex = 0;
-        else if(period == "24")
+        else if (period == "24")
             this.startIndex = this.chartData.candles.length - 24;
         else
             this.startIndex = this.chartData.candles.length - 168;
         let tempCandles =
             this.chartData.candles.filter((u, i) => i > this.startIndex);
-        var tradeCandles = tempCandles.map(obj => ({ ...obj }));
-        tradeCandles.forEach(c => {
-            c.high = 0
-        });
-        let candles: { x: number, y: number, timestamp: Date }[] = [];
+        let candles: { price: number, timestamp: Date, tradeAdvice: TradeAdvice }[] = [];
+        let hold: { price: number, tradeAdvice: TradeAdvice, timestamp: Date }[] = [];
+        let sell: { price: number, tradeAdvice: TradeAdvice, timestamp: Date }[] = [];
+        let buy: { price: number, tradeAdvice: TradeAdvice, timestamp: Date }[] = [];
+        let buyOrders: { price: number, timestamp: Date, tradeAdvice: TradeAdvice }[] = [];
+        let sellOrders: { price: number, timestamp: Date, tradeAdvice: TradeAdvice }[] = [];
         let i = 0;
+        let buyOrderIndex: number = 0;
+        let sellOrderIndex: number = 0;
         tempCandles.forEach(c => {
-            i++;
             candles.push({
-                x: i,
-                y: c.high,
+                price: c.high,
+                timestamp: c.timestamp,
+                tradeAdvice: c.emaAdvice
+            });
+            buyOrders.push({
+                price: c.high,
+                timestamp: c.timestamp,
+                tradeAdvice: c.emaAdvice
+            });
+            sellOrders.push({
+                price: c.high,
+                timestamp: c.timestamp,
+                tradeAdvice: c.emaAdvice
+            });
+            buyOrders[buyOrders.length - 1].price = 0;
+            sellOrders[sellOrders.length - 1].price = 0;
+            let buyTrade = this.chartData.trades[buyOrderIndex];
+            if (buyOrderIndex < this.chartData.trades.length &&
+                buyTrade.buyOrder.closed < c.timestamp) {
+                candles.push({
+                    price: buyTrade.buyOrder.pricePerUnit,
+                    timestamp: buyTrade.buyOrder.closed,
+                    tradeAdvice: c.emaAdvice
+                });
+                buyOrderIndex++;
+                buyOrders.push(candles[candles.length - 1]);
+            }
+            let sellTrade = this.chartData.trades[sellOrderIndex];
+            if (sellOrderIndex < this.chartData.trades.length &&
+                sellTrade.sellOrder.closed < c.timestamp && sellTrade.status == TradeStatus.TradeStatus.Completed) {
+                candles.push({
+                    price: sellTrade.sellOrder.pricePerUnit,
+                    timestamp: sellTrade.sellOrder.closed,
+                    tradeAdvice: c.emaAdvice
+                });
+                sellOrderIndex++;
+                sellOrders.push(candles[candles.length - 1]);
+            }
+        });
+        
+        candles.forEach(c => {
+
+            hold.push({
+                price: c.price,
+                tradeAdvice: c.tradeAdvice,
                 timestamp: c.timestamp
             });
+            sell.push({
+                price: c.price,
+                tradeAdvice: c.tradeAdvice,
+                timestamp: c.timestamp
+            });
+            buy.push({
+                price: c.price,
+                tradeAdvice: c.tradeAdvice,
+                timestamp: c.timestamp
+            });
+            if (c.tradeAdvice != TradeAdvice.Buy) {
+                buy[i].price = 0;
+            }
+            if (c.tradeAdvice == TradeAdvice.Buy) {
+                hold[i].price = 0;
+                sell[i].price = 0;
+            }
+            if (c.tradeAdvice == TradeAdvice.Sell) {
+                buy[i].price = 0;
+                hold[i].price = 0;
+            }
+            if (c.tradeAdvice == TradeAdvice.Hold) {
+                buy[i].price = 0;
+                sell[i].price = 0;
+            }
+            i++;
         });
         this.myChart = new Chart(context, {
             type: 'line',
@@ -142,13 +215,73 @@ export class Trader {
                 datasets: [{
                     type: 'line',
                     label: 'Candles',
-                    backgroundColor: 'green',
+                    backgroundColor: 'orange',
                     pointStyle: 'circle',
-                    borderColor: 'red',
+                    borderColor: 'orange',
                     borderWidth: 1,
                     fill: false,
                     pointRadius: 1,
-                    data: candles
+                    data: candles.map(c => c.price)
+                }, {
+                    type: 'line',
+                    label: 'Hold',
+                    backgroundColor: 'blue',
+                    pointStyle: 'circle',
+                    borderColor: 'blue',
+                    borderWidth: 1,
+                    showLine: false,
+                    hidden: true,
+                    fill: false,
+                    pointRadius: 1,
+                    data: hold.map(c => c.price)
+                }, {
+                    type: 'line',
+                    label: 'Sell',
+                    backgroundColor: 'pink',
+                    pointStyle: 'circle',
+                    borderColor: 'pink',
+                    borderWidth: 1,
+                    hidden: true,
+                    showLine: false,
+                    fill: false,
+                    pointRadius: 3,
+                    data: sell.map(c => c.price)
+                }, {
+                    type: 'line',
+                    label: 'Buy',
+                    backgroundColor: 'green',
+                    pointStyle: 'circle',
+                    borderColor: 'green',
+                    borderWidth: 1,
+                    hidden: true,
+                    showLine: false,
+                    fill: false,
+                    pointRadius: 3,
+                    data: buy.map(c => c.price)
+                }, {
+                    type: 'line',
+                    label: 'Buy orders',
+                    backgroundColor: 'blue',
+                    pointStyle: 'triangle',
+                    borderColor: 'blue',
+                    borderWidth: 1,
+                    hidden: false,
+                    showLine: false,
+                    fill: false,
+                    pointRadius: 5,
+                    data: buyOrders.map(c => c.price)
+                }, {
+                    type: 'line',
+                    label: 'Sell orders',
+                    backgroundColor: 'red',
+                    pointStyle: 'triangle',
+                    borderColor: 'red',
+                    borderWidth: 1,
+                    hidden: false,
+                    showLine: false,
+                    fill: false,
+                    pointRadius: 5,
+                    data: sellOrders.map(c => c.price)
                 }]
             },
             options: {
@@ -172,14 +305,14 @@ export class Trader {
                         position: 'bottom',
                         display: false,
                         ticks: {
-                            min: tempCandles.reduce((ya, u) => Math.min(ya, u.low), 1),
-                            max: tempCandles.reduce((ya, u) => Math.max(ya, u.high), 0),
+                            min: candles.reduce((ya, u) => Math.min(ya, u.price), 1),
+                            max: candles.reduce((ya, u) => Math.max(ya, u.price), 0),
                         }
                     }],
                     yAxes: [{
                         ticks: {
-                            min: tempCandles.reduce((ya, u) => Math.min(ya, u.low), 1),
-                            max: tempCandles.reduce((ya, u) => Math.max(ya, u.high), 0),
+                            min: candles.reduce((ya, u) => Math.min(ya, u.price), 1),
+                            max: candles.reduce((ya, u) => Math.max(ya, u.price), 0),
                         }
                     }]
                 }

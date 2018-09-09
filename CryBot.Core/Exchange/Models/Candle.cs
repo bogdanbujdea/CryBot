@@ -1,5 +1,8 @@
-﻿using System;
-using Bittrex.Net.Objects;
+﻿using Bittrex.Net.Objects;
+
+using CryBot.Core.Strategies;
+
+using System;
 
 namespace CryBot.Core.Exchange.Models
 {
@@ -20,5 +23,7 @@ namespace CryBot.Core.Exchange.Models
         public decimal Volume { get; set; }
         
         public TickInterval Interval { get; set; }
+        
+        public TradeAdvice EmaAdvice { get; set; }
     }
 }

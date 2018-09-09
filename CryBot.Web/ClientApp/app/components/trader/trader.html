@@ -19,6 +19,11 @@
     </div>
     <p if.bind="!traderData"><em>Loading trader...</em></p>
     <div show.bind="visible">
+        <div style="display: block">
+            <span class="profit"> ${ traderData.budget.available } &#8383; </span>
+            <span class="profit"> ${ traderData.budget.invested } &#8383; </span>
+            <span class="profit"> ${ traderData.budget.earned } &#8383; </span>
+        </div>
         <div id="buttons">
             <div id="lastMonth" click.trigger="lastMonth()" class="btn">last week</div>
             <div id="lastDay" click.trigger="lastDay()" class="btn">last day</div>
@@ -30,24 +35,26 @@
         </div>
         <table if.bind="traderData.trades" class="table">
             <thead>
-                <tr>
-                    <th>Time</th>
-                    <th>Status</th>
-                    <th>Buy &#8383;</th>
-                    <th>Max Price &#8383;</th>
-                    <th>Sell &#8383;</th>
-                    <th>Profit%</th>
-                </tr>
+            <tr>
+                <th>Bought</th>
+                <th>Sold</th>
+                <th>Status</th>
+                <th>Buy &#8383;</th>
+                <th>Max Price &#8383;</th>
+                <th>Sell &#8383;</th>
+                <th>Profit%</th>
+            </tr>
             </thead>
             <tbody>
-                <tr repeat.for="trade of traderData.trades">
-                    <td>${ trade.buyOrder.opened | dateFormat } </td>
-                    <td>${ trade.status | tradeStatus }</td>
-                    <td>${ trade.buyOrder.pricePerUnit }</td>
-                    <td>${ trade.maxPricePerUnit } </td>
-                    <td>${ trade.sellOrder.pricePerUnit } </td>
-                    <td class="${ trade.profit | valueFormat}">${ trade.profit }%</td>
-                </tr>
+            <tr repeat.for="trade of traderData.trades">
+                <td>${ trade.buyOrder.opened | dateFormat } </td>
+                <td>${ trade.sellOrder.closed | dateFormat } </td>
+                <td>${ trade.status | tradeStatus }</td>
+                <td>${ trade.buyOrder.pricePerUnit }</td>
+                <td>${ trade.maxPricePerUnit } </td>
+                <td>${ trade.sellOrder.pricePerUnit } </td>
+                <td class="${ trade.profit | valueFormat}">${ trade.profit }%</td>
+            </tr>
             </tbody>
         </table>
 

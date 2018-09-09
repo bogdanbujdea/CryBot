@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Bittrex.Net.Objects;
+using CryBot.Core.Strategies;
 
 namespace CryBot.Core.Trader
 {
@@ -66,6 +67,11 @@ namespace CryBot.Core.Trader
             var traderState = await traderGrain.GetTraderData();
             var chart = new Chart();
             var candlesResponse = await _cryptoApi.GetCandlesAsync(market, TickInterval.OneHour);
+            var report = new EmaCross().Prepare(candlesResponse.Content);
+            foreach (var candle in candlesResponse.Content)
+            {
+                candle.EmaAdvice = report[candlesResponse.Content.IndexOf(candle)];
+            }
             chart.Candles = candlesResponse.Content;
             chart.Trades = traderState.Trades;
             return chart;
