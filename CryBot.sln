@@ -15,7 +15,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{A8BFFF70-C32
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryBot.Backtesting", "CryBot.Backtesting\CryBot.Backtesting.csproj", "{33A18E34-6C5A-4C15-B56B-2822AC8EF485}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryBot.Storage", "CryBot.Storage\CryBot.Storage.csproj", "{F39CD703-88C1-47C5-B329-55E495CD72B2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryBot.Storage", "CryBot.Storage\CryBot.Storage.csproj", "{F39CD703-88C1-47C5-B329-55E495CD72B2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemaSignal", "DemaSignal\DemaSignal.csproj", "{1BA9288F-9872-452E-B2D9-FF8B5507B74C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -43,6 +45,10 @@ Global
 		{F39CD703-88C1-47C5-B329-55E495CD72B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F39CD703-88C1-47C5-B329-55E495CD72B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F39CD703-88C1-47C5-B329-55E495CD72B2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1BA9288F-9872-452E-B2D9-FF8B5507B74C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1BA9288F-9872-452E-B2D9-FF8B5507B74C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1BA9288F-9872-452E-B2D9-FF8B5507B74C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1BA9288F-9872-452E-B2D9-FF8B5507B74C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -53,6 +59,7 @@ Global
 		{3192EDA1-114A-4CC3-AF4C-3F00A74C11B7} = {A8BFFF70-C323-46E9-8825-90EFC1255EA7}
 		{33A18E34-6C5A-4C15-B56B-2822AC8EF485} = {A8BFFF70-C323-46E9-8825-90EFC1255EA7}
 		{F39CD703-88C1-47C5-B329-55E495CD72B2} = {A8BFFF70-C323-46E9-8825-90EFC1255EA7}
+		{1BA9288F-9872-452E-B2D9-FF8B5507B74C} = {A8BFFF70-C323-46E9-8825-90EFC1255EA7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C0493BDF-A172-4BD6-A071-3B25B46DE474}
