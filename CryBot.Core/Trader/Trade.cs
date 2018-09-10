@@ -1,10 +1,23 @@
 using CryBot.Core.Strategies;
 using CryBot.Core.Exchange.Models;
 
+using System;
+
+using System.Collections.Generic;
+
 namespace CryBot.Core.Trader
 {
     public class Trade
     {
+        public Trade()
+        {
+            Id = Guid.NewGuid();    
+        }
+
+        public Guid Id { get; set; }
+
+        public List<Guid> ChildTrades { get; set; } = new List<Guid>();
+
         public CryptoOrder BuyOrder { get; set; } = new CryptoOrder();
 
         public CryptoOrder SellOrder { get; set; } = new CryptoOrder();

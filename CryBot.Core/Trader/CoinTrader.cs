@@ -226,11 +226,21 @@ namespace CryBot.Core.Trader
                 Strategy.Settings.FirstBuyLowerPercentage = Strategy.Settings.BuyLowerPercentage;
             var tradeAction = Strategy.CalculateTradeAction(Ticker, trade);
             var emaAdvice = GetEmaAdvice();
-            if (emaAdvice == TradeAdvice.Buy && TraderState.Trades.Count(t => t.Status == TradeStatus.Buying) < 2)
+            bool isEmaOrder = false, isEmaOrderAllowed = false;
+            isEmaOrderAllowed = trade.ChildTrades.Count < Strategy.Settings.MaxChildTrades;
+            if (TraderState.Trades.Count == 1 && trade.Status == TradeStatus.Empty)
             {
+                if (emaAdvice != TradeAdvice.Buy)
+                {
+                    return Trade.Empty;
+                }
+            }
+            if (emaAdvice == TradeAdvice.Buy && isEmaOrderAllowed)
+            {
+                isEmaOrder = true;
                 tradeAction.TradeAdvice = TradeAdvice.Buy;
                 tradeAction.Reason = TradeReason.EmaBuy;
-                tradeAction.OrderPricePerUnit = Ticker.Bid;
+                tradeAction.OrderPricePerUnit = Ticker.Bid * 0.99M;
             }
             Ticker.LatestEmaAdvice = emaAdvice;
 
@@ -239,12 +249,11 @@ namespace CryBot.Core.Trader
                 case TradeAdvice.Buy:
                     if (emaAdvice == TradeAdvice.Sell)
                         break;
-                    if (trade.Status != TradeStatus.Empty)
-                        break;
                     var buyOrder = await CreateBuyOrder(tradeAction.OrderPricePerUnit);
-                    if (tradeAction.Reason == TradeReason.BuyTrigger)
+                    if (tradeAction.Reason == TradeReason.BuyTrigger || tradeAction.Reason == TradeReason.EmaBuy)
                     {
                         var newTrade = new Trade { BuyOrder = buyOrder, Status = TradeStatus.Buying, BuyReason = tradeAction.Reason };
+                        trade.ChildTrades.Add(newTrade.Id);
                         return newTrade;
                     }
                     trade.BuyReason = tradeAction.Reason;
@@ -252,15 +261,10 @@ namespace CryBot.Core.Trader
                     trade.Status = TradeStatus.Buying;
                     break;
                 case TradeAdvice.Sell:
-                    if (emaAdvice != TradeAdvice.Sell && tradeAction.Reason == TradeReason.StopLoss)
-                        break;
-                    if (tradeAction.Reason == TradeReason.TakeProfit && emaAdvice == TradeAdvice.Buy)
-                    {
-                        return Trade.Empty;
-                    }
+
                     trade.SellReason = tradeAction.Reason;
                     await CreateSellOrder(trade, tradeAction.OrderPricePerUnit);
-                    return Trade.Empty;
+                    break;
                 case TradeAdvice.Cancel:
                     var cancelResponse = await _cryptoApi.CancelOrder(trade.BuyOrder.Uuid);
                     if (cancelResponse.IsSuccessful)

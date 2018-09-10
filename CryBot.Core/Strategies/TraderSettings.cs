@@ -29,10 +29,13 @@ namespace CryBot.Core.Strategies
             TradingBudget = 0.0012M,
             MinimumTakeProfit = 0.5M,
             HighStopLossPercentage = -5M,
-            StopLoss = -4,
+            StopLoss = -5,
             BuyTrigger = -2M,
+            MaxChildTrades = 1,
             ExpirationTime = TimeSpan.FromHours(1)
         };
+
+        public int MaxChildTrades { get; set; }
 
         public override string ToString()
         {

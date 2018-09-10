@@ -28,7 +28,7 @@ namespace CryBot.Core.Strategies
                 if (currentTrade.Status == TradeStatus.Empty)
                 {
                     Log($"NEW: \t{ticker.Bid}");
-                    tradeAction.OrderPricePerUnit = ticker.Bid * Settings.FirstBuyLowerPercentage.ToPercentageMultiplier();
+                    tradeAction.OrderPricePerUnit = ticker.Bid * Settings.BuyLowerPercentage.ToPercentageMultiplier();
                     tradeAction.Reason = TradeReason.FirstTrade;
                     tradeAction.TradeAdvice = TradeAdvice.Buy;
                     return tradeAction;
