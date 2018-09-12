@@ -12,7 +12,7 @@ namespace DemaSignal
     public static class SignalAnalyzer
     {
         [FunctionName("SignalAnalyzer")]
-        public static async Task Run([TimerTrigger("0 */1 * * * *")]TimerInfo myTimer, TraceWriter log)
+        public static async Task Run([TimerTrigger("0 */30 * * * *")]TimerInfo myTimer, TraceWriter log)
         {
             try
             {
