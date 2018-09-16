@@ -7,6 +7,7 @@
     <PackageReference Include="AForge" Version="2.2.5" />
     <PackageReference Include="AForge.Imaging" Version="2.2.5" />
     <PackageReference Include="AForge.Math" Version="2.2.5" />
+    <PackageReference Include="Bitmex.NET" Version="2.0.65" />
     <PackageReference Include="ConvertApi" Version="2.4.0" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="1.0.19" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />

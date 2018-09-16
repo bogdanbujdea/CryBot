@@ -22,7 +22,6 @@ namespace DemaSignal
             };
             mail.From = new MailAddress("bujdeabogdan@gmail.com");
             mail.To.Add("bogdan@thewindev.net");
-            mail.To.Add("maximad@gmail.com");
 
             mail.Subject = "Signal";
 

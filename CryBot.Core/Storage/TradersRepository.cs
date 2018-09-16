@@ -54,8 +54,7 @@ namespace CryBot.Core.Storage
 
         private async Task<CloudTable> GetTradersTable()
         {
-            CloudStorageAccount storageAccount = CloudStorageAccount.Parse(
-                "DefaultEndpointsProtocol=https;AccountName=crybot;AccountKey=tw+TB3korYKRw5QeHiD16wgy1H1DAKHEswWFuPcjWxnbMqn1OWjolaS0nScbOIfhC/OkCBYHCxBji1Bdq+arsg==;EndpointSuffix=core.windows.net");
+            CloudStorageAccount storageAccount = CloudStorageAccount.Parse(_config.StorageConnectionString);
             CloudTableClient tableClient = storageAccount.CreateCloudTableClient();
             // Retrieve a reference to the table.
             CloudTable table = tableClient.GetTableReference(_config.TradersTable);

@@ -13,5 +13,7 @@
         public string TradersTable { get; set; }
 
         public bool TestMode { get; set; }
+
+        public string StorageConnectionString { get; set; }
     }
 }
