@@ -80,7 +80,7 @@ namespace DemaSignal
                 .WithRestartPolicy(ContainerGroupRestartPolicy.Never)
                 .Create();
 
-            var url = "http://" + containerGroup.Fqdn + ":" + Port + "/users";
+            var url = "http://" + containerGroup.Fqdn + ":" + Port + "/charts";
             return url;
         }
 

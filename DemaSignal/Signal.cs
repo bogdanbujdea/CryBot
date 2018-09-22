@@ -1,5 +1,6 @@
-using System;
 using Microsoft.WindowsAzure.Storage.Table;
+
+using System;
 
 namespace DemaSignal
 {
@@ -9,7 +10,7 @@ namespace DemaSignal
 
         public Signal()
         {
-            PartitionKey = "bittrex";
+            PartitionKey = "bitmex";
         }
 
         public string SignalType { get; set; }
@@ -23,5 +24,7 @@ namespace DemaSignal
                 RowKey = _time.ToString("F");
             }
         }
+
+        public string Market { get; set; }
     }
 }

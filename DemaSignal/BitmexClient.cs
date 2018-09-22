@@ -29,34 +29,34 @@ namespace DemaSignal
             return bitmexApiService;
         }
 
-        public async Task<string> GoLong(string market)
+        public async Task<string> GoLong(MarketInfo marketInfo)
         {
-            await _bitmexApiService.Execute(BitmexApiUrls.Order.PostOrder, OrderPOSTRequestParams.ClosePositionByMarket(market));
-            await SetLeverage(market, 50);
-            var buyPrice = await GetCurrentPrice(market);
+            await _bitmexApiService.Execute(BitmexApiUrls.Order.PostOrder, OrderPOSTRequestParams.ClosePositionByMarket(marketInfo.Market));
+            await SetLeverage(marketInfo.Market, marketInfo.Leverage);
+            var buyPrice = await GetCurrentPrice(marketInfo.Market);
             var orderDto = await _bitmexApiService.Execute(BitmexApiUrls.Order.PostOrder,
-                OrderPOSTRequestParams.CreateSimpleLimit(market, 1500, buyPrice, OrderSide.Buy));
+                OrderPOSTRequestParams.CreateSimpleLimit(marketInfo.Market, marketInfo.Quantity, buyPrice, OrderSide.Buy));
             var stopPrice = Math.Round((decimal)orderDto.Price * 1.005M, 0);
-            await _bitmexApiService.Execute(BitmexApiUrls.Order.PostOrder, OrderPOSTRequestParams.CreateSimpleHidenLimit(market, 1500, buyPrice - 50, OrderSide.Buy));
-            await _bitmexApiService.Execute(BitmexApiUrls.Order.PostOrder, OrderPOSTRequestParams.CreateSimpleHidenLimit(market, 1500, stopPrice, OrderSide.Sell));
-            return $"Bought {orderDto.OrderQty} at {orderDto.Price}, buying again at {buyPrice - 50}, stop order set to {stopPrice}";
+            //await _bitmexApiService.Execute(BitmexApiUrls.Order.PostOrder, OrderPOSTRequestParams.CreateSimpleHidenLimit(marketInfo.Market, marketInfo.Quantity, buyPrice - 50, OrderSide.Buy));
+            await _bitmexApiService.Execute(BitmexApiUrls.Order.PostOrder, OrderPOSTRequestParams.CreateSimpleHidenLimit(marketInfo.Market, marketInfo.Quantity, stopPrice, OrderSide.Sell));
+            return $"Bought {orderDto.OrderQty} {marketInfo.Market} at {orderDto.Price}, stop order set to {stopPrice}";
         }
 
-        public async Task<string> GoShort(string market)
+        public async Task<string> GoShort(MarketInfo marketInfo)
         {
-            await _bitmexApiService.Execute(BitmexApiUrls.Order.PostOrder, OrderPOSTRequestParams.ClosePositionByMarket(market));
+            await _bitmexApiService.Execute(BitmexApiUrls.Order.PostOrder, OrderPOSTRequestParams.ClosePositionByMarket(marketInfo.Market));
 
-            await SetLeverage(market, 50);
-            var sellPrice = await GetCurrentPrice(market);
+            await SetLeverage(marketInfo.Market, marketInfo.Leverage);
+            var sellPrice = await GetCurrentPrice(marketInfo.Market);
             //create limit order
             var orderDto = await _bitmexApiService.Execute(BitmexApiUrls.Order.PostOrder,
-                OrderPOSTRequestParams.CreateSimpleLimit(market, 1500, sellPrice, OrderSide.Sell));
+                OrderPOSTRequestParams.CreateSimpleLimit(marketInfo.Market, marketInfo.Quantity, sellPrice, OrderSide.Sell));
             var stopPrice = Math.Round((decimal)orderDto.Price * 0.995M, 0);
             //create stop order
-            await _bitmexApiService.Execute(BitmexApiUrls.Order.PostOrder, OrderPOSTRequestParams.CreateSimpleHidenLimit(market, 1500, sellPrice + 50, OrderSide.Sell));
-            await _bitmexApiService.Execute(BitmexApiUrls.Order.PostOrder, OrderPOSTRequestParams.CreateSimpleHidenLimit(market, 1500, stopPrice, OrderSide.Buy));
+            //await _bitmexApiService.Execute(BitmexApiUrls.Order.PostOrder, OrderPOSTRequestParams.CreateSimpleHidenLimit(marketInfo.Market, marketInfo.Quantity, sellPrice + 50, OrderSide.Sell));
+            await _bitmexApiService.Execute(BitmexApiUrls.Order.PostOrder, OrderPOSTRequestParams.CreateSimpleHidenLimit(marketInfo.Market, marketInfo.Quantity, stopPrice, OrderSide.Buy));
             //create 
-            return $"Sold {orderDto.OrderQty} at {orderDto.Price}, selling again at {orderDto.Price + 50}, stop order set to {stopPrice}";
+            return $"Sold {orderDto.OrderQty} {marketInfo.Market} at {orderDto.Price}, stop order set to {stopPrice}";
         }
 
         private async Task SetLeverage(string market, int leverage)

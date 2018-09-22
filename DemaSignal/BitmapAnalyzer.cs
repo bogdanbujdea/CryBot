@@ -1,14 +1,10 @@
 ﻿using AForge;
 using AForge.Imaging.Filters;
 
-using ConvertApiDotNet;
-
 using System;
-using System.IO;
 using System.Drawing;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace DemaSignal
 {
@@ -24,12 +20,12 @@ namespace DemaSignal
             _bearishSignalColor = Color.FromArgb(255, 255, 0, 255);
         }
 
-        public async Task<SignalType> GetLastSignal(string url)
+        public async Task<SignalType> GetLastSignal(string url, MarketInfo marketInfo)
         {
             SignalType lastSignal = SignalType.None;
             try
             {
-                await DownloadChartImage(url);
+                await DownloadChartImage(url, marketInfo);
                 var bullishFilter = GetFilterForBullishSignal();
                 var bearishFilter = GetFilterForBearishSignal();
                 var bearishImage = GetImageForFilter(bearishFilter);
@@ -112,17 +108,6 @@ namespace DemaSignal
             return pixelInfo;
         }
 
-        private List<Color> GetColorsArray(int i, int j, int height, Color[,] colorArray)
-        {
-            var colors = new List<Color>();
-            for (int index = i; index < height; index++)
-            {
-                colors.Add(colorArray[index, j]);
-            }
-
-            return colors;
-        }
-
         private bool ColorMatches(Color searchedColor, Color currentColor)
         {
             return currentColor.ToArgb() == searchedColor.ToArgb() || GetColorDistance(currentColor, searchedColor) < 25;
@@ -134,10 +119,10 @@ namespace DemaSignal
             return coloredImage;
         }
 
-        private static async Task DownloadChartImage(string url)
+        private static async Task DownloadChartImage(string url, MarketInfo marketInfo)
         {
             var httpClient = new HttpClient();
-            var streamResponse = await httpClient.GetStreamAsync(url);
+            var streamResponse = await httpClient.GetStreamAsync($"{url}?market={marketInfo.Market}&timeout={Environment.GetEnvironmentVariable("timeout")}&chartUrl={marketInfo.ChartUrl}");
             _chartImage = new Bitmap(streamResponse);
         }
 
