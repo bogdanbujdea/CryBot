@@ -1,7 +1,8 @@
-﻿using System;
-using System.Threading.Tasks;
-using Bitmex.NET;
+﻿using Bitmex.NET;
 using Bitmex.NET.Models;
+
+using System;
+using System.Threading.Tasks;
 
 namespace DemaSignal
 {
@@ -16,10 +17,14 @@ namespace DemaSignal
 
         private IBitmexApiService CreateBitmexClient()
         {
-            var bitmexAuthorization = new BitmexAuthorization();
-            bitmexAuthorization.BitmexEnvironment = Environment.GetEnvironmentVariable("bitmexEnvironment") == "Test" ? BitmexEnvironment.Test : BitmexEnvironment.Prod;
-            bitmexAuthorization.Key = Environment.GetEnvironmentVariable("bitmexTestnetKey");
-            bitmexAuthorization.Secret = Environment.GetEnvironmentVariable("bitmexTestnetSecret");
+            var bitmexAuthorization = new BitmexAuthorization
+            {
+                BitmexEnvironment = Environment.GetEnvironmentVariable("bitmexEnvironment") == "Test"
+                    ? BitmexEnvironment.Test
+                    : BitmexEnvironment.Prod,
+                Key = Environment.GetEnvironmentVariable("bitmexTestnetKey"),
+                Secret = Environment.GetEnvironmentVariable("bitmexTestnetSecret")
+            };
             var bitmexApiService = BitmexApiService.CreateDefaultApi(bitmexAuthorization);
             return bitmexApiService;
         }

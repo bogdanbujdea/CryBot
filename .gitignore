@@ -270,3 +270,5 @@ CryBot\.Backtesting/Resource\.resx
 CryBot\.Backtesting/Resource\.Designer\.cs
 
 CryBot\.Web/candles/
+
+DemaSignal/my\.azureauth

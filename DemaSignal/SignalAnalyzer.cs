@@ -1,5 +1,3 @@
-using Bitmex.NET;
-using Bitmex.NET.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.WindowsAzure.Storage;
@@ -15,17 +13,24 @@ namespace DemaSignal
         const string Market = "XBTUSD";
 
         [FunctionName("SignalAnalyzer")]
-        public static async Task Run([TimerTrigger("0 */30 * * * *")]TimerInfo myTimer, TraceWriter log)
+        public static async Task Run([TimerTrigger("0 */15 * * * *")]TimerInfo myTimer, TraceWriter log)
         {
             try
-            {
+            {                
+                Logger.Init(log);
                 log.Info($"Starting at {DateTime.Now}");
+                var azureContainerManager = new AzureContainerManager();
+                var url = azureContainerManager.StartImageAnalyzer();
+
                 var bitmapAnalyzer = new BitmapAnalyzer();
-                var signalType = await bitmapAnalyzer.GetLastSignal();
+                var signalType = await bitmapAnalyzer.GetLastSignal(url);
+                azureContainerManager.StopImageAnalyzer();
+
                 await CheckSignalWithLast(signalType, log);
                 var table = await GetSignalsTable();
                 var insertOperation = TableOperation.Insert(new Signal { SignalType = signalType.ToString().ToLower(), Time = DateTime.UtcNow });
                 await table.ExecuteAsync(insertOperation);
+                 
                 log.Info($"Last signal at {DateTime.Now} is {signalType}");
             }
             catch (Exception e)
@@ -59,8 +64,6 @@ namespace DemaSignal
                 await new Mailman().SendMailAsync($"Signal got changed to {signalType}. {message}");
             }
         }
-
-
 
         private static async Task<CloudTable> GetSignalsTable()
         {

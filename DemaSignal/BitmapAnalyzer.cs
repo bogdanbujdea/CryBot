@@ -8,6 +8,7 @@ using System.IO;
 using System.Drawing;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Net.Http;
 
 namespace DemaSignal
 {
@@ -23,12 +24,12 @@ namespace DemaSignal
             _bearishSignalColor = Color.FromArgb(255, 255, 0, 255);
         }
 
-        public async Task<SignalType> GetLastSignal()
+        public async Task<SignalType> GetLastSignal(string url)
         {
             SignalType lastSignal = SignalType.None;
             try
             {
-                await DownloadChartImage();
+                await DownloadChartImage(url);
                 var bullishFilter = GetFilterForBullishSignal();
                 var bearishFilter = GetFilterForBearishSignal();
                 var bearishImage = GetImageForFilter(bearishFilter);
@@ -51,7 +52,7 @@ namespace DemaSignal
             return lastSignal;
         }
 
-        private double ColourDistance(Color e1, Color e2)
+        private double GetColorDistance(Color e1, Color e2)
         {
             var rmean = (e1.R + (long)e2.R) / 2;
             var r = e1.R - (long)e2.R;
@@ -124,7 +125,7 @@ namespace DemaSignal
 
         private bool ColorMatches(Color searchedColor, Color currentColor)
         {
-            return currentColor.ToArgb() == searchedColor.ToArgb() || ColourDistance(currentColor, searchedColor) < 25;
+            return currentColor.ToArgb() == searchedColor.ToArgb() || GetColorDistance(currentColor, searchedColor) < 25;
         }
 
         private static Bitmap DropOtherColors(HSLFiltering filter)
@@ -133,14 +134,11 @@ namespace DemaSignal
             return coloredImage;
         }
 
-        private static async Task DownloadChartImage()
+        private static async Task DownloadChartImage(string url)
         {
-            var key = Environment.GetEnvironmentVariable("imageApiKey");
-            var convertApi = new ConvertApi(key);
-            var fileStream = await convertApi.ConvertAsync("web", "png",
-                new ConvertApiParam("Url", Environment.GetEnvironmentVariable("chartUrl"))
-            ).Result.AsFileStreamAsync(0);
-            _chartImage = new Bitmap(fileStream);
+            var httpClient = new HttpClient();
+            var streamResponse = await httpClient.GetStreamAsync(url);
+            _chartImage = new Bitmap(streamResponse);
         }
 
         private static HSLFiltering GetFilterForBearishSignal()
