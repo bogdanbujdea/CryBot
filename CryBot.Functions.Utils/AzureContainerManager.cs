@@ -75,6 +75,7 @@ namespace CryBot.Functions.Utils
                     .WithExternalTcpPort(Port)
                     .WithCpuCoreCount(1.0)
                     .WithMemorySizeInGB(1)
+                    .WithEnvironmentVariable("AZURE_STORAGE_CONNECTION_STRING", Environment.GetEnvironmentVariable("AzureWebJobsStorage"))
                     .Attach()
                 .WithDnsPrefix(containerGroupName)
                 .WithRestartPolicy(ContainerGroupRestartPolicy.Never)

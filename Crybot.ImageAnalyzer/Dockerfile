@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y wget --no-install-recommends \
 
 # copy project files and install dependencies
 RUN mkdir -p /var/app
-COPY . /var/app 
+COPY . /var/app  
 WORKDIR /var/app
 RUN npm install
 RUN npm i puppeteer

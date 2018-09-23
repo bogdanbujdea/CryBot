@@ -32,9 +32,23 @@ router.get('/', function(req, res, next) {
     const page = await browser.newPage();
     await page.goto(req.query.chartUrl);
     await timeout(timeoutPeriod);
-    const tempImage = `${market}.png`;
+    const tempImage = `${market}-${req.query.id}.png`; 
     await page.screenshot({path: path.join(__dirname, tempImage)});
     console.log(`finished ${market} request at ${Date.now}`);
+    var blobService = azure.createBlobService();
+    blobService.createContainerIfNotExists('trading-images', {
+      publicAccessLevel: 'blob'
+    }, function(error, result, response) {
+      if (!error) {
+        blobService.createBlockBlobFromLocalFile('trading-images', tempImage, path.join(__dirname, tempImage), function(error, result, response) {
+          if (!error) {
+            console.log(`file ${tempImage} uploaded to azure storage`)
+          }
+        else console.log(error);
+      });
+      }
+      else console.log(error);
+    });
     res.sendFile(path.join(__dirname, tempImage));
   })();
 });

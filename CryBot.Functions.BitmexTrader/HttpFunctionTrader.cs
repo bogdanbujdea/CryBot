@@ -23,11 +23,13 @@ namespace CryBot.Functions.BitmexTrader
             new MarketInfo("ETHUSD", "https://www.tradingview.com/chart/RkkgaHHm/", 2000, 35, 1, 1.5M),
             new MarketInfo("ADAU18", "https://www.tradingview.com/chart/W0NboM7z/", 10000, 15, 8, 3)
         };
+
         [FunctionName("HttpFunctionTrader")]
         public static async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)]HttpRequestMessage req, TraceWriter log)
         {
             try
             {
+                CryptoTrader.Timestamp = DateTime.Now.Ticks;
                 Logger.Init(log);
                 Logger.Log($"Started function at {DateTime.UtcNow}");
                 AzureContainerManager azureContainerManager = new AzureContainerManager();

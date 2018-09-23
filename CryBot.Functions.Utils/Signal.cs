@@ -22,7 +22,7 @@ namespace CryBot.Functions.Utils
             set
             {
                 _market = value;
-                RowKey = DateTime.Now.Ticks.ToString();
+                RowKey = CryptoTrader.Timestamp.ToString();
             }
         }
     }

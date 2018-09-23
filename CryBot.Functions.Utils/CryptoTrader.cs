@@ -9,6 +9,8 @@ namespace CryBot.Functions.Utils
 {
     public class CryptoTrader
     {
+        public static long Timestamp = 0;
+
         public async Task RetrieveAndProcessSignal(string url, MarketInfo marketInfo)
         {
             try
@@ -22,7 +24,6 @@ namespace CryBot.Functions.Utils
                 var table = await GetSignalsTable();
                 var insertOperation = TableOperation.Insert(new Signal { SignalType = signalType.ToString().ToLower(), Market = marketInfo.Market });
                 await table.ExecuteAsync(insertOperation);
-
             }
             catch (Exception e)
             {

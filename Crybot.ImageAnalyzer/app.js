@@ -41,6 +41,6 @@ app.use(function(err, req, res, next) {
 console.log('executing get request');
 module.exports = app;
 
-https.get(process.env.FUNCTION_URL, function(){
-  console.log('request done');
-});
+  https.get(process.env.FUNCTION_URL, function(){
+    console.log('request done');
+  });

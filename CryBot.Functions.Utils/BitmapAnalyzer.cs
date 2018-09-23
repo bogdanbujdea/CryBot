@@ -132,7 +132,7 @@ namespace CryBot.Functions.Utils
                     count++;
                     Logger.Log($"Trial {count}");
                     var httpClient = new HttpClient();
-                    streamResponse = await httpClient.GetAsync($"{url}?market={marketInfo.Market}&timeout={Environment.GetEnvironmentVariable("timeout")}&chartUrl={marketInfo.ChartUrl}");
+                    streamResponse = await httpClient.GetAsync($"{url}?market={marketInfo.Market}&id={CryptoTrader.Timestamp}&timeout={Environment.GetEnvironmentVariable("timeout")}&chartUrl={marketInfo.ChartUrl}");
                     var stream = await streamResponse.Content.ReadAsStreamAsync();
                     _chartImage = new Bitmap(stream);
                     Logger.Log($"Image downloaded for {marketInfo.Market}");
