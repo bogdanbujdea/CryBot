@@ -17,10 +17,11 @@ namespace CryBot.Functions.BitmexTrader
     {
         private static readonly List<MarketInfo> MarketCharts = new List<MarketInfo>
         {
-            new MarketInfo("XBTUSD", "https://www.tradingview.com/chart/WpYk6xkq/", 1500, 50, 0),
-            new MarketInfo("XRPU18", "https://www.tradingview.com/chart/S1CVQjyz/", 2000, 15, 6),
-            new MarketInfo("ETHUSD", "https://www.tradingview.com/chart/RkkgaHHm/", 2000, 35, 2),
-            new MarketInfo("ADAU18", "https://www.tradingview.com/chart/W0NboM7z/", 10000, 15, 8)
+            //new MarketInfo("BCHU18", "https://www.tradingview.com/chart/z977J1a7/", 2, 20, 4, 2),
+            new MarketInfo("XBTUSD", "https://www.tradingview.com/chart/WpYk6xkq/", 1500, 50, 0, 1.4M),
+            new MarketInfo("XRPU18", "https://www.tradingview.com/chart/S1CVQjyz/", 2000, 15, 6, 3.5M),
+            new MarketInfo("ETHUSD", "https://www.tradingview.com/chart/RkkgaHHm/", 2000, 35, 1, 1.5M),
+            new MarketInfo("ADAU18", "https://www.tradingview.com/chart/W0NboM7z/", 10000, 15, 8, 3)
         };
         [FunctionName("HttpFunctionTrader")]
         public static async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)]HttpRequestMessage req, TraceWriter log)

@@ -7,6 +7,7 @@ namespace CryBot.Functions.Utils
     public class Signal : TableEntity
     {
         private DateTime _time;
+        private string _market;
 
         public Signal()
         {
@@ -15,16 +16,14 @@ namespace CryBot.Functions.Utils
 
         public string SignalType { get; set; }
 
-        public DateTime Time
+        public string Market
         {
-            get => _time;
+            get => _market;
             set
             {
-                _time = value;
-                RowKey = _time.ToString("F");
+                _market = value;
+                RowKey = DateTime.Now.Ticks.ToString();
             }
         }
-
-        public string Market { get; set; }
     }
 }

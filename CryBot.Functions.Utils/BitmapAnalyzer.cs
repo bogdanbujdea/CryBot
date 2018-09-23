@@ -130,17 +130,19 @@ namespace CryBot.Functions.Utils
                 try
                 {
                     count++;
+                    Logger.Log($"Trial {count}");
                     var httpClient = new HttpClient();
                     streamResponse = await httpClient.GetAsync($"{url}?market={marketInfo.Market}&timeout={Environment.GetEnvironmentVariable("timeout")}&chartUrl={marketInfo.ChartUrl}");
                     var stream = await streamResponse.Content.ReadAsStreamAsync();
                     _chartImage = new Bitmap(stream);
+                    Logger.Log($"Image downloaded for {marketInfo.Market}");
                 }
                 catch (Exception e)
                 {
                     Logger.Log(e.ToString());
                 }
 
-                if (count == 4)
+                if (count == 3)
                 {
                     return false;
                 }

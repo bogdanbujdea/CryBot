@@ -11,14 +11,23 @@ namespace CryBot.Functions.Utils
     {
         public async Task RetrieveAndProcessSignal(string url, MarketInfo marketInfo)
         {
-            var bitmapAnalyzer = new BitmapAnalyzer();
-            var signalType = await bitmapAnalyzer.GetLastSignal(url, marketInfo);
+            try
+            {
+                var bitmapAnalyzer = new BitmapAnalyzer();
+                var signalType = await bitmapAnalyzer.GetLastSignal(url, marketInfo);
+                if (signalType == SignalType.None)
+                    return;
+                await CheckSignalWithLast(signalType, marketInfo);
 
-            await CheckSignalWithLast(signalType, marketInfo);
+                var table = await GetSignalsTable();
+                var insertOperation = TableOperation.Insert(new Signal { SignalType = signalType.ToString().ToLower(), Market = marketInfo.Market });
+                await table.ExecuteAsync(insertOperation);
 
-            var table = await GetSignalsTable();
-            var insertOperation = TableOperation.Insert(new Signal { SignalType = signalType.ToString().ToLower(), Time = DateTime.UtcNow, Market = marketInfo.Market });
-            await table.ExecuteAsync(insertOperation);
+            }
+            catch (Exception e)
+            {
+                Logger.Log(e.ToString());
+            }
         }
 
         private async Task CheckSignalWithLast(SignalType signalType, MarketInfo marketInfo)
@@ -30,7 +39,7 @@ namespace CryBot.Functions.Utils
                 .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, "bitmex"))
                 .Where(TableQuery.GenerateFilterCondition("Market", QueryComparisons.Equal, marketInfo.Market));
             var results = await table.ExecuteQuerySegmentedAsync(query, new TableContinuationToken());
-            var lastResult = results.Results.OrderBy(o => o.Time).LastOrDefault();
+            var lastResult = results.Results.OrderBy(o => o.Timestamp.DateTime).LastOrDefault();
             if (lastResult?.SignalType != signalType.ToString().ToLower() && signalType != SignalType.None)
             {
                 string message;

@@ -37,6 +37,10 @@ namespace CryBot.Backtesting
                 bitmexAuthorization.Secret = "uOtP5-0sEtiis5d1_Qv1-LW8FLsV3qW9Qsmsf_OWBXVzw-c3";
                 _bitmexApiService = BitmexApiService.CreateDefaultApi(bitmexAuthorization);
 
+                await _bitmexApiService.Execute(BitmexApiUrls.Order.DeleteOrderAll, new OrderAllDELETERequestParams
+                {
+                    Symbol="BCHU18"
+                });
                 var bitcoinOrderBook = await _bitmexApiService.Execute(BitmexApiUrls.OrderBook.GetOrderBookL2,
                     new OrderBookL2GETRequestParams {Depth = 1, Symbol = market});
                 var currentPrice = Math.Round((bitcoinOrderBook[0].Price + bitcoinOrderBook[1].Price) / 2);
@@ -65,7 +69,11 @@ namespace CryBot.Backtesting
             }
             
         }
-
+        private static async Task<OrderDto> ExecuteOrder(string market, int quantity, decimal price, OrderSide orderSide)
+        {
+            return await _bitmexApiService.Execute(BitmexApiUrls.Order.PostOrder,
+                OrderPOSTRequestParams.CreateSimpleLimit(market, quantity, price, orderSide));
+        }
         private static async Task<OrderDto> CreateLimitOrder(string market, int quantity, decimal price, OrderSide orderSide)
         {
             return await _bitmexApiService.Execute(BitmexApiUrls.Order.PostOrder, OrderPOSTRequestParams.CreateSimpleLimit(market, quantity, price, orderSide));
