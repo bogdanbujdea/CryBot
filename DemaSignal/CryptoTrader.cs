@@ -28,7 +28,7 @@ namespace DemaSignal
             await table.ExecuteAsync(tableOperation);
             var query = new TableQuery<Signal>()
                 .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, "bitmex"))
-                .Where(TableQuery.GenerateFilterCondition("market", QueryComparisons.Equal, marketInfo.Market));
+                .Where(TableQuery.GenerateFilterCondition("Market", QueryComparisons.Equal, marketInfo.Market));
             var results = await table.ExecuteQuerySegmentedAsync(query, new TableContinuationToken());
             var lastResult = results.Results.OrderBy(o => o.Time).LastOrDefault();
             if (lastResult?.SignalType != signalType.ToString().ToLower() && signalType != SignalType.None)
@@ -39,9 +39,13 @@ namespace DemaSignal
                 {
                     message = await bitmexClient.GoLong(marketInfo);
                 }
-                else
+                else if(signalType == SignalType.Bearish)
                 {
                     message = await bitmexClient.GoShort(marketInfo);
+                }
+                else
+                {
+                    return;
                 }
                 Logger.Log(message);
 

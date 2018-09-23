@@ -6,7 +6,7 @@ using Microsoft.Azure.Management.ContainerInstance.Fluent.Models;
 
 using System;
 
-namespace DemaSignal
+namespace ContainerManager
 {
     public class AzureContainerManager
     {
@@ -34,7 +34,7 @@ namespace DemaSignal
         {
             Logger.Log($"\nDeleting resource group '{resourceGroupName}'...");
 
-            azure.ResourceGroups.DeleteByName(resourceGroupName);
+            azure.ResourceGroups.DeleteByNameAsync(resourceGroupName);
         }
 
         private static void DeleteContainerGroup(IAzure azure, string resourceGroupName, string containerGroupName)
@@ -78,10 +78,9 @@ namespace DemaSignal
                     .Attach()
                 .WithDnsPrefix(containerGroupName)
                 .WithRestartPolicy(ContainerGroupRestartPolicy.Never)
-                .Create();
+                .CreateAsync();
 
-            var url = "http://" + containerGroup.Fqdn + ":" + Port + "/charts";
-            return url;
+            return "";
         }
 
         private static void CreateResourceGroup(IAzure azure, string resourceGroupName, Region azureRegion)
@@ -121,6 +120,5 @@ namespace DemaSignal
 
             return azure;
         }
-
     }
 }
