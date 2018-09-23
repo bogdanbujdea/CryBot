@@ -272,3 +272,5 @@ CryBot\.Backtesting/Resource\.Designer\.cs
 CryBot\.Web/candles/
 
 DemaSignal/my\.azureauth
+
+*.azureauth

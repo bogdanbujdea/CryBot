@@ -1,8 +1,9 @@
-﻿using System;
-using CryBot.Core.Storage;
+﻿using CryBot.Core.Storage;
 using CryBot.Core.Notifications;
 
 using Orleans;
+
+using System;
 
 using System.Threading.Tasks;
 using System.Collections.Generic;

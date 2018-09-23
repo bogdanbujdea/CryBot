@@ -1,7 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using CryBot.Core.Trader;
 using CryBot.Core.Exchange.Models;
-using CryBot.Core.Trader;
+
+using System;
+using System.Collections.Generic;
 
 namespace CryBot.Core.Strategies
 {

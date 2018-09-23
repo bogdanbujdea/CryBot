@@ -1,9 +1,10 @@
 ﻿using Bittrex.Net.Objects;
 
+using CryBot.Core.Trader;
+
 using CryBot.Core.Exchange.Models;
 
 using System;
-using CryBot.Core.Trader;
 
 namespace CryBot.Core.Infrastructure
 {

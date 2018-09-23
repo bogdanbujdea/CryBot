@@ -2,6 +2,7 @@
 using CryBot.Core.Storage;
 using CryBot.Core.Exchange;
 using CryBot.Core.Exchange.Models;
+using CryBot.Core.Trader.Backtesting;
 
 using FluentAssertions;
 
@@ -11,7 +12,7 @@ using Orleans;
 
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using CryBot.Core.Trader.Backtesting;
+
 using Xunit;
 
 namespace CryBot.UnitTests.Services

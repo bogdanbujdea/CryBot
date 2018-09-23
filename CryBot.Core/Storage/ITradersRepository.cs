@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using CryBot.Core.Exchange.Models;
+
 using System.Threading.Tasks;
-using CryBot.Core.Exchange.Models;
+using System.Collections.Generic;
 
 namespace CryBot.Core.Storage
 {

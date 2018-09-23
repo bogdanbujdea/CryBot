@@ -1,9 +1,12 @@
-﻿using CryBot.Core.Exchange.Models;
-using CryBot.Core.Infrastructure;
+﻿using CryBot.Core.Trader;
 using CryBot.Core.Strategies;
-using CryBot.Core.Trader;
+using CryBot.Core.Infrastructure;
+using CryBot.Core.Exchange.Models;
+
 using FluentAssertions;
+
 using System;
+
 using Xunit;
 
 namespace CryBot.UnitTests.Strategies

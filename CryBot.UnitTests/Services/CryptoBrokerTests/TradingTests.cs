@@ -1,11 +1,15 @@
-﻿using CryBot.Core.Exchange.Models;
+﻿using CryBot.Core.Trader;
 using CryBot.Core.Strategies;
-using CryBot.Core.Trader;
+using CryBot.Core.Exchange.Models;
 using CryBot.UnitTests.Infrastructure;
+
 using FluentAssertions;
+
 using Moq;
-using System.Collections.Generic;
+
 using System.Threading.Tasks;
+using System.Collections.Generic;
+
 using Xunit;
 
 namespace CryBot.UnitTests.Services.CryptoBrokerTests

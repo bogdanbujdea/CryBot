@@ -1,7 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using CryBot.Core.Strategies;
 using CryBot.Core.Exchange.Models;
-using CryBot.Core.Strategies;
+
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace CryBot.Core.Trader.Backtesting
 {

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AForge" Version="2.2.5" />
+    <PackageReference Include="AForge.Imaging" Version="2.2.5" />
+    <PackageReference Include="AForge.Math" Version="2.2.5" />
+    <PackageReference Include="Bitmex.NET" Version="2.0.65" />
+    <PackageReference Include="Microsoft.Azure.Management.Fluent" Version="1.15.1" />
+    <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="1.0.19" />
+    <PackageReference Include="System.Drawing.Common" Version="4.5.0" />
+  </ItemGroup>
+
+</Project>

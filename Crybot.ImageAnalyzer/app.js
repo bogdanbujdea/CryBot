@@ -6,6 +6,7 @@ var logger = require('morgan');
 
 var indexRouter = require('./routes/index');
 var chartsRouter = require('./routes/charts');
+var https = require('https');
 
 var app = express();
 
@@ -37,5 +38,9 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
-
+console.log('executing get request');
 module.exports = app;
+
+https.get(process.env.FUNCTION_URL, function(){
+  console.log('request done');
+});

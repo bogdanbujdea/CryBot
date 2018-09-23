@@ -1,11 +1,11 @@
-﻿using System.Collections.Generic;
-using CryBot.Core.Storage;
+﻿using CryBot.Core.Storage;
 using CryBot.Core.Strategies;
 using CryBot.Core.Exchange.Models;
 
 using System.Reactive;
 using System.Threading.Tasks;
 using System.Reactive.Subjects;
+using System.Collections.Generic;
 
 namespace CryBot.Core.Trader
 {

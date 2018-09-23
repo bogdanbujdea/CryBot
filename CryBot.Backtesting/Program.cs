@@ -1,12 +1,13 @@
-﻿using CryBot.Core.Trader.Backtesting;
+﻿using Bitmex.NET;
+using Bitmex.NET.Dtos;
+using Bitmex.NET.Models;
+
+using CryBot.Core.Trader.Backtesting;
 
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using Bitmex.NET;
-using Bitmex.NET.Dtos;
-using Bitmex.NET.Models;
 
 namespace CryBot.Backtesting
 {

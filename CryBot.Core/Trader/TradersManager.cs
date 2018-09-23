@@ -1,5 +1,8 @@
-﻿using CryBot.Core.Storage;
+﻿using Bittrex.Net.Objects;
+
+using CryBot.Core.Storage;
 using CryBot.Core.Exchange;
+using CryBot.Core.Strategies;
 using CryBot.Core.Notifications;
 using CryBot.Core.Exchange.Models;
 
@@ -9,8 +12,6 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using Bittrex.Net.Objects;
-using CryBot.Core.Strategies;
 
 namespace CryBot.Core.Trader
 {

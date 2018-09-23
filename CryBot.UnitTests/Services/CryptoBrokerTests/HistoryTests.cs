@@ -1,8 +1,10 @@
 ﻿using Bittrex.Net.Objects;
 
 using CryBot.Core.Trader;
+using CryBot.Core.Storage;
 using CryBot.Core.Exchange;
 using CryBot.Core.Strategies;
+using CryBot.Core.Exchange.Models;
 
 using FluentAssertions;
 
@@ -12,8 +14,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using CryBot.Core.Exchange.Models;
-using CryBot.Core.Storage;
+
 using Xunit;
 
 namespace CryBot.UnitTests.Services.CryptoBrokerTests
